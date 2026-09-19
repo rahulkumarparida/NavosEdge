@@ -17,6 +17,16 @@ class Settings(BaseSettings):
     MODEL_WEIGHTS_FILE: str = 'gasnet.pt'
     MODEL_PREPROCESS_FILE: str = 'preprocess.pkl'
 
+    # Anomaly detection engine
+    ANOMALY_HISTORY_WINDOW_HOURS: int = 24
+    ANOMALY_MODEL_UPDATE_INTERVAL_MINUTES: int = 15
+    ANOMALY_MIN_SAMPLES_FOR_REGRESSION: int = 30
+    ANOMALY_MIN_SAMPLES_FOR_MONITORING: int = 10
+    ANOMALY_BOOTSTRAP_SAMPLES: int = 5
+    ANOMALY_SCORE_THRESHOLD_HIGH: float = 3.0
+    ANOMALY_SCORE_THRESHOLD_MEDIUM: float = 2.0
+    ANOMALY_STALE_DATA_MINUTES: int = 30
+
     model_config = SettingsConfigDict(
         env_prefix='NAVOS_',
         env_file='.env',

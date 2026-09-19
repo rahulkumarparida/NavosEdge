@@ -2,16 +2,19 @@
 Processing pipeline — orchestrates validation, inference, storage and events.
 """
 
+import asyncio
 import logging
 import uuid
 
 from app.schemas.sensor import SensorPayload
 from app.schemas.responses import ReadingAccepted
+from app.schemas.anomaly import AnomalyReport
 from app.services.events import EventService
 from app.services.inference import InferenceAdapter
 from app.services.node_registry import NodeRegistry
 from app.storage.jsonl_store import JsonlStorageService
 from app.services.pipeline import ModularPipeline
+from app.anomaly.engine import AnomalyEngine
 
 logger = logging.getLogger(__name__)
 
@@ -23,12 +26,43 @@ class ProcessingService:
         node_registry: NodeRegistry,
         storage: JsonlStorageService,
         event_service: EventService,
+        anomaly_engine: AnomalyEngine,
     ) -> None:
         self.inference_adapter = inference_adapter
         self.node_registry = node_registry
         self.storage = storage
         self.event_service = event_service
+        self.anomaly_engine = anomaly_engine
         self.pipeline = ModularPipeline()
+        # Track which nodes have been history-primed
+        self._primed_nodes: set = set()
+
+    async def _ensure_history_loaded(self, node_id: str) -> None:
+        """
+        On first encounter with a node, load recent history from JSONL
+        into the anomaly engine's rolling window.
+        """
+        if node_id in self._primed_nodes:
+            return
+
+        try:
+            history = await self.storage.get_recent_readings(node_id, hours=24)
+            if history:
+                loop = asyncio.get_event_loop()
+                await loop.run_in_executor(
+                    None, self.anomaly_engine.load_history, node_id, history
+                )
+                logger.info(
+                    "Loaded %d historical records for node %s anomaly baseline",
+                    len(history),
+                    node_id,
+                )
+        except Exception as e:
+            logger.warning(
+                "Failed to load history for node %s: %s", node_id, e
+            )
+
+        self._primed_nodes.add(node_id)
 
     async def process_reading(self, payload: SensorPayload) -> ReadingAccepted:
         reading_id = uuid.uuid4().hex[:12]
@@ -70,8 +104,24 @@ class ProcessingService:
             "pipeline": pipeline_results.model_dump(mode="json"),
         }
 
-        # Persist
+        # Persist to JSONL (must happen BEFORE anomaly analysis so history is on disk)
         await self.storage.append_reading(node_id, record)
+
+        # --- Anomaly detection ---
+        await self._ensure_history_loaded(node_id)
+
+        try:
+            loop = asyncio.get_event_loop()
+            anomaly_dict = await loop.run_in_executor(
+                None, self.anomaly_engine.analyse, node_id, record
+            )
+            anomaly_report = AnomalyReport.from_engine_dict(anomaly_dict)
+            pipeline_results.anomaly_report = anomaly_report
+        except Exception as e:
+            logger.error(
+                "Anomaly engine error for node %s: %s", node_id, e, exc_info=True
+            )
+            # Pipeline continues without anomaly report
 
         # Publish SSE event
         summary = {
@@ -81,8 +131,19 @@ class ProcessingService:
             "safety_status": inference_result.safety_status,
             "advisory_level": pipeline_results.advisory.level,
             "health_status": pipeline_results.health.status,
-            "is_anomalous": pipeline_results.anomaly.is_anomalous
+            "is_anomalous": pipeline_results.anomaly.is_anomalous,
         }
+
+        # Include anomaly report summary in SSE if available
+        if pipeline_results.anomaly_report is not None:
+            ar = pipeline_results.anomaly_report
+            summary["anomaly_report"] = {
+                "detected": ar.anomaly.detected,
+                "severity": ar.anomaly.severity.value if hasattr(ar.anomaly.severity, 'value') else ar.anomaly.severity,
+                "confidence": ar.data_quality.confidence.value if hasattr(ar.data_quality.confidence, 'value') else ar.data_quality.confidence,
+                "system_state": ar.system_state.value if hasattr(ar.system_state, 'value') else ar.system_state,
+            }
+
         await self.event_service.publish(node_id, "new_reading", summary)
 
         logger.info("Processed reading %s for node %s", reading_id, node_id)
@@ -93,3 +154,4 @@ class ProcessingService:
             inference=inference_result,
             pipeline=pipeline_results,
         )
+

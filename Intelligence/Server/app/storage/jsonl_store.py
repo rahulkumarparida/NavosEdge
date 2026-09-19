@@ -2,9 +2,9 @@ import asyncio
 import json
 import logging
 import threading
-from datetime import date, datetime
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -225,3 +225,101 @@ class JsonlStorageService:
         except Exception as e:
             logger.error(f"Storage health check failed: {e}", exc_info=True)
             return False
+
+    def _sync_get_recent_readings(
+        self, node_id: str, hours: int = 24, max_records: int = 10000
+    ) -> List[dict]:
+        """
+        Stream recent observations from JSONL files within the last *hours*.
+
+        Only opens files whose date could fall within the window (today,
+        yesterday, and the day before to handle timezone edge-cases).
+        Reads line-by-line — never loads an entire file into memory.
+        Returns at most *max_records* entries, newest last.
+        """
+        lock = self._get_node_lock(node_id)
+        with lock:
+            node_dir = self.data_dir / "readings" / node_id
+            if not node_dir.exists():
+                return []
+
+            cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+
+            # Determine which date-files could possibly contain data in the
+            # window.  We check today, yesterday, and the day before yesterday
+            # to be safe across timezone boundaries and rotation suffixes.
+            candidate_dates: list[str] = []
+            for offset_days in range(hours // 24 + 2):
+                d = (date.today() - timedelta(days=offset_days)).isoformat()
+                candidate_dates.append(d)
+
+            # Gather candidate file paths (includes rotated files)
+            candidate_files: list[Path] = []
+            for f in node_dir.iterdir():
+                if not f.is_file():
+                    continue
+                if not ".jsonl" in f.name:
+                    continue
+                # Match if the filename starts with any candidate date
+                for d in candidate_dates:
+                    if f.name.startswith(d):
+                        candidate_files.append(f)
+                        break
+
+            # Sort by name so we read chronologically
+            candidate_files.sort(key=lambda p: p.name)
+
+            results: list[dict] = []
+            for filepath in candidate_files:
+                try:
+                    with open(filepath, "r", encoding="utf-8") as fh:
+                        for line in fh:
+                            line = line.strip()
+                            if not line:
+                                continue
+                            try:
+                                record = json.loads(line)
+                            except json.JSONDecodeError:
+                                continue
+
+                            # Parse timestamp from the record
+                            ts_raw = record.get("timestamp")
+                            if ts_raw is None:
+                                continue
+                            try:
+                                if isinstance(ts_raw, str):
+                                    ts = datetime.fromisoformat(ts_raw)
+                                else:
+                                    continue
+                            except (ValueError, TypeError):
+                                continue
+
+                            # Normalise to UTC for comparison
+                            if ts.tzinfo is None:
+                                ts = ts.replace(tzinfo=timezone.utc)
+                            else:
+                                ts = ts.astimezone(timezone.utc)
+
+                            if ts >= cutoff:
+                                results.append(record)
+                                if len(results) >= max_records:
+                                    return results
+                except Exception as e:
+                    logger.error(
+                        f"Error reading history from {filepath}: {e}",
+                        exc_info=True,
+                    )
+
+            return results
+
+    async def get_recent_readings(
+        self, node_id: str, hours: int = 24, max_records: int = 10000
+    ) -> List[dict]:
+        """
+        Async wrapper — retrieve recent readings within the rolling window.
+        """
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            None, self._sync_get_recent_readings, node_id, hours, max_records
+        )
+

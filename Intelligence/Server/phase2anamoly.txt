@@ -1,0 +1,70 @@
+======================================================================
+NAVOSEDGE INTELLIGENCE — PHASE 2: ANOMALY DETECTION SUBSYSTEM
+======================================================================
+
+1. OVERVIEW OF CHANGES
+----------------------------------------------------------------------
+The NavosEdge Intelligence Server has been extended with a new Anomaly Detection 
+and Short-Term Forecasting subsystem. The following modules were implemented in 
+the `app/anomaly/` package:
+
+- temporal.py      : Extracts time-of-day features (sin/cos of hour) for modelling diurnal cycles.
+- window.py        : Manages a memory-bounded rolling window of recent sensor observations.
+- baseline.py      : Computes expected sensor values using a 3-level fallback hierarchy.
+- residuals.py     : Tracks prediction errors (residuals) and computes robust anomaly scores using Median Absolute Deviation (MAD).
+- sensor_health.py : Validates individual sensor channels for faults (stuck/frozen, impossible ranges, railed voltages).
+- detector.py      : The multi-sensor fusion detector that combines individual scores into a unified anomaly severity.
+- engine.py        : The top-level orchestrator that manages state per node, loads historical data from disk, and integrates with FastAPI.
+
+Integration changes:
+- schemas/anomaly.py     : Defines the structured JSON models for the anomaly report.
+- schemas/pipeline.py    : Modified to include `anomaly_report` in `PipelineResults`.
+- storage/jsonl_store.py : Added `get_recent_readings` to dynamically load past data.
+- services/processing.py : Injected the AnomalyEngine, priming history on first sight, and returning anomaly data via Server-Sent Events (SSE).
+- main.py                : Initialised the AnomalyEngine with configuration during server startup.
+- tests/                 : Created a comprehensive deterministic test suite for 16 edge-case scenarios (stable, gradual spikes, missing data, sensor failure, stale data, etc.).
+
+
+2. HOW THE PIPELINE WORKS
+----------------------------------------------------------------------
+When a new sensor payload arrives at the Edge Node:
+
+1. Ingestion: `ProcessingService.process_reading` receives the payload.
+2. Inference: Standard thresholding/GasNet inference runs to classify safety.
+3. Storage: The reading is written to the daily JSONL file.
+4. History Loading (One-Time): If this is the first time the server has seen this node since startup, the `AnomalyEngine` asks the storage service for the last 24 hours of data to prime its baseline.
+5. Anomaly Analysis:
+   - The current reading is passed to `AnomalyEngine.analyse()`.
+   - The timestamp and features are extracted.
+   - The observation is added to the node's `RollingWindow`.
+   - If data is too old (e.g., node was offline), it skips detection and flags data as "STALE".
+   - Periodically (e.g., every 15 minutes), the background baselines are re-fitted using the latest window data.
+   - `AnomalyDetector.detect()` is invoked to evaluate the new reading.
+6. Event Broadcast: The structured anomaly report (with scores, severity, and explanations) is attached to the pipeline results and broadcasted out to clients via SSE.
+
+
+3. HOW IT PREDICTS ANOMALIES
+----------------------------------------------------------------------
+The prediction is deterministic, lightweight (uses standard libraries + numpy), and explainable:
+
+Step A: The Baseline (Expected Value)
+For each feature (e.g., PM10, MQ2 voltage, temperature), the `BaselineEstimator` predicts the "expected" normal value based on the current time of day. It uses a 3-tier hierarchy:
+  - Level 1 (Bootstrapping): If very little data exists, uses an Exponentially Weighted Moving Average (EMA).
+  - Level 2 (Learning): If enough data exists (e.g., >30 samples), fits a simple Ordinary Least Squares (OLS) regression using time-of-day features (sin/cos) to capture daily cyclical patterns (e.g., hotter at noon).
+  - Level 3 (Monitoring): Applies a short-term linear trend correction over the last 10 readings to adjust for natural environmental drift.
+
+Step B: Residual Analysis (The Error)
+- The system computes the residual: `Actual Value - Expected Value`.
+- Instead of using standard deviation (which is ruined by outliers), `ResidualTracker` maintains a historical bounded list of residuals and calculates the Median Absolute Deviation (MAD).
+- A normalized "Score" is generated: `|Residual| / (Spread Constant * MAD)`.
+
+Step C: Sensor Health & Classification
+- Independently, `SensorHealthChecker` ensures the raw value isn't physically impossible (e.g., -50 PM10), suddenly jumping 100 degrees, or frozen exactly at 300.0 for 10 consecutive readings.
+- If a sensor is broken, it marks it "DEGRADED" or "FAILED".
+
+Step D: Multi-Sensor Fusion
+- The `AnomalyDetector` gathers all individual feature scores.
+- It calculates a weighted maximum across categories (Particulates, Gases, Environment).
+- Corroboration Bonus: If BOTH a gas sensor and a particulate sensor spike simultaneously, the anomaly score gets a boost because multi-domain evidence strongly suggests a real environmental fire/event, rather than a single glitchy sensor.
+- The final combined score yields a Severity: LOW, MEDIUM, or HIGH.
+- The system determines the source: "ENVIRONMENTAL" (real anomaly) vs "SENSOR_FAULT" (hardware issue).

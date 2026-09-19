@@ -1,5 +1,6 @@
 from typing import List, Optional
 from pydantic import BaseModel
+from app.schemas.anomaly import AnomalyReport
 
 class SensorHealth(BaseModel):
     status: str  # "ok", "degraded", "stale", "invalid"
@@ -22,3 +23,4 @@ class PipelineResults(BaseModel):
     anomaly: AnomalyResult
     forecast: ForecastResult
     advisory: AdvisoryResult
+    anomaly_report: Optional[AnomalyReport] = None

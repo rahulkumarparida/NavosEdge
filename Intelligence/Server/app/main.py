@@ -18,6 +18,7 @@ from app.services.inference import TinyGasNetAdapter
 from app.services.node_registry import NodeRegistry
 from app.services.events import EventService
 from app.services.processing import ProcessingService
+from app.anomaly.engine import AnomalyEngine
 from app.api.routes.health import router as health_router
 from app.api.routes.nodes import router as nodes_router
 
@@ -45,6 +46,18 @@ async def lifespan(app: FastAPI):
     inference_adapter = TinyGasNetAdapter(artifacts_dir=settings.ARTIFACTS_DIR)
     inference_adapter.load()
 
+    # Anomaly engine
+    anomaly_engine = AnomalyEngine(
+        window_hours=settings.ANOMALY_HISTORY_WINDOW_HOURS,
+        model_update_interval_minutes=settings.ANOMALY_MODEL_UPDATE_INTERVAL_MINUTES,
+        threshold_medium=settings.ANOMALY_SCORE_THRESHOLD_MEDIUM,
+        threshold_high=settings.ANOMALY_SCORE_THRESHOLD_HIGH,
+        bootstrap_samples=settings.ANOMALY_BOOTSTRAP_SAMPLES,
+        min_samples_monitoring=settings.ANOMALY_MIN_SAMPLES_FOR_MONITORING,
+        min_samples_regression=settings.ANOMALY_MIN_SAMPLES_FOR_REGRESSION,
+        stale_data_minutes=settings.ANOMALY_STALE_DATA_MINUTES,
+    )
+
     # Registries / services
     node_registry = NodeRegistry()
     event_service = EventService(
@@ -55,6 +68,7 @@ async def lifespan(app: FastAPI):
         node_registry=node_registry,
         storage=storage,
         event_service=event_service,
+        anomaly_engine=anomaly_engine,
     )
 
     # Attach to app state so route handlers can access them
@@ -63,6 +77,7 @@ async def lifespan(app: FastAPI):
     app.state.node_registry = node_registry
     app.state.event_service = event_service
     app.state.processing_service = processing_service
+    app.state.anomaly_engine = anomaly_engine
 
     logger.info("Startup complete — model loaded: %s", inference_adapter._loaded)
     yield
