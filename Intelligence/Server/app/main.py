@@ -1,0 +1,145 @@
+"""
+NavosEdge Intelligence Server — FastAPI application entry point.
+"""
+
+import logging
+from contextlib import asynccontextmanager
+from datetime import datetime, timezone
+
+from fastapi import FastAPI, Request, status
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+
+from app.core.config import get_settings
+from app.core.logging import setup_logging
+from app.schemas.responses import ErrorResponse
+from app.storage.jsonl_store import JsonlStorageService
+from app.services.inference import TinyGasNetAdapter
+from app.services.node_registry import NodeRegistry
+from app.services.events import EventService
+from app.services.processing import ProcessingService
+from app.api.routes.health import router as health_router
+from app.api.routes.nodes import router as nodes_router
+
+logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    settings = get_settings()
+    setup_logging(settings.LOG_LEVEL)
+    logger.info("Starting NavosEdge Intelligence Server v%s", settings.APP_VERSION)
+
+    # Ensure directories
+    settings.DATA_DIR.mkdir(parents=True, exist_ok=True)
+    settings.ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
+
+    # Storage
+    storage = JsonlStorageService(
+        data_dir=settings.DATA_DIR,
+        max_file_size_mb=settings.STORAGE_MAX_FILE_SIZE_MB,
+        max_files_per_node=settings.STORAGE_MAX_FILES_PER_NODE,
+    )
+
+    # Inference adapter
+    inference_adapter = TinyGasNetAdapter(artifacts_dir=settings.ARTIFACTS_DIR)
+    inference_adapter.load()
+
+    # Registries / services
+    node_registry = NodeRegistry()
+    event_service = EventService(
+        heartbeat_interval=settings.SSE_HEARTBEAT_INTERVAL_S
+    )
+    processing_service = ProcessingService(
+        inference_adapter=inference_adapter,
+        node_registry=node_registry,
+        storage=storage,
+        event_service=event_service,
+    )
+
+    # Attach to app state so route handlers can access them
+    app.state.storage = storage
+    app.state.inference_adapter = inference_adapter
+    app.state.node_registry = node_registry
+    app.state.event_service = event_service
+    app.state.processing_service = processing_service
+
+    logger.info("Startup complete — model loaded: %s", inference_adapter._loaded)
+    yield
+    logger.info("Shutting down NavosEdge Intelligence Server.")
+
+
+def create_app() -> FastAPI:
+    settings = get_settings()
+
+    app = FastAPI(
+        title=settings.APP_NAME,
+        version=settings.APP_VERSION,
+        description=(
+            "Edge-AI environmental monitoring intelligence backend. "
+            "Receives sensor data, runs classification, and stores results."
+        ),
+        lifespan=lifespan,
+    )
+
+    # --- Middleware: payload size limit ---
+    @app.middleware("http")
+    async def limit_payload_size(request: Request, call_next):
+        content_length = request.headers.get("content-length")
+        if content_length and int(content_length) > settings.MAX_PAYLOAD_BYTES:
+            return JSONResponse(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                content=ErrorResponse(
+                    error="Payload too large",
+                    detail=f"Max allowed: {settings.MAX_PAYLOAD_BYTES} bytes",
+                    timestamp=datetime.now(timezone.utc),
+                ).model_dump(mode="json"),
+            )
+        return await call_next(request)
+
+    # --- Exception handlers ---
+    @app.exception_handler(RequestValidationError)
+    async def validation_exception_handler(
+        request: Request, exc: RequestValidationError
+    ):
+        return JSONResponse(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            content=ErrorResponse(
+                error="Validation error",
+                detail=str(exc.errors()),
+                timestamp=datetime.now(timezone.utc),
+            ).model_dump(mode="json"),
+        )
+
+    @app.exception_handler(Exception)
+    async def generic_exception_handler(request: Request, exc: Exception):
+        logger.error("Unhandled exception: %s", exc, exc_info=True)
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content=ErrorResponse(
+                error="Internal server error",
+                detail=str(exc),
+                timestamp=datetime.now(timezone.utc),
+            ).model_dump(mode="json"),
+        )
+
+    # --- Routers ---
+    app.include_router(health_router)
+    app.include_router(nodes_router)
+
+    return app
+
+
+app = create_app()
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    settings = get_settings()
+    uvicorn.run(
+        "app.main:app",
+        host=settings.HOST,
+        port=settings.PORT,
+        log_level=settings.LOG_LEVEL.lower(),
+    )
