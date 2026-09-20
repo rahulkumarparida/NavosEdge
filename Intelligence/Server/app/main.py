@@ -19,6 +19,7 @@ from app.services.node_registry import NodeRegistry
 from app.services.events import EventService
 from app.services.processing import ProcessingService
 from app.anomaly.engine import AnomalyEngine
+from app.source_classifier.classifier import SourceClassifier
 from app.api.routes.health import router as health_router
 from app.api.routes.nodes import router as nodes_router
 
@@ -58,6 +59,10 @@ async def lifespan(app: FastAPI):
         stale_data_minutes=settings.ANOMALY_STALE_DATA_MINUTES,
     )
 
+    # Source classifier (Phase 3)
+    source_classifier = SourceClassifier(artifacts_dir=settings.ARTIFACTS_DIR)
+    source_classifier.load()  # Fails gracefully if artifacts missing
+
     # Registries / services
     node_registry = NodeRegistry()
     event_service = EventService(
@@ -69,6 +74,7 @@ async def lifespan(app: FastAPI):
         storage=storage,
         event_service=event_service,
         anomaly_engine=anomaly_engine,
+        source_classifier=source_classifier,
     )
 
     # Attach to app state so route handlers can access them
@@ -78,8 +84,13 @@ async def lifespan(app: FastAPI):
     app.state.event_service = event_service
     app.state.processing_service = processing_service
     app.state.anomaly_engine = anomaly_engine
+    app.state.source_classifier = source_classifier
 
-    logger.info("Startup complete — model loaded: %s", inference_adapter._loaded)
+    logger.info(
+        "Startup complete — model loaded: %s, source classifier loaded: %s",
+        inference_adapter._loaded,
+        source_classifier.is_loaded,
+    )
     yield
     logger.info("Shutting down NavosEdge Intelligence Server.")
 

@@ -9,12 +9,14 @@ import uuid
 from app.schemas.sensor import SensorPayload
 from app.schemas.responses import ReadingAccepted
 from app.schemas.anomaly import AnomalyReport
+from app.schemas.source_classification import SourceClassificationResult
 from app.services.events import EventService
 from app.services.inference import InferenceAdapter
 from app.services.node_registry import NodeRegistry
 from app.storage.jsonl_store import JsonlStorageService
 from app.services.pipeline import ModularPipeline
 from app.anomaly.engine import AnomalyEngine
+from app.source_classifier.classifier import SourceClassifier
 
 logger = logging.getLogger(__name__)
 
@@ -27,12 +29,14 @@ class ProcessingService:
         storage: JsonlStorageService,
         event_service: EventService,
         anomaly_engine: AnomalyEngine,
+        source_classifier: SourceClassifier | None = None,
     ) -> None:
         self.inference_adapter = inference_adapter
         self.node_registry = node_registry
         self.storage = storage
         self.event_service = event_service
         self.anomaly_engine = anomaly_engine
+        self.source_classifier = source_classifier
         self.pipeline = ModularPipeline()
         # Track which nodes have been history-primed
         self._primed_nodes: set = set()
@@ -123,6 +127,21 @@ class ProcessingService:
             )
             # Pipeline continues without anomaly report
 
+        # --- Source classification (Phase 3) ---
+        if self.source_classifier is not None and self.source_classifier.is_loaded:
+            try:
+                loop = asyncio.get_event_loop()
+                sc_dict = await loop.run_in_executor(
+                    None, self.source_classifier.classify, payload
+                )
+                sc_result = SourceClassificationResult.from_classifier_dict(sc_dict)
+                pipeline_results.source_classification = sc_result
+            except Exception as e:
+                logger.error(
+                    "Source classifier error for node %s: %s", node_id, e, exc_info=True
+                )
+                # Pipeline continues without source classification
+
         # Publish SSE event
         summary = {
             "reading_id": reading_id,
@@ -142,6 +161,15 @@ class ProcessingService:
                 "severity": ar.anomaly.severity.value if hasattr(ar.anomaly.severity, 'value') else ar.anomaly.severity,
                 "confidence": ar.data_quality.confidence.value if hasattr(ar.data_quality.confidence, 'value') else ar.data_quality.confidence,
                 "system_state": ar.system_state.value if hasattr(ar.system_state, 'value') else ar.system_state,
+            }
+
+        # Include source classification summary in SSE if available
+        if pipeline_results.source_classification is not None:
+            sc = pipeline_results.source_classification
+            summary["source_classification"] = {
+                "top_source": sc.top_source,
+                "status": sc.status.value if hasattr(sc.status, 'value') else sc.status,
+                "is_uncertain": sc.uncertainty.is_uncertain if sc.uncertainty else True,
             }
 
         await self.event_service.publish(node_id, "new_reading", summary)

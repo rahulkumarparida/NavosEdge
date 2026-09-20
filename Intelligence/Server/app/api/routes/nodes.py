@@ -9,6 +9,7 @@ from fastapi import APIRouter, HTTPException, Request, status
 from starlette.responses import StreamingResponse
 
 from app.schemas.sensor import SensorPayload
+from app.schemas.source_classification import SourceClassificationResult
 from app.schemas.responses import (
     LatestReadingResponse,
     NodeInfo,
@@ -42,6 +43,7 @@ async def submit_reading(node_id: str, payload: SensorPayload, request: Request)
 async def get_node_status(node_id: str, request: Request):
     node_registry = request.app.state.node_registry
     inference_adapter = request.app.state.inference_adapter
+    source_classifier = request.app.state.source_classifier
 
     node = node_registry.get_node(node_id)
     if node is None:
@@ -55,6 +57,7 @@ async def get_node_status(node_id: str, request: Request):
         last_reading_at=node.last_seen,
         total_readings=node.total_readings,
         inference_available=getattr(inference_adapter, "_loaded", False),
+        source_classifier_available=getattr(source_classifier, "_loaded", False),
     )
 
 

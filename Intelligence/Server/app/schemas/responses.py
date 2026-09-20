@@ -35,6 +35,7 @@ class NodeStatusResponse(BaseModel):
     last_reading_at: Optional[datetime]
     total_readings: int
     inference_available: bool
+    source_classifier_available: bool = False
 
 class LatestReadingResponse(BaseModel):
     node_id: str
