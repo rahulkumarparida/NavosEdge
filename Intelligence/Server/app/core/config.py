@@ -27,6 +27,13 @@ class Settings(BaseSettings):
     ANOMALY_SCORE_THRESHOLD_MEDIUM: float = 2.0
     ANOMALY_STALE_DATA_MINUTES: int = 30
 
+    # Phase 4 — Forecast plugin
+    FORECAST_ENABLED: bool = True
+    FORECAST_STORAGE_DIR: Path = Path('./data/forecast')
+    FORECAST_RETENTION_HOURS: int = 48
+    FORECAST_DEFAULT_HORIZON_MINUTES: int = 60
+    FORECAST_DEFAULT_SAMPLING_INTERVAL_MINUTES: int = 5
+
     model_config = SettingsConfigDict(
         env_prefix='NAVOS_',
         env_file='.env',

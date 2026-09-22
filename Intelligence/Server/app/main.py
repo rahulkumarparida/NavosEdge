@@ -20,8 +20,11 @@ from app.services.events import EventService
 from app.services.processing import ProcessingService
 from app.anomaly.engine import AnomalyEngine
 from app.source_classifier.classifier import SourceClassifier
+from app.forecast.plugin import ForecastPlugin
+from app.forecast.config import ForecastSettings
 from app.api.routes.health import router as health_router
 from app.api.routes.nodes import router as nodes_router
+from app.api.routes.forecast import router as forecast_router
 
 logger = logging.getLogger(__name__)
 
@@ -68,6 +71,17 @@ async def lifespan(app: FastAPI):
     event_service = EventService(
         heartbeat_interval=settings.SSE_HEARTBEAT_INTERVAL_S
     )
+    # Phase 4 — Forecast plugin
+    forecast_plugin = ForecastPlugin()
+    if settings.FORECAST_ENABLED:
+        forecast_settings = ForecastSettings(
+            STORAGE_DIR=settings.FORECAST_STORAGE_DIR,
+            RETENTION_HOURS=settings.FORECAST_RETENTION_HOURS,
+            DEFAULT_HORIZON_MINUTES=settings.FORECAST_DEFAULT_HORIZON_MINUTES,
+            DEFAULT_SAMPLING_INTERVAL_MINUTES=settings.FORECAST_DEFAULT_SAMPLING_INTERVAL_MINUTES,
+        )
+        forecast_plugin.initialize(forecast_settings)
+
     processing_service = ProcessingService(
         inference_adapter=inference_adapter,
         node_registry=node_registry,
@@ -75,6 +89,7 @@ async def lifespan(app: FastAPI):
         event_service=event_service,
         anomaly_engine=anomaly_engine,
         source_classifier=source_classifier,
+        forecast_plugin=forecast_plugin,
     )
 
     # Attach to app state so route handlers can access them
@@ -85,13 +100,18 @@ async def lifespan(app: FastAPI):
     app.state.processing_service = processing_service
     app.state.anomaly_engine = anomaly_engine
     app.state.source_classifier = source_classifier
+    app.state.forecast_plugin = forecast_plugin
 
     logger.info(
-        "Startup complete — model loaded: %s, source classifier loaded: %s",
+        "Startup complete — model loaded: %s, source classifier loaded: %s, forecast plugin: %s",
         inference_adapter._loaded,
         source_classifier.is_loaded,
+        forecast_plugin.is_initialized,
     )
     yield
+    # Shutdown
+    if forecast_plugin.is_initialized:
+        forecast_plugin.shutdown()
     logger.info("Shutting down NavosEdge Intelligence Server.")
 
 
@@ -152,6 +172,7 @@ def create_app() -> FastAPI:
     # --- Routers ---
     app.include_router(health_router)
     app.include_router(nodes_router)
+    app.include_router(forecast_router)
 
     return app
 

@@ -17,6 +17,8 @@ from app.storage.jsonl_store import JsonlStorageService
 from app.services.pipeline import ModularPipeline
 from app.anomaly.engine import AnomalyEngine
 from app.source_classifier.classifier import SourceClassifier
+from app.forecast.plugin import ForecastPlugin
+from app.schemas.forecast import ForecastReadingInput
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +32,7 @@ class ProcessingService:
         event_service: EventService,
         anomaly_engine: AnomalyEngine,
         source_classifier: SourceClassifier | None = None,
+        forecast_plugin: ForecastPlugin | None = None,
     ) -> None:
         self.inference_adapter = inference_adapter
         self.node_registry = node_registry
@@ -37,6 +40,7 @@ class ProcessingService:
         self.event_service = event_service
         self.anomaly_engine = anomaly_engine
         self.source_classifier = source_classifier
+        self.forecast_plugin = forecast_plugin
         self.pipeline = ModularPipeline()
         # Track which nodes have been history-primed
         self._primed_nodes: set = set()
@@ -141,6 +145,23 @@ class ProcessingService:
                     "Source classifier error for node %s: %s", node_id, e, exc_info=True
                 )
                 # Pipeline continues without source classification
+
+        # --- Phase 4: Forward to forecast plugin ---
+        if self.forecast_plugin is not None and self.forecast_plugin.is_initialized:
+            try:
+                forecast_reading = ForecastReadingInput(
+                    node_id=node_id,
+                    timestamp=payload.timestamp,
+                    PM1_0=payload.particulate_matter.PM1_0,
+                    PM2_5=payload.particulate_matter.PM2_5,
+                    PM10=payload.particulate_matter.PM10,
+                )
+                await self.forecast_plugin.async_ingest(forecast_reading)
+            except Exception as e:
+                logger.error(
+                    "Forecast plugin ingest error for node %s: %s", node_id, e, exc_info=True
+                )
+                # Pipeline continues without forecast ingestion
 
         # Publish SSE event
         summary = {
