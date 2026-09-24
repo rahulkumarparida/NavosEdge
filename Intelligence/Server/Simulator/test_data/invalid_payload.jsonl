@@ -1,0 +1,1 @@
+{"node_id":"fixture-node-01","timestamp":"2026-01-01T00:00:00+00:00","environment":{"temperature_C":29.29,"humidity_pct":140},"particulate_matter":{"PM1_0":8.33,"PM2_5":17.68,"PM10":32.51},"gas_sensors":{"MQ2":{"raw_adc":189,"voltage_V":0.925},"MQ9":{"raw_adc":146,"voltage_V":0.714},"MQ135":{"raw_adc":165,"voltage_V":0.805}}}

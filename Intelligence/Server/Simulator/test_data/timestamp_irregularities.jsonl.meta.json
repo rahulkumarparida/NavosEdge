@@ -1,0 +1,7 @@
+{
+  "synthetic": true,
+  "source_type": "hardware_simulator",
+  "warning": "Synthetic test data; not physical measurements or model ground truth.",
+  "records": 6,
+  "session": null
+}
