@@ -32,7 +32,9 @@ class SimulationConfig:
     send: bool = True
     save_path: Path | None = None
     custom: dict[str, float] = field(default_factory=dict)
+    exact: dict[str, float] = field(default_factory=dict)
     verify: bool = False
+    quiet: bool = False
 
     def __post_init__(self) -> None:
         if not self.node_ids:
@@ -82,10 +84,12 @@ class SimulationSession:
                 seed=config.seed + index,
                 noise=config.noise,
                 custom=config.custom,
+                exact=config.exact,
             )
             for index, node_id in enumerate(config.node_ids)
         }
         self._saved_records: list[dict[str, Any]] = []
+        self.last_responses: dict[str, dict[str, Any]] = {}
 
     def pause(self) -> None:
         self._resume_event.clear()
@@ -142,52 +146,52 @@ class SimulationSession:
         self._saved_records.append(payload)
         self.stats.saved += 1
         if not self.config.send:
-            print(
-                f"[SIMULATED] node={node_id} timestamp={payload['timestamp']} "
-                f"PM2.5={payload['particulate_matter']['PM2_5']:.2f}"
-            )
+            if not self.config.quiet:
+                print(
+                    f"[SIMULATED] node={node_id} timestamp={payload['timestamp']} "
+                    f"PM2.5={payload['particulate_matter']['PM2_5']:.2f}"
+                )
             return
         result = await self.client.submit(payload)
         self.stats.submitted += 1
         if result.ok and result.status_code in {200, 201, 202}:
             self.stats.succeeded += 1
-            print(_format_feedback(node_id, result))
+            if isinstance(result.body, dict):
+                self.last_responses[node_id] = result.body
+            if not self.config.quiet:
+                print(_format_feedback(node_id, result))
         else:
             self.stats.failed += 1
             message = f"{node_id}: {result.error or result.status_code}"
             self.stats.errors.append(message)
             logger.warning("Simulation request failed: %s", message)
-            print(f"[FAILED] node={node_id} status={result.status_code} error={result.error or result.body}")
+            if not self.config.quiet:
+                print(f"[FAILED] node={node_id} status={result.status_code} error={result.error or result.body}")
             if self.config.on_error == "stop":
                 self.stop()
         logger.info("session=%s node=%s status=%s ok=%s", self.stats.session_id, node_id, result.status_code, result.ok)
         if self.config.verify and result.ok:
             status_result = await self.client.status(node_id)
             latest_result = await self.client.latest(node_id)
-            print(
-                f"[VERIFY] node={node_id} status_http={status_result.status_code} "
-                f"latest_http={latest_result.status_code}"
-            )
+            if not self.config.quiet:
+                print(
+                    f"[VERIFY] node={node_id} status_http={status_result.status_code} "
+                    f"latest_http={latest_result.status_code}"
+                )
 
 
 def _format_feedback(node_id: str, result: ApiResult) -> str:
     """Render the useful server response fields for terminal users."""
     body = result.body if isinstance(result.body, dict) else {}
-    inference = body.get("inference", {})
-    pipeline = body.get("pipeline", {})
-    advisory = pipeline.get("advisory", {})
-    source_result = pipeline.get("source_classification") or {}
-    anomaly_report = pipeline.get("anomaly_report") or {}
-    anomaly = anomaly_report.get("anomaly", {})
+    predictions = body.get("predictions", {})
+    source = predictions.get("source", {})
+    forecast = predictions.get("forecast", {})
     return (
         f"[ACCEPTED] node={node_id} http={result.status_code} "
-        f"reading_id={body.get('reading_id', '-')} "
-        f"gas={inference.get('gas_class', '-')} "
-        f"safety={inference.get('safety_status', '-')} "
-        f"health={pipeline.get('health', {}).get('status', '-')} "
-        f"advisory={advisory.get('level', '-')} "
-        f"anomaly={anomaly.get('detected', False)} "
-        f"source={source_result.get('top_source', '-')}"
+        f"PM2.5={body.get('pm', {}).get('PM2_5', '-')} "
+        f"source={source.get('value', '-')} "
+        f"source_confidence={source.get('confidence', '-')} "
+        f"forecast_confidence={forecast.get('confidence', '-')}"
     )
 
 

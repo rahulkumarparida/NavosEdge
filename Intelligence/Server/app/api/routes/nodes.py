@@ -17,6 +17,7 @@ from app.schemas.responses import (
     NodeStatusResponse,
     ReadingAccepted,
 )
+from app.schemas.intelligence import IntelligenceResult
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +26,7 @@ router = APIRouter()
 
 @router.post(
     "/api/v1/nodes/{node_id}/readings",
-    response_model=ReadingAccepted,
+    response_model=IntelligenceResult,
     status_code=status.HTTP_201_CREATED,
 )
 async def submit_reading(node_id: str, payload: SensorPayload, request: Request):
@@ -61,31 +62,23 @@ async def get_node_status(node_id: str, request: Request):
     )
 
 
-@router.get("/api/v1/nodes/{node_id}/latest", response_model=LatestReadingResponse)
+@router.get("/api/v1/nodes/{node_id}/latest", response_model=IntelligenceResult)
 async def get_latest_reading(node_id: str, request: Request):
-    storage = request.app.state.storage
     node_registry = request.app.state.node_registry
+    processing_service = request.app.state.processing_service
 
     if not node_registry.has_node(node_id):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Node not found"
         )
 
-    record = await storage.get_latest_reading(node_id)
-    if record is None:
+    result = processing_service.get_latest_result(node_id)
+    if result is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No readings stored for this node",
         )
-
-    inference_data = record.get("inference")
-
-    return LatestReadingResponse(
-        node_id=node_id,
-        reading=record,
-        inference=inference_data,
-        recorded_at=record.get("timestamp", datetime.now(timezone.utc).isoformat()),
-    )
+    return result
 
 
 @router.get("/api/v1/nodes/{node_id}/events")

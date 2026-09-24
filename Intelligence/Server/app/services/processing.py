@@ -7,7 +7,7 @@ import logging
 import uuid
 
 from app.schemas.sensor import SensorPayload
-from app.schemas.responses import ReadingAccepted
+from app.schemas.intelligence import IntelligenceResult
 from app.schemas.anomaly import AnomalyReport
 from app.schemas.source_classification import SourceClassificationResult
 from app.services.events import EventService
@@ -19,6 +19,7 @@ from app.anomaly.engine import AnomalyEngine
 from app.source_classifier.classifier import SourceClassifier
 from app.forecast.plugin import ForecastPlugin
 from app.schemas.forecast import ForecastReadingInput
+from app.services.aggregation import aggregate_intelligence
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +43,7 @@ class ProcessingService:
         self.source_classifier = source_classifier
         self.forecast_plugin = forecast_plugin
         self.pipeline = ModularPipeline()
+        self._latest_results: dict[str, IntelligenceResult] = {}
         # Track which nodes have been history-primed
         self._primed_nodes: set = set()
 
@@ -72,7 +74,7 @@ class ProcessingService:
 
         self._primed_nodes.add(node_id)
 
-    async def process_reading(self, payload: SensorPayload) -> ReadingAccepted:
+    async def process_reading(self, payload: SensorPayload) -> IntelligenceResult:
         reading_id = uuid.uuid4().hex[:12]
         node_id = payload.node_id
         timestamp = payload.timestamp
@@ -163,6 +165,17 @@ class ProcessingService:
                 )
                 # Pipeline continues without forecast ingestion
 
+        # Generate the full forecast after current PM ingestion. Forecast
+        # failures remain non-fatal and are represented as unavailable.
+        forecast_result = None
+        if self.forecast_plugin is not None and self.forecast_plugin.is_initialized:
+            try:
+                forecast_result = await self.forecast_plugin.async_forecast(node_id)
+            except Exception as e:
+                logger.error(
+                    "Forecast generation error for node %s: %s", node_id, e, exc_info=True
+                )
+
         # Publish SSE event
         summary = {
             "reading_id": reading_id,
@@ -196,11 +209,15 @@ class ProcessingService:
         await self.event_service.publish(node_id, "new_reading", summary)
 
         logger.info("Processed reading %s for node %s", reading_id, node_id)
-        return ReadingAccepted(
-            node_id=node_id,
-            reading_id=reading_id,
-            timestamp=timestamp,
-            inference=inference_result,
+        result = aggregate_intelligence(
+            payload=payload,
             pipeline=pipeline_results,
+            inference=inference_result,
+            forecast=forecast_result,
         )
+        self._latest_results[node_id] = result
+        return result
+
+    def get_latest_result(self, node_id: str) -> IntelligenceResult | None:
+        return self._latest_results.get(node_id)
 

@@ -1,0 +1,8 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^\\./venv/bin/python -m pytest tests/test_readings\\.py::test_submit_valid_reading -q$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

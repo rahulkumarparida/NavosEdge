@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+from urllib.parse import urlencode
 from dataclasses import dataclass
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
@@ -41,6 +42,18 @@ class IntelligenceClient:
 
     async def latest(self, node_id: str) -> ApiResult:
         return await self._request("GET", f"/api/v1/nodes/{node_id}/latest")
+
+    async def forecast(
+        self,
+        node_id: str,
+        horizon_minutes: int = 60,
+        sampling_interval_minutes: int = 5,
+    ) -> ApiResult:
+        query = urlencode({
+            "horizon_minutes": horizon_minutes,
+            "sampling_interval_minutes": sampling_interval_minutes,
+        })
+        return await self._request("GET", f"/api/v1/forecast/nodes/{node_id}/predict?{query}")
 
     async def forecast_ingest(self, payload: dict) -> ApiResult:
         reading = {

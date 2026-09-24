@@ -23,6 +23,16 @@ def build_parser() -> argparse.ArgumentParser:
 
     sub.add_parser("list", help="list available scenarios")
 
+    e2e = sub.add_parser("e2e", help="run the complete handshake, SSE, ingestion, and intelligence workflow")
+    e2e.add_argument("--server-url", default="http://127.0.0.1:8420")
+    e2e.add_argument("--node-id", default="e2e-node-01")
+    e2e.add_argument("--scenario", choices=available_scenarios(), default="traffic")
+    e2e.add_argument("--count", type=int, default=1)
+    e2e.add_argument("--duration", type=float)
+    e2e.add_argument("--interval", type=float, default=5.0)
+    e2e.add_argument("--accelerated", action="store_true")
+    e2e.add_argument("--json", action="store_true")
+
     sample = sub.add_parser("sample", help="generate one schema-valid sample")
     _add_generation_args(sample)
     sample.add_argument("--send", action="store_true", help="submit the sample to the server")
@@ -57,13 +67,21 @@ def build_parser() -> argparse.ArgumentParser:
 
 def _add_generation_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--node-id", action="append", dest="node_ids", default=None, help="node ID; repeat for multiple nodes")
-    parser.add_argument("--scenario", choices=available_scenarios(), default="clean_background")
+    parser.add_argument("--scenario", "--classification", dest="scenario", choices=available_scenarios(), default="clean_background", help="synthetic classification/scenario profile")
     parser.add_argument("--interval", type=float, default=5.0, help="simulated seconds between samples")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--noise", type=float, default=1.0)
     parser.add_argument("--server-url", default="http://127.0.0.1:8420")
     parser.add_argument("--timeout", type=float, default=10.0)
     parser.add_argument("--custom", action="append", default=[], metavar="NAME=VALUE", help="custom scenario parameter; repeat as needed")
+    parser.add_argument("--temperature", type=float, metavar="C", help="override temperature_C")
+    parser.add_argument("--humidity", type=float, metavar="PCT", help="override humidity_pct")
+    parser.add_argument("--pm1", type=float, metavar="VALUE", help="override PM1_0")
+    parser.add_argument("--pm25", type=float, metavar="VALUE", help="override PM2_5")
+    parser.add_argument("--pm10", type=float, metavar="VALUE", help="override PM10")
+    parser.add_argument("--mq2", type=float, metavar="VOLTS", help="override MQ2 voltage_V")
+    parser.add_argument("--mq9", type=float, metavar="VOLTS", help="override MQ9 voltage_V")
+    parser.add_argument("--mq135", type=float, metavar="VOLTS", help="override MQ135 voltage_V")
 
 
 def _config(args: argparse.Namespace, *, samples: int | None, send: bool, save_path: Path | None = None) -> SimulationConfig:
@@ -80,7 +98,8 @@ def _config(args: argparse.Namespace, *, samples: int | None, send: bool, save_p
         save_path=save_path,
         on_error=getattr(args, "on_error", "continue"),
         verify=getattr(args, "verify", False),
-        custom=_parse_custom(args.custom),
+        custom=_custom_values(args),
+        exact=_direct_values(args),
     )
 
 
@@ -94,17 +113,65 @@ def _parse_custom(values: list[str]) -> dict[str, float]:
     return custom
 
 
+def _custom_values(args: argparse.Namespace) -> dict[str, float]:
+    custom = _parse_custom(args.custom)
+    direct_values = {
+        "temp": args.temperature,
+        "humidity": args.humidity,
+        "pm1": args.pm1,
+        "pm25": args.pm25,
+        "pm10": args.pm10,
+        "mq2": args.mq2,
+        "mq9": args.mq9,
+        "mq135": args.mq135,
+    }
+    custom.update({name: value for name, value in direct_values.items() if value is not None})
+    return custom
+
+
+def _direct_values(args: argparse.Namespace) -> dict[str, float]:
+    return {
+        name: value
+        for name, value in {
+            "temp": args.temperature,
+            "humidity": args.humidity,
+            "pm1": args.pm1,
+            "pm25": args.pm25,
+            "pm10": args.pm10,
+            "mq2": args.mq2,
+            "mq9": args.mq9,
+            "mq135": args.mq135,
+        }.items()
+        if value is not None
+    }
+
+
 async def _run(args: argparse.Namespace) -> int:
     if args.command == "list":
         print("\n".join(available_scenarios()))
         return 0
+    if args.command == "e2e":
+        from .e2e import _main_async, build_parser
+        e2e_args = build_parser().parse_args([])
+        for name in ("server_url", "node_id", "scenario", "count", "duration", "interval", "accelerated", "json"):
+            setattr(e2e_args, name, getattr(args, name))
+        e2e_args.seed = 42
+        e2e_args.noise = 1.0
+        e2e_args.timeout = 10.0
+        e2e_args.horizon = 60
+        e2e_args.forecast_interval = 5
+        e2e_args.custom = []
+        for name in ("temperature", "humidity", "pm1", "pm25", "pm10", "mq2", "mq9", "mq135"):
+            setattr(e2e_args, name, None)
+        return await _main_async(e2e_args)
     if args.command == "sample":
         generator = ScenarioGenerator(
             args.node_ids[0] if args.node_ids else "sim-node-01",
             args.scenario,
             args.seed,
             args.noise,
-            custom=_parse_custom(args.custom),
+            custom=_custom_values(args),
+            exact=_direct_values(args),
         )
         payload = generator.next_payload(args.interval)
         if args.send:

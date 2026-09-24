@@ -45,6 +45,7 @@ class ScenarioGenerator:
     noise: float = 1.0
     start_time: datetime | None = None
     custom: dict[str, float] = field(default_factory=dict)
+    exact: dict[str, float] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if self.scenario not in SCENARIOS:
@@ -75,19 +76,23 @@ class ScenarioGenerator:
             spike = self._rng.uniform(1.25, 2.2)
 
         def value(name: str, scale: float = 1.0) -> float:
+            if name in self.exact:
+                return self.exact[name]
             base = profile[name] * (1.0 + wave * scale + pulse * 0.4)
             return max(0.0, base + self._rng.gauss(0.0, max(profile[name] * 0.025 * self.noise, 0.001)))
 
-        pm1 = value("pm1") * spike
-        pm25 = max(pm1, value("pm25") * spike)
-        pm10 = max(pm25, value("pm10") * spike)
+        pm1 = value("pm1") if "pm1" in self.exact else value("pm1") * spike
+        pm25 = value("pm25") if "pm25" in self.exact else value("pm25") * spike
+        pm10 = value("pm10") if "pm10" in self.exact else value("pm10") * spike
+        pm25 = max(pm1, pm25)
+        pm10 = max(pm25, pm10)
         temperature = min(85.0, max(-40.0, value("temp", 0.25)))
         humidity = min(100.0, max(0.0, value("humidity", 0.18)))
 
         voltages = {
-            "MQ2": min(5.0, max(0.0, value("mq2", 0.8) * (1.0 + (spike - 1.0) * 0.6))),
-            "MQ9": min(5.0, max(0.0, value("mq9", 0.8) * (1.0 + (spike - 1.0) * 0.5))),
-            "MQ135": min(5.0, max(0.0, value("mq135", 0.8) * (1.0 + (spike - 1.0) * 0.55))),
+            "MQ2": min(5.0, max(0.0, value("mq2", 0.8) if "mq2" in self.exact else value("mq2", 0.8) * (1.0 + (spike - 1.0) * 0.6))),
+            "MQ9": min(5.0, max(0.0, value("mq9", 0.8) if "mq9" in self.exact else value("mq9", 0.8) * (1.0 + (spike - 1.0) * 0.5))),
+            "MQ135": min(5.0, max(0.0, value("mq135", 0.8) if "mq135" in self.exact else value("mq135", 0.8) * (1.0 + (spike - 1.0) * 0.55))),
         }
         gas_sensors = {
             name: {"raw_adc": int(round(voltage * 1023 / 5.0)), "voltage_V": round(voltage, 3)}
