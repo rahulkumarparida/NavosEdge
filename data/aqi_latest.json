@@ -1,0 +1,18 @@
+{
+  "status": "available",
+  "aqi": 118.73,
+  "category": "Unhealthy for Sensitive Groups",
+  "dominant_pollutant": "PM2_5",
+  "pm": {
+    "PM1_0": 18.4,
+    "PM2_5": 42.7,
+    "PM10": 76.3
+  },
+  "sub_indices": {
+    "PM1_0": 64.25,
+    "PM2_5": 118.73,
+    "PM10": 61.54
+  },
+  "timestamp": "2026-09-26T14:08:41",
+  "node_id": "node-beta"
+}

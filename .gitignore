@@ -4,4 +4,4 @@ venv/
 .venv/
 node_modules/
 *.md
-tests/
+/tests/

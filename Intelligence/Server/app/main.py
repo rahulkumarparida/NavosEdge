@@ -82,6 +82,15 @@ async def lifespan(app: FastAPI):
         )
         forecast_plugin.initialize(forecast_settings)
 
+    # AQI Service
+    from app.aqi.service import AQIService
+    from app.aqi.router import router as aqi_router
+
+    aqi_service = AQIService(
+        storage_path=settings.AQI_STORAGE_FILE,
+        standard=settings.AQI_STANDARD,
+    )
+
     processing_service = ProcessingService(
         inference_adapter=inference_adapter,
         node_registry=node_registry,
@@ -90,6 +99,7 @@ async def lifespan(app: FastAPI):
         anomaly_engine=anomaly_engine,
         source_classifier=source_classifier,
         forecast_plugin=forecast_plugin,
+        aqi_service=aqi_service,
     )
 
     # Attach to app state so route handlers can access them
@@ -101,6 +111,7 @@ async def lifespan(app: FastAPI):
     app.state.anomaly_engine = anomaly_engine
     app.state.source_classifier = source_classifier
     app.state.forecast_plugin = forecast_plugin
+    app.state.aqi_service = aqi_service
 
     logger.info(
         "Startup complete — model loaded: %s, source classifier loaded: %s, forecast plugin: %s",
@@ -173,6 +184,8 @@ def create_app() -> FastAPI:
     app.include_router(health_router)
     app.include_router(nodes_router)
     app.include_router(forecast_router)
+    from app.aqi.router import router as aqi_router
+    app.include_router(aqi_router)
 
     return app
 

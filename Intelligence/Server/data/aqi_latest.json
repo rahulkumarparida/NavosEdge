@@ -1,0 +1,18 @@
+{
+  "status": "available",
+  "aqi": 174.64,
+  "category": "Unhealthy",
+  "dominant_pollutant": "PM2_5",
+  "pm": {
+    "PM1_0": 42.78,
+    "PM2_5": 101.29,
+    "PM10": 173.52
+  },
+  "sub_indices": {
+    "PM1_0": 118.93,
+    "PM2_5": 174.64,
+    "PM10": 110.17
+  },
+  "timestamp": "2026-09-26T14:20:56.161448Z",
+  "node_id": "e2e-node-01"
+}

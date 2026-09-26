@@ -34,6 +34,10 @@ class Settings(BaseSettings):
     FORECAST_DEFAULT_HORIZON_MINUTES: int = 60
     FORECAST_DEFAULT_SAMPLING_INTERVAL_MINUTES: int = 5
 
+    # AQI Module
+    AQI_STORAGE_FILE: Path = Path('./data/aqi_latest.json')
+    AQI_STANDARD: str = 'EPA'
+
     model_config = SettingsConfigDict(
         env_prefix='NAVOS_',
         env_file='.env',

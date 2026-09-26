@@ -13,12 +13,24 @@ from app.schemas.pipeline import PipelineResults
 from app.schemas.sensor import SensorPayload
 
 
-class AqiProcessor:
-    """AQI boundary kept explicit until a project-approved calculation exists."""
+from app.aqi.calculator import AQICalculator
 
-    def calculate(self, _pm: dict[str, float]) -> None:
-        # The repository has no approved AQI formula or pollutant breakpoint table.
-        return None
+
+class AqiProcessor:
+    """AQI processor using regulatory standard breakpoint calculation."""
+
+    def __init__(self, standard: str = "EPA") -> None:
+        self.calculator = AQICalculator(standard=standard)
+
+    def calculate(self, pm: dict[str, float]) -> float | None:
+        if not pm or "PM2_5" not in pm or "PM10" not in pm:
+            return None
+        res = self.calculator.calculate(
+            pm1_0=pm.get("PM1_0", 0.0),
+            pm2_5=pm.get("PM2_5", 0.0),
+            pm10=pm.get("PM10", 0.0),
+        )
+        return res.aqi
 
 
 def _source_prediction(pipeline: PipelineResults) -> PredictionOutput:

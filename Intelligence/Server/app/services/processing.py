@@ -24,6 +24,9 @@ from app.services.aggregation import aggregate_intelligence
 logger = logging.getLogger(__name__)
 
 
+from app.aqi.service import AQIService
+
+
 class ProcessingService:
     def __init__(
         self,
@@ -34,6 +37,7 @@ class ProcessingService:
         anomaly_engine: AnomalyEngine,
         source_classifier: SourceClassifier | None = None,
         forecast_plugin: ForecastPlugin | None = None,
+        aqi_service: AQIService | None = None,
     ) -> None:
         self.inference_adapter = inference_adapter
         self.node_registry = node_registry
@@ -42,6 +46,7 @@ class ProcessingService:
         self.anomaly_engine = anomaly_engine
         self.source_classifier = source_classifier
         self.forecast_plugin = forecast_plugin
+        self.aqi_service = aqi_service
         self.pipeline = ModularPipeline()
         self._latest_results: dict[str, IntelligenceResult] = {}
         # Track which nodes have been history-primed
@@ -174,6 +179,15 @@ class ProcessingService:
             except Exception as e:
                 logger.error(
                     "Forecast generation error for node %s: %s", node_id, e, exc_info=True
+                )
+
+        # --- AQI calculation & persistence ---
+        if self.aqi_service is not None:
+            try:
+                self.aqi_service.process_reading(payload)
+            except Exception as e:
+                logger.error(
+                    "AQI service error for node %s: %s", node_id, e, exc_info=True
                 )
 
         # Publish SSE event
