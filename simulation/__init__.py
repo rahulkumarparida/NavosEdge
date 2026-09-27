@@ -1,0 +1,3 @@
+"""
+Simulation module for NavosEdge.
+"""

@@ -1,0 +1,68 @@
+{
+  "model_version": "20260927_212926",
+  "architecture": {
+    "n_features": 5,
+    "hidden1": 32,
+    "hidden2": 16,
+    "n_classes": 8,
+    "p_drop": 0.1
+  },
+  "feature_order": [
+    "MQ2_V",
+    "MQ9_V",
+    "MQ135_V",
+    "temperature_C",
+    "humidity_pct"
+  ],
+  "class_labels": [
+    "Alcohol",
+    "CO",
+    "CleanAir",
+    "Hydrogen",
+    "LPG",
+    "Methane",
+    "Propane",
+    "Smoke"
+  ],
+  "calibration_temperature": 1.0802513360977173,
+  "preprocessing": {
+    "scaler_mean": [
+      0.9291165488865781,
+      0.697519678011969,
+      0.4249357506668838,
+      24.992989279769716,
+      59.83832858312697
+    ],
+    "scaler_scale": [
+      0.6577353895229981,
+      0.5638561335416346,
+      0.38243255902702916,
+      8.725950210827204,
+      17.135795413186422
+    ]
+  },
+  "expected_input_ranges": {
+    "MQ2_V": [
+      0.0,
+      5.0
+    ],
+    "MQ9_V": [
+      0.0,
+      5.0
+    ],
+    "MQ135_V": [
+      0.0,
+      5.0
+    ],
+    "temperature_C": [
+      -20.0,
+      80.0
+    ],
+    "humidity_pct": [
+      0.0,
+      100.0
+    ]
+  },
+  "export_timestamp": "2026-09-27T21:29:26.029968",
+  "source_weights_file": "Training/models/gasnet.pt"
+}

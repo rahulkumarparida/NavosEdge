@@ -1,0 +1,3 @@
+"""
+Schema package for NavosEdge.
+"""

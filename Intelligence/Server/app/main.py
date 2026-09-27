@@ -14,7 +14,7 @@ from app.core.config import get_settings
 from app.core.logging import setup_logging
 from app.schemas.responses import ErrorResponse
 from app.storage.jsonl_store import JsonlStorageService
-from app.services.inference import TinyGasNetAdapter
+from app.services.numpy_inference import NumpyGasNetAdapter
 from app.services.node_registry import NodeRegistry
 from app.services.events import EventService
 from app.services.processing import ProcessingService
@@ -47,7 +47,7 @@ async def lifespan(app: FastAPI):
     )
 
     # Inference adapter
-    inference_adapter = TinyGasNetAdapter(artifacts_dir=settings.ARTIFACTS_DIR)
+    inference_adapter = NumpyGasNetAdapter(artifacts_dir=settings.ARTIFACTS_DIR)
     inference_adapter.load()
 
     # Anomaly engine

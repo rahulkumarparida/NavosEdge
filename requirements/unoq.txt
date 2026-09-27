@@ -1,0 +1,17 @@
+# NavosEdge — UNO Q Runtime Requirements
+# For Arduino UNO Q (ARM Cortex-A53, 2GB RAM, 16GB eMMC, Debian Linux)
+# NO PyTorch — uses NumPy inference backend
+
+# Core server
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+pydantic>=2.9.0
+pydantic-settings>=2.5.0
+
+# SSE for hardware communication
+sse-starlette>=2.0.0
+
+# ML inference (lightweight)
+numpy>=1.24.0
+joblib>=1.3.0
+scikit-learn>=1.3.0
