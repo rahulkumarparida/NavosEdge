@@ -186,6 +186,8 @@ def create_app() -> FastAPI:
     app.include_router(forecast_router)
     from app.aqi.router import router as aqi_router
     app.include_router(aqi_router)
+    from app.api.routes.hardware import router as hardware_router
+    app.include_router(hardware_router)
 
     return app
 
