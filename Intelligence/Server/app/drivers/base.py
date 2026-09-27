@@ -16,4 +16,3 @@ class SensorDriver(ABC):
     def get_node_id(self) -> str:
         """Get the ID of the sensor node."""
         ...
-``
