@@ -1,5 +1,7 @@
 file(REMOVE_RECURSE
   "CMakeFiles/navos_hardware_bridge.dir/link.d"
+  "CMakeFiles/navos_hardware_bridge.dir/display/gui/NavosEdgeGUI.cpp.o"
+  "CMakeFiles/navos_hardware_bridge.dir/display/gui/NavosEdgeGUI.cpp.o.d"
   "CMakeFiles/navos_hardware_bridge.dir/src/main.cpp.o"
   "CMakeFiles/navos_hardware_bridge.dir/src/main.cpp.o.d"
   "navos_hardware_bridge"

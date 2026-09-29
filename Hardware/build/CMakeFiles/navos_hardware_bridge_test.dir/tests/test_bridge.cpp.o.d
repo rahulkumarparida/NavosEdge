@@ -270,4 +270,7 @@ CMakeFiles/navos_hardware_bridge_test.dir/tests/test_bridge.cpp.o: \
  /usr/include/bits/getopt_core.h /usr/include/bits/unistd_ext.h \
  /usr/include/linux/close_range.h /usr/include/bits/ss_flags.h \
  /usr/include/bits/types/struct_sigstack.h /usr/include/bits/sigthread.h \
- /usr/include/bits/signal_ext.h
+ /usr/include/bits/signal_ext.h \
+ /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/include/../display/gui/NavosEdgeGUI.h \
+ /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/include/../display/gui/../state/NavosEdgeState.h \
+ /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/include/../display/gui/../state/../platform.h

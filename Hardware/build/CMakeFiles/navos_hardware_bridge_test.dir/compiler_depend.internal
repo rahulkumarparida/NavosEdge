@@ -3,6 +3,9 @@
 
 CMakeFiles/navos_hardware_bridge_test.dir/tests/test_bridge.cpp.o
  /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/tests/test_bridge.cpp
+ /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/display/platform.h
+ /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/display/state/NavosEdgeState.h
+ /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/display/gui/NavosEdgeGUI.h
  /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/include/bridge.hpp
  /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/include/config.hpp
  /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/include/http_client.hpp
@@ -80,7 +83,9 @@ CMakeFiles/navos_hardware_bridge_test.dir/tests/test_bridge.cpp.o
  /usr/include/bits/stdint-intn.h
  /usr/include/bits/stdint-least.h
  /usr/include/bits/stdint-uintn.h
+ /usr/include/bits/stdio.h
  /usr/include/bits/stdio_lim.h
+ /usr/include/bits/stdlib-bsearch.h
  /usr/include/bits/stdlib-float.h
  /usr/include/bits/struct_mutex.h
  /usr/include/bits/struct_rwlock.h

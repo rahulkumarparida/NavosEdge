@@ -1,0 +1,3 @@
+"""
+NavosEdge Manager Package
+"""

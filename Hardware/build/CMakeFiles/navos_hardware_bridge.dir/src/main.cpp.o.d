@@ -271,4 +271,7 @@ CMakeFiles/navos_hardware_bridge.dir/src/main.cpp.o: \
  /usr/include/c++/16/atomic /usr/include/c++/16/thread \
  /usr/include/c++/16/bits/std_thread.h \
  /usr/include/c++/16/bits/this_thread_sleep.h \
- /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/include/sse_client.hpp
+ /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/include/sse_client.hpp \
+ /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/include/../display/gui/NavosEdgeGUI.h \
+ /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/include/../display/gui/../state/NavosEdgeState.h \
+ /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/include/../display/gui/../state/../platform.h

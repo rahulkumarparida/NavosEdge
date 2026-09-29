@@ -220,9 +220,7 @@ class ProcessingService:
                 "is_uncertain": sc.uncertainty.is_uncertain if sc.uncertainty else True,
             }
 
-        await self.event_service.publish(node_id, "new_reading", summary)
-
-        logger.info("Processed reading %s for node %s", reading_id, node_id)
+        # Publish SSE events
         result = aggregate_intelligence(
             payload=payload,
             pipeline=pipeline_results,
@@ -230,8 +228,41 @@ class ProcessingService:
             forecast=forecast_result,
         )
         self._latest_results[node_id] = result
+
+        result_dict = result.model_dump(mode="json")
+        await self.event_service.publish(node_id, "intelligence_update", result_dict)
+        await self.event_service.publish(node_id, "new_reading", summary)
+
+        logger.info("Processed reading %s for node %s", reading_id, node_id)
+        asyncio.create_task(self._forward_to_manager(node_id, payload, result))
         return result
+
+    async def _forward_to_manager(self, node_id: str, payload: SensorPayload, result: IntelligenceResult) -> None:
+        import os
+        manager_url = os.getenv("NAVOS_MANAGER_URL", "http://127.0.0.1:8430")
+        if not manager_url:
+            return
+        try:
+            import httpx
+            ts_str = payload.timestamp.isoformat() if hasattr(payload.timestamp, "isoformat") else str(payload.timestamp)
+            location_val = getattr(payload, "location", None) or os.getenv("NAVOS_NODE_LOCATION", f"Location-{node_id}")
+            telemetry = {
+                "node_id": node_id,
+                "location": location_val,
+                "aqi": result.aqi,
+                "pm": result.pm,
+                "temperature_C": result.temperature_C,
+                "humidity_pct": result.humidity_pct,
+                "predictions": result.predictions.model_dump(mode="json") if hasattr(result.predictions, "model_dump") else result.predictions,
+                "advisory": result.advisory.model_dump(mode="json") if hasattr(result.advisory, "model_dump") else result.advisory,
+                "timestamp": ts_str,
+            }
+            async with httpx.AsyncClient(timeout=3.0) as client:
+                await client.post(f"{manager_url}/api/v1/nodes/{node_id}/telemetry", json=telemetry)
+        except Exception as e:
+            logger.debug("Forwarding to Manager (%s) skipped/failed: %s", manager_url, e)
 
     def get_latest_result(self, node_id: str) -> IntelligenceResult | None:
         return self._latest_results.get(node_id)
+
 

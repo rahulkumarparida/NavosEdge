@@ -1,0 +1,30 @@
+{
+  "nodes": {
+    "e2e-node-1": {
+      "node_id": "e2e-node-1",
+      "location": "Test Lab",
+      "status": "active",
+      "last_seen": "2026-09-29T06:48:12.096793+00:00",
+      "aqi": 88.0,
+      "pm": {
+        "PM1_0": 10.0,
+        "PM2_5": 25.0,
+        "PM10": 50.0
+      },
+      "temperature_C": 24.5,
+      "humidity_pct": 55.0,
+      "source_prediction": "Stable",
+      "source_confidence": 0.9,
+      "predictions": {
+        "source": {
+          "value": "Stable",
+          "confidence": 0.9
+        }
+      },
+      "advisory": {
+        "severity": "NORMAL",
+        "advice": "Nominal"
+      }
+    }
+  }
+}

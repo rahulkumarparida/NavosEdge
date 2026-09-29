@@ -4,7 +4,7 @@
 # compile CXX with /usr/bin/c++
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/include -I/home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/third_party
+CXX_INCLUDES = -I/home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/include -I/home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/third_party -I/home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/display
 
 CXX_FLAGS = -O3 -DNDEBUG -std=gnu++17
 

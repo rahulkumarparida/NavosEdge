@@ -8,6 +8,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
+  "/home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/display/gui/NavosEdgeGUI.cpp" "CMakeFiles/navos_hardware_bridge_test.dir/display/gui/NavosEdgeGUI.cpp.o" "gcc" "CMakeFiles/navos_hardware_bridge_test.dir/display/gui/NavosEdgeGUI.cpp.o.d"
   "/home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/tests/test_bridge.cpp" "CMakeFiles/navos_hardware_bridge_test.dir/tests/test_bridge.cpp.o" "gcc" "CMakeFiles/navos_hardware_bridge_test.dir/tests/test_bridge.cpp.o.d"
   "" "navos_hardware_bridge_test" "gcc" "CMakeFiles/navos_hardware_bridge_test.dir/link.d"
   )

@@ -142,6 +142,33 @@ navos_hardware_bridge_test/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/navos_hardware_bridge_test.dir/build.make CMakeFiles/navos_hardware_bridge_test.dir/build
 .PHONY : navos_hardware_bridge_test/fast
 
+display/gui/NavosEdgeGUI.o: display/gui/NavosEdgeGUI.cpp.o
+.PHONY : display/gui/NavosEdgeGUI.o
+
+# target to build an object file
+display/gui/NavosEdgeGUI.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/navos_hardware_bridge.dir/build.make CMakeFiles/navos_hardware_bridge.dir/display/gui/NavosEdgeGUI.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/navos_hardware_bridge_test.dir/build.make CMakeFiles/navos_hardware_bridge_test.dir/display/gui/NavosEdgeGUI.cpp.o
+.PHONY : display/gui/NavosEdgeGUI.cpp.o
+
+display/gui/NavosEdgeGUI.i: display/gui/NavosEdgeGUI.cpp.i
+.PHONY : display/gui/NavosEdgeGUI.i
+
+# target to preprocess a source file
+display/gui/NavosEdgeGUI.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/navos_hardware_bridge.dir/build.make CMakeFiles/navos_hardware_bridge.dir/display/gui/NavosEdgeGUI.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/navos_hardware_bridge_test.dir/build.make CMakeFiles/navos_hardware_bridge_test.dir/display/gui/NavosEdgeGUI.cpp.i
+.PHONY : display/gui/NavosEdgeGUI.cpp.i
+
+display/gui/NavosEdgeGUI.s: display/gui/NavosEdgeGUI.cpp.s
+.PHONY : display/gui/NavosEdgeGUI.s
+
+# target to generate assembly for a file
+display/gui/NavosEdgeGUI.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/navos_hardware_bridge.dir/build.make CMakeFiles/navos_hardware_bridge.dir/display/gui/NavosEdgeGUI.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/navos_hardware_bridge_test.dir/build.make CMakeFiles/navos_hardware_bridge_test.dir/display/gui/NavosEdgeGUI.cpp.s
+.PHONY : display/gui/NavosEdgeGUI.cpp.s
+
 src/main.o: src/main.cpp.o
 .PHONY : src/main.o
 
@@ -200,6 +227,9 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... navos_hardware_bridge"
 	@echo "... navos_hardware_bridge_test"
+	@echo "... display/gui/NavosEdgeGUI.o"
+	@echo "... display/gui/NavosEdgeGUI.i"
+	@echo "... display/gui/NavosEdgeGUI.s"
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"

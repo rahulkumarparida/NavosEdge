@@ -1,1 +1,1 @@
-/usr/bin/c++ -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/navos_hardware_bridge.dir/link.d CMakeFiles/navos_hardware_bridge.dir/src/main.cpp.o -o navos_hardware_bridge  /usr/lib/libcurl.so /usr/lib/libcurl.so
+/usr/bin/c++ -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/navos_hardware_bridge.dir/link.d CMakeFiles/navos_hardware_bridge.dir/src/main.cpp.o CMakeFiles/navos_hardware_bridge.dir/display/gui/NavosEdgeGUI.cpp.o -o navos_hardware_bridge  /usr/lib/libcurl.so /usr/lib/libcurl.so
