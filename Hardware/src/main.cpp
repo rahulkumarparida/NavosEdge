@@ -37,7 +37,7 @@ int main(int argc, char* argv[]) {
             override_scenario = argv[++i];
         } else if ((arg == "--interval" || arg == "-i") && i + 1 < argc) {
             override_interval = std::stoi(argv[++i]);
-        } else if (arg == "--test-rpc") {
+        } else if (arg == "--test-rpc" || arg == "--test-mcu-rpc") {
             test_rpc = true;
         } else if (arg == "--help" || arg == "-h") {
             std::cout << "Usage: " << argv[0] << " [options]\n"
@@ -45,7 +45,7 @@ int main(int argc, char* argv[]) {
                       << "  --node-id, -n <id>      Override node ID\n"
                       << "  --scenario, -s <mode>   Simulation scenario: normal, high_pm, traffic, dust\n"
                       << "  --interval, -i <sec>    Override sampling interval seconds\n"
-                      << "  --test-rpc              Send test state over Router RPC and exit\n"
+                      << "  --test-mcu-rpc          Send test state over Router RPC and exit\n"
                       << "  --help, -h              Show this help\n";
             return 0;
         }

@@ -4,6 +4,8 @@
  * mcu_bridge.hpp — MPU (Linux) ↔ MCU MessagePack-RPC Client via Arduino Router
  *
  * Fault-tolerant MessagePack-RPC client over Unix domain socket (/var/run/arduino-router.sock).
+ * Sends MessagePack-RPC requests: [0, msg_id, "update_display", params]
+ * Reads and decodes MessagePack-RPC responses: [1, msg_id, error, result]
  * Manages connection lifecycle (DISCONNECTED, CONNECTING, CONNECTED), non-blocking retry with backoff,
  * rate-limited diagnostic logging, and automatic state re-transmission upon MCU reconnection.
  */
@@ -18,6 +20,7 @@
 #include <cstring>
 #include <chrono>
 #include <algorithm>
+#include <cerrno>
 #include <nlohmann/json.hpp>
 #include "../display/state/NavosEdgeState.h"
 
@@ -82,10 +85,6 @@ public:
 
                 if (has_latest_state_ && latest_state_.valid) {
                     std::cout << "[MCU] Resending latest display state\n";
-                    std::cout << "[MCU] AQI=" << latest_state_.aqi
-                              << " PM2.5=" << latest_state_.pm2_5
-                              << " TEMP=" << latest_state_.temperature
-                              << " HUM=" << latest_state_.humidity << "\n";
                     transmit_rpc(latest_state_);
                 }
             } else {
@@ -139,6 +138,13 @@ private:
             return false;
         }
 
+        // Set 1-second receive and send timeouts so recv() never blocks main loop
+        struct timeval tv;
+        tv.tv_sec = 1;
+        tv.tv_usec = 0;
+        setsockopt(fd_, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof(tv));
+        setsockopt(fd_, SOL_SOCKET, SO_SNDTIMEO, (const char*)&tv, sizeof(tv));
+
         struct sockaddr_un addr;
         std::memset(&addr, 0, sizeof(addr));
         addr.sun_family = AF_UNIX;
@@ -175,32 +181,82 @@ private:
             actions_csv
         });
 
-        // MsgPack RPC Request format: [0, msgid, "method", params]
+        uint32_t req_id = msg_id_++;
+
+        // MessagePack-RPC Request format: [0, msg_id, "update_display", params]
         nlohmann::json rpc_req = nlohmann::json::array({
             0,
-            msg_id_++,
+            req_id,
             "update_display",
             params
         });
 
         std::vector<uint8_t> msgpack_bytes = nlohmann::json::to_msgpack(rpc_req);
 
+        // 1. Send Request
         ssize_t bytes_written = write(fd_, msgpack_bytes.data(), msgpack_bytes.size());
         if (bytes_written < 0) {
-            auto now = std::chrono::steady_clock::now();
-            auto elapsed_log = std::chrono::duration_cast<std::chrono::seconds>(now - last_unavailable_log_time_).count();
-            if (elapsed_log >= 5) {
-                std::cout << "[MCU] Router RPC disconnected\n";
-                last_unavailable_log_time_ = now;
-            }
+            log_rpc_failure("socket send error (" + std::string(std::strerror(errno)) + ")");
             close_socket();
-            retry_interval_sec_ = 1;
             return false;
         }
 
+        // 2. Read Response from Arduino Router using recv()
+        uint8_t rx_buf[2048];
+        ssize_t bytes_read = recv(fd_, rx_buf, sizeof(rx_buf), 0);
+
+        if (bytes_read <= 0) {
+            if (bytes_read == 0) {
+                log_rpc_failure("connection closed by router");
+            } else if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                log_rpc_failure("receive timeout");
+            } else {
+                log_rpc_failure("socket receive error (" + std::string(std::strerror(errno)) + ")");
+            }
+            close_socket();
+            return false;
+        }
+
+        // 3. Decode MessagePack Response: [1, msg_id, error, result]
+        nlohmann::json res_j = nlohmann::json::from_msgpack(rx_buf, rx_buf + bytes_read, true, false);
+        if (res_j.is_discarded() || !res_j.is_array() || res_j.size() < 4) {
+            log_rpc_failure("invalid MsgPack response frame");
+            close_socket();
+            return false;
+        }
+
+        int type = res_j[0].is_number_integer() ? res_j[0].get<int>() : -1;
+        uint32_t resp_id = res_j[1].is_number_unsigned() ? res_j[1].get<uint32_t>() : (res_j[1].is_number_integer() ? res_j[1].get<int>() : 0);
+
+        if (type != 1) {
+            log_rpc_failure("unexpected response type " + std::to_string(type));
+            return false;
+        }
+
+        if (resp_id != req_id) {
+            log_rpc_failure("msg_id mismatch (got " + std::to_string(resp_id) + ", expected " + std::to_string(req_id) + ")");
+            return false;
+        }
+
+        if (!res_j[2].is_null()) {
+            std::string rpc_err = res_j[2].is_string() ? res_j[2].get<std::string>() : res_j[2].dump();
+            log_rpc_failure(rpc_err);
+            return false;
+        }
+
+        // 4. Successful RPC Response Received & Verified
         std::cout << "[MCU] Display state sent via RPC\n";
         std::cout << "[MCU] AQI=" << s.aqi << " PM2.5=" << s.pm2_5 << " TEMP=" << s.temperature << " HUM=" << s.humidity << "\n";
         return true;
+    }
+
+    void log_rpc_failure(const std::string& reason) {
+        auto now = std::chrono::steady_clock::now();
+        auto elapsed_log = std::chrono::duration_cast<std::chrono::seconds>(now - last_unavailable_log_time_).count();
+        if (elapsed_log >= 5) {
+            std::cout << "[MCU] RPC call failed: " << reason << "\n";
+            last_unavailable_log_time_ = now;
+        }
     }
 
     std::string socket_path_;

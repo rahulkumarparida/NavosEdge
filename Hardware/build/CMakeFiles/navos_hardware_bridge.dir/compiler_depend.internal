@@ -3,6 +3,7 @@
 
 CMakeFiles/navos_hardware_bridge.dir/src/main.cpp.o
  /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/src/main.cpp
+ /home/arduino/NavosEdge/NavosEdge/Hardware/include/nlohmann/json.hpp
  /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/display/platform.h
  /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/display/state/NavosEdgeState.h
  /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/include/bridge.hpp
@@ -11,7 +12,6 @@ CMakeFiles/navos_hardware_bridge.dir/src/main.cpp.o
  /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/include/mcu_bridge.hpp
  /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/include/sensor.hpp
  /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/include/sse_client.hpp
- /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/third_party/nlohmann/json.hpp
  /usr/include/alloca.h
  /usr/include/asm-generic/bitsperlong.h
  /usr/include/asm-generic/errno-base.h
@@ -31,12 +31,15 @@ CMakeFiles/navos_hardware_bridge.dir/src/main.cpp.o
  /usr/include/assert.h
  /usr/include/bits/atomic_wide_counter.h
  /usr/include/bits/byteswap.h
+ /usr/include/bits/cloexec.h
  /usr/include/bits/confname.h
  /usr/include/bits/cpu-set.h
  /usr/include/bits/endian.h
  /usr/include/bits/endianness.h
  /usr/include/bits/environments.h
  /usr/include/bits/errno.h
+ /usr/include/bits/fcntl-linux.h
+ /usr/include/bits/fcntl.h
  /usr/include/bits/floatn-common.h
  /usr/include/bits/floatn.h
  /usr/include/bits/flt-eval-method.h
@@ -55,6 +58,7 @@ CMakeFiles/navos_hardware_bridge.dir/src/main.cpp.o
  /usr/include/bits/mathcalls-macros.h
  /usr/include/bits/mathcalls-narrow.h
  /usr/include/bits/mathcalls.h
+ /usr/include/bits/openat2.h
  /usr/include/bits/posix1_lim.h
  /usr/include/bits/posix2_lim.h
  /usr/include/bits/posix_opt.h
@@ -80,6 +84,7 @@ CMakeFiles/navos_hardware_bridge.dir/src/main.cpp.o
  /usr/include/bits/socket.h
  /usr/include/bits/socket_type.h
  /usr/include/bits/ss_flags.h
+ /usr/include/bits/stat.h
  /usr/include/bits/stdint-intn.h
  /usr/include/bits/stdint-least.h
  /usr/include/bits/stdint-uintn.h
@@ -89,6 +94,7 @@ CMakeFiles/navos_hardware_bridge.dir/src/main.cpp.o
  /usr/include/bits/stdlib-float.h
  /usr/include/bits/struct_mutex.h
  /usr/include/bits/struct_rwlock.h
+ /usr/include/bits/struct_stat.h
  /usr/include/bits/thread-shared-types.h
  /usr/include/bits/time.h
  /usr/include/bits/time64.h
@@ -372,6 +378,7 @@ CMakeFiles/navos_hardware_bridge.dir/src/main.cpp.o
  /usr/include/curl/websockets.h
  /usr/include/endian.h
  /usr/include/errno.h
+ /usr/include/fcntl.h
  /usr/include/features-time64.h
  /usr/include/features.h
  /usr/include/gnu/stubs-64.h
@@ -380,7 +387,9 @@ CMakeFiles/navos_hardware_bridge.dir/src/main.cpp.o
  /usr/include/limits.h
  /usr/include/linux/close_range.h
  /usr/include/linux/errno.h
+ /usr/include/linux/falloc.h
  /usr/include/linux/limits.h
+ /usr/include/linux/openat2.h
  /usr/include/linux/posix_types.h
  /usr/include/linux/sched/types.h
  /usr/include/linux/stddef.h
