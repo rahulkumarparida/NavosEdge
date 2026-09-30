@@ -53,5 +53,4 @@ set(CMAKE_MAKEFILE_PRODUCTS
 # Dependency information for all targets:
 set(CMAKE_DEPEND_INFO_FILES
   "CMakeFiles/navos_hardware_bridge.dir/DependInfo.cmake"
-  "CMakeFiles/navos_hardware_bridge_test.dir/DependInfo.cmake"
   )

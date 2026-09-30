@@ -3,7 +3,6 @@ navos_hardware_bridge: \
   /usr/lib/gcc/x86_64-pc-linux-gnu/16/../../../../lib/crti.o \
   /usr/lib/gcc/x86_64-pc-linux-gnu/16/crtbeginS.o \
   CMakeFiles/navos_hardware_bridge.dir/src/main.cpp.o \
-  CMakeFiles/navos_hardware_bridge.dir/display/gui/NavosEdgeGUI.cpp.o \
   /usr/lib/libcurl.so \
   /usr/lib/libcurl.so \
   /usr/lib/gcc/x86_64-pc-linux-gnu/16/libstdc++.so \
@@ -89,8 +88,6 @@ navos_hardware_bridge: \
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/crtbeginS.o:
 
 CMakeFiles/navos_hardware_bridge.dir/src/main.cpp.o:
-
-CMakeFiles/navos_hardware_bridge.dir/display/gui/NavosEdgeGUI.cpp.o:
 
 /usr/lib/libcurl.so:
 

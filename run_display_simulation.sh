@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# NavosEdge — Synthetic Hardware → Intelligence → MPI3501 Display Test Launcher
+# NavosEdge — Synthetic Hardware → Intelligence → MCU Display Simulation Pipeline
 # ==============================================================================
 # Usage:
 #   ./run_display_simulation.sh
@@ -69,11 +69,12 @@ free_port() {
 }
 
 echo "============================================================"
-echo " NavosEdge — Synthetic Hardware → Intelligence → MPI3501"
+echo " NavosEdge — Synthetic Hardware → Intelligence → MCU Display"
 echo "============================================================"
-echo "  Node ID:   $NODE_ID"
-echo "  Scenario:  $SCENARIO"
-echo "  Interval:  ${INTERVAL}s (default 60s)"
+echo "  Node ID:          $NODE_ID"
+echo "  Scenario:         $SCENARIO"
+echo "  Interval:         ${INTERVAL}s (default 60s)"
+echo "  Physical MCU Port: /dev/ttyACM0"
 echo "============================================================"
 
 SERVER_DIR="$SCRIPT_DIR/Intelligence/Server"
@@ -82,7 +83,7 @@ PYTHON_BIN="$SERVER_DIR/venv/bin/python3"
 if [ ! -d "$SERVER_DIR/venv" ]; then
     echo "[NAVOS] Creating Python virtual environment..."
     python3 -m venv "$SERVER_DIR/venv"
-    "$PYTHON_BIN" -m pip install -r "$SERVER_DIR/requirements/unoq.txt" # CHANGE THIS TO requirements/unoq.txt
+    "$PYTHON_BIN" -m pip install -r "$SCRIPT_DIR/requirements/unoq.txt"
 fi
 
 INTEL_HOST="127.0.0.1"
@@ -93,7 +94,7 @@ if ! curl -s "http://$INTEL_HOST:$INTEL_PORT/health" > /dev/null 2>&1; then
     echo "[NAVOS] Starting Python Intelligence Server..."
     free_port $INTEL_PORT
     cd "$SERVER_DIR"
-    PYTHONPATH="$SERVER_DIR" "$PYTHON_BIN" -m uvicorn --host $INTEL_HOST --port $INTEL_PORT --log-level warning app.main:app &
+    PYTHONUNBUFFERED=1 PYTHONPATH="$SERVER_DIR" "$PYTHON_BIN" -m uvicorn --host $INTEL_HOST --port $INTEL_PORT --log-level warning app.main:app &
     INTEL_PID=$!
     PIDS+=($INTEL_PID)
     cd "$SCRIPT_DIR"
@@ -104,7 +105,7 @@ fi
 # 2. Wait for Intelligence Server health & readiness
 echo "[NAVOS] Waiting for Intelligence Server readiness..."
 READY=0
-for i in {1..30}; do
+for i in {1..60}; do
     if curl -s "http://$INTEL_HOST:$INTEL_PORT/health" | grep -q "ok" 2>/dev/null; then
         READY=1
         echo "[NAVOS] Intelligence Server READY"
@@ -129,7 +130,7 @@ if [ ! -f "navos_hardware_bridge" ]; then
 fi
 cd "$SCRIPT_DIR"
 
-# 4. Launch C++ Hardware application (Mock Sensor + HTTP POST + SSE + MPI3501 GUI)
+# 4. Launch C++ Hardware application (Mock Sensor + HTTP POST + SSE + MCU Serial Bridge)
 echo "[NAVOS] Launching C++ Hardware application..."
 ./Hardware/build/navos_hardware_bridge --config Hardware/config/hardware_config.json --node-id "$NODE_ID" --scenario "$SCENARIO" --interval "$INTERVAL" &
 HW_PID=$!
@@ -141,7 +142,7 @@ echo "============================================================"
 echo "  • Node ID:               $NODE_ID"
 echo "  • Scenario:              $SCENARIO"
 echo "  • Sensor update:         every ${INTERVAL}s"
-echo "  • Display rotation:      every 10s"
+echo "  • MCU display rotation:  every 10s (hardware rendering)"
 echo "============================================================"
 echo "[NAVOS] Press Ctrl+C to stop."
 echo ""

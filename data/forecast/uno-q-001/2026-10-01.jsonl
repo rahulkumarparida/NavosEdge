@@ -1,0 +1,4 @@
+{"timestamp": "2026-09-30T20:55:11+00:00", "node_id": "uno-q-001", "is_synthetic": false, "PM1_0": 12.0, "PM2_5": 18.0, "PM10": 25.0}
+{"timestamp": "2026-09-30T20:55:20+00:00", "node_id": "uno-q-001", "is_synthetic": false, "PM1_0": 12.2, "PM2_5": 18.3, "PM10": 25.4}
+{"timestamp": "2026-09-30T20:55:25+00:00", "node_id": "uno-q-001", "is_synthetic": false, "PM1_0": 12.4, "PM2_5": 18.6, "PM10": 25.79}
+{"timestamp": "2026-09-30T20:55:31+00:00", "node_id": "uno-q-001", "is_synthetic": false, "PM1_0": 12.59, "PM2_5": 18.89, "PM10": 26.18}

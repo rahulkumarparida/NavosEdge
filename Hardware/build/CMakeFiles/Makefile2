@@ -64,12 +64,10 @@ CMAKE_BINARY_DIR = /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hard
 
 # The main recursive "all" target.
 all: CMakeFiles/navos_hardware_bridge.dir/all
-all: CMakeFiles/navos_hardware_bridge_test.dir/all
 .PHONY : all
 
 # The main recursive "codegen" target.
 codegen: CMakeFiles/navos_hardware_bridge.dir/codegen
-codegen: CMakeFiles/navos_hardware_bridge_test.dir/codegen
 .PHONY : codegen
 
 # The main recursive "preinstall" target.
@@ -78,7 +76,6 @@ preinstall:
 
 # The main recursive "clean" target.
 clean: CMakeFiles/navos_hardware_bridge.dir/clean
-clean: CMakeFiles/navos_hardware_bridge_test.dir/clean
 .PHONY : clean
 
 #=============================================================================
@@ -88,12 +85,12 @@ clean: CMakeFiles/navos_hardware_bridge_test.dir/clean
 CMakeFiles/navos_hardware_bridge.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/navos_hardware_bridge.dir/build.make CMakeFiles/navos_hardware_bridge.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/navos_hardware_bridge.dir/build.make CMakeFiles/navos_hardware_bridge.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/build/CMakeFiles --progress-num=1,2,3 "Built target navos_hardware_bridge"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/build/CMakeFiles --progress-num=1,2 "Built target navos_hardware_bridge"
 .PHONY : CMakeFiles/navos_hardware_bridge.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/navos_hardware_bridge.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/build/CMakeFiles 3
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/build/CMakeFiles 2
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/navos_hardware_bridge.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/build/CMakeFiles 0
 .PHONY : CMakeFiles/navos_hardware_bridge.dir/rule
@@ -105,45 +102,13 @@ navos_hardware_bridge: CMakeFiles/navos_hardware_bridge.dir/rule
 # codegen rule for target.
 CMakeFiles/navos_hardware_bridge.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/navos_hardware_bridge.dir/build.make CMakeFiles/navos_hardware_bridge.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/build/CMakeFiles --progress-num=1,2,3 "Finished codegen for target navos_hardware_bridge"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/build/CMakeFiles --progress-num=1,2 "Finished codegen for target navos_hardware_bridge"
 .PHONY : CMakeFiles/navos_hardware_bridge.dir/codegen
 
 # clean rule for target.
 CMakeFiles/navos_hardware_bridge.dir/clean:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/navos_hardware_bridge.dir/build.make CMakeFiles/navos_hardware_bridge.dir/clean
 .PHONY : CMakeFiles/navos_hardware_bridge.dir/clean
-
-#=============================================================================
-# Target rules for target CMakeFiles/navos_hardware_bridge_test.dir
-
-# All Build rule for target.
-CMakeFiles/navos_hardware_bridge_test.dir/all:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/navos_hardware_bridge_test.dir/build.make CMakeFiles/navos_hardware_bridge_test.dir/depend
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/navos_hardware_bridge_test.dir/build.make CMakeFiles/navos_hardware_bridge_test.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/build/CMakeFiles --progress-num=4,5,6 "Built target navos_hardware_bridge_test"
-.PHONY : CMakeFiles/navos_hardware_bridge_test.dir/all
-
-# Build rule for subdir invocation for target.
-CMakeFiles/navos_hardware_bridge_test.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/build/CMakeFiles 3
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/navos_hardware_bridge_test.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/build/CMakeFiles 0
-.PHONY : CMakeFiles/navos_hardware_bridge_test.dir/rule
-
-# Convenience name for target.
-navos_hardware_bridge_test: CMakeFiles/navos_hardware_bridge_test.dir/rule
-.PHONY : navos_hardware_bridge_test
-
-# codegen rule for target.
-CMakeFiles/navos_hardware_bridge_test.dir/codegen:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/navos_hardware_bridge_test.dir/build.make CMakeFiles/navos_hardware_bridge_test.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/build/CMakeFiles --progress-num=4,5,6 "Finished codegen for target navos_hardware_bridge_test"
-.PHONY : CMakeFiles/navos_hardware_bridge_test.dir/codegen
-
-# clean rule for target.
-CMakeFiles/navos_hardware_bridge_test.dir/clean:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/navos_hardware_bridge_test.dir/build.make CMakeFiles/navos_hardware_bridge_test.dir/clean
-.PHONY : CMakeFiles/navos_hardware_bridge_test.dir/clean
 
 #=============================================================================
 # Special targets to cleanup operation of make.

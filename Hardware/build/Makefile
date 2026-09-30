@@ -129,46 +129,6 @@ navos_hardware_bridge/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/navos_hardware_bridge.dir/build.make CMakeFiles/navos_hardware_bridge.dir/build
 .PHONY : navos_hardware_bridge/fast
 
-#=============================================================================
-# Target rules for targets named navos_hardware_bridge_test
-
-# Build rule for target.
-navos_hardware_bridge_test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 navos_hardware_bridge_test
-.PHONY : navos_hardware_bridge_test
-
-# fast build rule for target.
-navos_hardware_bridge_test/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/navos_hardware_bridge_test.dir/build.make CMakeFiles/navos_hardware_bridge_test.dir/build
-.PHONY : navos_hardware_bridge_test/fast
-
-display/gui/NavosEdgeGUI.o: display/gui/NavosEdgeGUI.cpp.o
-.PHONY : display/gui/NavosEdgeGUI.o
-
-# target to build an object file
-display/gui/NavosEdgeGUI.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/navos_hardware_bridge.dir/build.make CMakeFiles/navos_hardware_bridge.dir/display/gui/NavosEdgeGUI.cpp.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/navos_hardware_bridge_test.dir/build.make CMakeFiles/navos_hardware_bridge_test.dir/display/gui/NavosEdgeGUI.cpp.o
-.PHONY : display/gui/NavosEdgeGUI.cpp.o
-
-display/gui/NavosEdgeGUI.i: display/gui/NavosEdgeGUI.cpp.i
-.PHONY : display/gui/NavosEdgeGUI.i
-
-# target to preprocess a source file
-display/gui/NavosEdgeGUI.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/navos_hardware_bridge.dir/build.make CMakeFiles/navos_hardware_bridge.dir/display/gui/NavosEdgeGUI.cpp.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/navos_hardware_bridge_test.dir/build.make CMakeFiles/navos_hardware_bridge_test.dir/display/gui/NavosEdgeGUI.cpp.i
-.PHONY : display/gui/NavosEdgeGUI.cpp.i
-
-display/gui/NavosEdgeGUI.s: display/gui/NavosEdgeGUI.cpp.s
-.PHONY : display/gui/NavosEdgeGUI.s
-
-# target to generate assembly for a file
-display/gui/NavosEdgeGUI.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/navos_hardware_bridge.dir/build.make CMakeFiles/navos_hardware_bridge.dir/display/gui/NavosEdgeGUI.cpp.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/navos_hardware_bridge_test.dir/build.make CMakeFiles/navos_hardware_bridge_test.dir/display/gui/NavosEdgeGUI.cpp.s
-.PHONY : display/gui/NavosEdgeGUI.cpp.s
-
 src/main.o: src/main.cpp.o
 .PHONY : src/main.o
 
@@ -193,30 +153,6 @@ src/main.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/navos_hardware_bridge.dir/build.make CMakeFiles/navos_hardware_bridge.dir/src/main.cpp.s
 .PHONY : src/main.cpp.s
 
-tests/test_bridge.o: tests/test_bridge.cpp.o
-.PHONY : tests/test_bridge.o
-
-# target to build an object file
-tests/test_bridge.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/navos_hardware_bridge_test.dir/build.make CMakeFiles/navos_hardware_bridge_test.dir/tests/test_bridge.cpp.o
-.PHONY : tests/test_bridge.cpp.o
-
-tests/test_bridge.i: tests/test_bridge.cpp.i
-.PHONY : tests/test_bridge.i
-
-# target to preprocess a source file
-tests/test_bridge.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/navos_hardware_bridge_test.dir/build.make CMakeFiles/navos_hardware_bridge_test.dir/tests/test_bridge.cpp.i
-.PHONY : tests/test_bridge.cpp.i
-
-tests/test_bridge.s: tests/test_bridge.cpp.s
-.PHONY : tests/test_bridge.s
-
-# target to generate assembly for a file
-tests/test_bridge.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/navos_hardware_bridge_test.dir/build.make CMakeFiles/navos_hardware_bridge_test.dir/tests/test_bridge.cpp.s
-.PHONY : tests/test_bridge.cpp.s
-
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -226,16 +162,9 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... navos_hardware_bridge"
-	@echo "... navos_hardware_bridge_test"
-	@echo "... display/gui/NavosEdgeGUI.o"
-	@echo "... display/gui/NavosEdgeGUI.i"
-	@echo "... display/gui/NavosEdgeGUI.s"
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"
-	@echo "... tests/test_bridge.o"
-	@echo "... tests/test_bridge.i"
-	@echo "... tests/test_bridge.s"
 .PHONY : help
 
 

@@ -8,13 +8,14 @@
 #include <algorithm>
 #include <csignal>
 #include <iomanip>
+#include <cmath>
 #include <nlohmann/json.hpp>
 
 #include "config.hpp"
 #include "sensor.hpp"
 #include "http_client.hpp"
 #include "sse_client.hpp"
-#include "../display/gui/NavosEdgeGUI.h"
+#include "mcu_bridge.hpp"
 #include "../display/state/NavosEdgeState.h"
 
 namespace navos {
@@ -27,6 +28,7 @@ public:
         : cfg_(std::move(cfg))
         , sensor_(std::move(sensor))
         , http_(http)
+        , mcu_bridge_("/dev/ttyACM0", 115200)
         , running_(true)
         , consecutive_failures_(0)
         , sampling_interval_seconds_(cfg_.sampling_interval_seconds)
@@ -42,28 +44,26 @@ public:
     void run() {
         std::cout << "[HW] Starting node: " << cfg_.node_id << "\n";
 
-        gui_.begin();
-        gui_.showStatus("NavosEdge", "Connecting...");
+        // Connect to MCU physical display bridge
+        mcu_bridge_.open_port();
 
         // Phase 1: Wait for server health & readiness
         if (!wait_for_server()) {
             std::cerr << "[HW] Server health/readiness check failed. Exiting.\n";
-            gui_.showStatus("NavosEdge Error", "Server Offline");
             return;
         }
 
         std::cout << "[HW] Server: connected\n";
-        gui_.showStatus("NavosEdge", "Server Connected");
 
         // Phase 2: Start SSE Control Channel
         SseClient sse(cfg_.server_url, cfg_.node_id, [this](const std::string& event, const std::string& data) {
             handle_sse_event(event, data);
         });
         
-        std::cout << "[HW] SSE: connected\n";
+        std::cout << "[HW] SSE connected\n";
         sse.start();
 
-        // Phase 3: Main non-blocking sensor transmit & GUI rendering loop
+        // Phase 3: Main non-blocking sensor transmit loop
         auto last_transmit_time = std::chrono::steady_clock::now() - std::chrono::seconds(cfg_.sampling_interval_seconds);
 
         while (running_.load()) {
@@ -76,14 +76,12 @@ public:
                 last_transmit_time = std::chrono::steady_clock::now();
             }
 
-            // Non-blocking GUI update (screen rotation + redraw when state changes)
-            gui_.update(app_state_);
-
             // Yield CPU (~50ms)
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
         }
 
         sse.stop();
+        mcu_bridge_.close_port();
         std::cout << "[HW] Node " << cfg_.node_id << " stopped gracefully.\n";
     }
 
@@ -146,7 +144,7 @@ private:
     HardwareConfig cfg_;
     std::unique_ptr<SensorSource> sensor_;
     HttpClient& http_;
-    NavosEdgeGUI gui_;
+    McuBridge mcu_bridge_;
     NavosEdgeState app_state_;
     std::atomic<bool> running_;
     int consecutive_failures_;
@@ -240,6 +238,9 @@ private:
         std::cout << "[DISPLAY] State updated\n";
         std::cout << "[HW] Shared NavosEdgeState updated via SSE (AQI: " << app_state_.aqi
                   << " | PM2.5: " << app_state_.pm2_5 << " | Temp: " << app_state_.temperature << "C)\n";
+
+        // Forward state to MCU display over serial bridge
+        mcu_bridge_.send_state(app_state_);
     }
 
     // Wait for the server to respond to /health and /ready
@@ -291,7 +292,7 @@ private:
             return;
         }
 
-        std::cout << "[HW] POST /hardware/data → " << resp.status_code << "\n";
+        std::cout << "[HW] POST /hardware/data -> " << resp.status_code << "\n";
 
         if (resp.status_code == 201 || resp.status_code == 200) {
             consecutive_failures_ = 0;

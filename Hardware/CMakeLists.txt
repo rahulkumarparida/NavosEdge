@@ -14,11 +14,7 @@ include_directories(
 
 set(SOURCES
     src/main.cpp
-    display/gui/NavosEdgeGUI.cpp
 )
 
 add_executable(navos_hardware_bridge ${SOURCES})
 target_link_libraries(navos_hardware_bridge CURL::libcurl)
-
-add_executable(navos_hardware_bridge_test tests/test_bridge.cpp display/gui/NavosEdgeGUI.cpp)
-target_link_libraries(navos_hardware_bridge_test CURL::libcurl)
