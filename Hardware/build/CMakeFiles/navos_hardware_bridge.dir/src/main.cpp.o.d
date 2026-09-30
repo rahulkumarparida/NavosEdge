@@ -273,16 +273,6 @@ CMakeFiles/navos_hardware_bridge.dir/src/main.cpp.o: \
  /usr/include/c++/16/bits/this_thread_sleep.h \
  /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/include/sse_client.hpp \
  /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/include/mcu_bridge.hpp \
- /usr/include/fcntl.h /usr/include/bits/fcntl.h \
- /usr/include/bits/fcntl-linux.h /usr/include/bits/cloexec.h \
- /usr/include/linux/falloc.h /usr/include/linux/openat2.h \
- /usr/include/bits/openat2.h /usr/include/bits/stat.h \
- /usr/include/bits/struct_stat.h /usr/include/termios.h \
- /usr/include/bits/termios.h /usr/include/bits/termios-struct.h \
- /usr/include/bits/termios-c_cc.h /usr/include/bits/termios-c_iflag.h \
- /usr/include/bits/termios-c_oflag.h /usr/include/bits/termios-c_cflag.h \
- /usr/include/bits/termios-cbaud.h /usr/include/bits/termios-c_lflag.h \
- /usr/include/bits/termios-tcflow.h /usr/include/bits/termios-misc.h \
- /usr/include/bits/termios-baud.h /usr/include/sys/ttydefaults.h \
+ /usr/include/sys/un.h \
  /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/include/../display/state/NavosEdgeState.h \
  /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/include/../display/state/../platform.h

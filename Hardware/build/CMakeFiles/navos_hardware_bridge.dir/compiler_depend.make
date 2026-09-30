@@ -4,10 +4,10 @@
 CMakeFiles/navos_hardware_bridge.dir/src/main.cpp.o: /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/src/main.cpp \
   /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/display/platform.h \
   /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/display/state/NavosEdgeState.h \
-  /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/display/gui/NavosEdgeGUI.h \
   /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/include/bridge.hpp \
   /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/include/config.hpp \
   /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/include/http_client.hpp \
+  /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/include/mcu_bridge.hpp \
   /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/include/sensor.hpp \
   /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/include/sse_client.hpp \
   /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/third_party/nlohmann/json.hpp \
@@ -402,6 +402,7 @@ CMakeFiles/navos_hardware_bridge.dir/src/main.cpp.o: /home/rahulroxx/MyHDD/NewVo
   /usr/include/sys/time.h \
   /usr/include/sys/types.h \
   /usr/include/sys/ucontext.h \
+  /usr/include/sys/un.h \
   /usr/include/time.h \
   /usr/include/unistd.h \
   /usr/include/wchar.h \
@@ -475,7 +476,6 @@ navos_hardware_bridge: /usr/lib/Scrt1.o \
   /usr/lib32/libunistring.so.5 \
   /usr/lib32/libz.so.1 \
   /usr/lib32/libzstd.so.1 \
-  CMakeFiles/navos_hardware_bridge.dir/display/gui/NavosEdgeGUI.cpp.o \
   CMakeFiles/navos_hardware_bridge.dir/src/main.cpp.o
 
 
@@ -521,8 +521,6 @@ CMakeFiles/navos_hardware_bridge.dir/src/main.cpp.o:
 
 /usr/lib/libmvec.so.1:
 
-CMakeFiles/navos_hardware_bridge.dir/display/gui/NavosEdgeGUI.cpp.o:
-
 /usr/lib/libm.so.6:
 
 /usr/lib/libk5crypto.so.3:
@@ -556,6 +554,8 @@ CMakeFiles/navos_hardware_bridge.dir/display/gui/NavosEdgeGUI.cpp.o:
 /usr/lib/gcc/x86_64-pc-linux-gnu/16/include/stdint.h:
 
 /usr/include/unistd.h:
+
+/usr/include/time.h:
 
 /usr/include/sys/types.h:
 
@@ -771,6 +771,8 @@ CMakeFiles/navos_hardware_bridge.dir/display/gui/NavosEdgeGUI.cpp.o:
 
 /usr/include/bits/types/sigevent_t.h:
 
+/usr/include/sys/un.h:
+
 /usr/include/bits/typesizes.h:
 
 /usr/include/bits/types/locale_t.h:
@@ -823,10 +825,6 @@ CMakeFiles/navos_hardware_bridge.dir/display/gui/NavosEdgeGUI.cpp.o:
 
 /usr/include/bits/stdlib-bsearch.h:
 
-/usr/include/c++/16/bits/locale_classes.tcc:
-
-/usr/include/bits/types/__mbstate_t.h:
-
 /usr/include/bits/stdio.h:
 
 /usr/include/c++/16/tr1/poly_hermite.tcc:
@@ -861,6 +859,10 @@ CMakeFiles/navos_hardware_bridge.dir/display/gui/NavosEdgeGUI.cpp.o:
 
 /usr/include/c++/16/bits/exception_defines.h:
 
+/usr/include/c++/16/valarray:
+
+/usr/include/bits/types/struct_timespec.h:
+
 /usr/include/bits/select.h:
 
 /usr/include/bits/types/cookie_io_functions_t.h:
@@ -878,12 +880,6 @@ CMakeFiles/navos_hardware_bridge.dir/display/gui/NavosEdgeGUI.cpp.o:
 /usr/include/bits/types/siginfo_t.h:
 
 /usr/include/c++/16/bits/memoryfwd.h:
-
-/usr/lib32/libbrotlidec.so.1:
-
-/usr/include/bits/byteswap.h:
-
-/usr/include/c++/16/bits/requires_hosted.h:
 
 /usr/include/linux/posix_types.h:
 
@@ -907,12 +903,6 @@ CMakeFiles/navos_hardware_bridge.dir/display/gui/NavosEdgeGUI.cpp.o:
 
 /usr/include/bits/pthread_stack_min-dynamic.h:
 
-/usr/lib/gcc/x86_64-pc-linux-gnu/16/crtendS.o:
-
-/usr/include/bits/stdio_lim.h:
-
-/home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/include/config.hpp:
-
 /usr/include/bits/stdint-intn.h:
 
 /usr/include/bits/types/clockid_t.h:
@@ -924,6 +914,14 @@ CMakeFiles/navos_hardware_bridge.dir/display/gui/NavosEdgeGUI.cpp.o:
 /usr/include/c++/16/bits/unordered_map.h:
 
 /usr/include/bits/posix_opt.h:
+
+/usr/include/bits/types/__mbstate_t.h:
+
+/usr/lib/gcc/x86_64-pc-linux-gnu/16/crtendS.o:
+
+/home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/include/config.hpp:
+
+/usr/include/bits/stdio_lim.h:
 
 /usr/include/bits/siginfo-consts-arch.h:
 
@@ -991,25 +989,25 @@ CMakeFiles/navos_hardware_bridge.dir/display/gui/NavosEdgeGUI.cpp.o:
 
 /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/display/state/NavosEdgeState.h:
 
+/usr/lib32/libbrotlidec.so.1:
+
+/usr/include/bits/byteswap.h:
+
+/usr/include/c++/16/bits/requires_hosted.h:
+
+/usr/include/c++/16/bits/locale_classes.tcc:
+
+/usr/include/bits/stdint-least.h:
+
+/usr/include/c++/16/bits/shared_ptr_base.h:
+
 /usr/include/assert.h:
-
-/usr/lib/libnghttp3.so.9:
-
-/usr/include/bits/fp-logb.h:
 
 /usr/include/c++/16/x86_64-pc-linux-gnu/bits/c++config.h:
 
 /usr/include/bits/setjmp.h:
 
 /usr/include/asm/bitsperlong.h:
-
-/usr/include/c++/16/valarray:
-
-/usr/include/bits/types/struct_timespec.h:
-
-/usr/include/time.h:
-
-/home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/display/gui/NavosEdgeGUI.h:
 
 /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/include/bridge.hpp:
 
@@ -1064,6 +1062,10 @@ CMakeFiles/navos_hardware_bridge.dir/display/gui/NavosEdgeGUI.cpp.o:
 /usr/include/bits/waitstatus.h:
 
 /usr/include/bits/wchar.h:
+
+/usr/lib/libnghttp3.so.9:
+
+/usr/include/bits/fp-logb.h:
 
 /usr/include/bits/cpu-set.h:
 
@@ -1365,10 +1367,6 @@ CMakeFiles/navos_hardware_bridge.dir/display/gui/NavosEdgeGUI.cpp.o:
 
 /usr/include/c++/16/bits/postypes.h:
 
-/usr/include/bits/stdint-least.h:
-
-/usr/include/c++/16/bits/shared_ptr_base.h:
-
 /usr/include/sys/socket.h:
 
 /usr/include/bits/mathcalls-helper-functions.h:
@@ -1416,6 +1414,8 @@ CMakeFiles/navos_hardware_bridge.dir/display/gui/NavosEdgeGUI.cpp.o:
 /usr/include/c++/16/bits/stl_pair.h:
 
 /usr/include/c++/16/bits/stl_uninitialized.h:
+
+/home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/include/mcu_bridge.hpp:
 
 /usr/include/c++/16/bits/string_view.tcc:
 

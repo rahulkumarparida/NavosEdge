@@ -74,7 +74,7 @@ echo "============================================================"
 echo "  Node ID:          $NODE_ID"
 echo "  Scenario:         $SCENARIO"
 echo "  Interval:         ${INTERVAL}s (default 60s)"
-echo "  Physical MCU Port: /dev/ttyACM0"
+echo "  Arduino Router RPC: /var/run/arduino-router.sock"
 echo "============================================================"
 
 SERVER_DIR="$SCRIPT_DIR/Intelligence/Server"

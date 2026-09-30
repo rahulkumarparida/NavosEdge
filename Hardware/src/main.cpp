@@ -25,6 +25,8 @@ int main(int argc, char* argv[]) {
     std::string override_scenario;
     int override_interval = 0;
 
+    bool test_rpc = false;
+
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
         if ((arg == "--config" || arg == "-c") && i + 1 < argc) {
@@ -35,15 +37,48 @@ int main(int argc, char* argv[]) {
             override_scenario = argv[++i];
         } else if ((arg == "--interval" || arg == "-i") && i + 1 < argc) {
             override_interval = std::stoi(argv[++i]);
+        } else if (arg == "--test-rpc") {
+            test_rpc = true;
         } else if (arg == "--help" || arg == "-h") {
             std::cout << "Usage: " << argv[0] << " [options]\n"
                       << "  --config, -c <path>     Path to config JSON (default: config/hardware_config.json)\n"
                       << "  --node-id, -n <id>      Override node ID\n"
                       << "  --scenario, -s <mode>   Simulation scenario: normal, high_pm, traffic, dust\n"
                       << "  --interval, -i <sec>    Override sampling interval seconds\n"
+                      << "  --test-rpc              Send test state over Router RPC and exit\n"
                       << "  --help, -h              Show this help\n";
             return 0;
         }
+    }
+
+    if (test_rpc) {
+        std::cout << "[MCU] Standalone RPC test mode\n";
+        navos::McuBridge mcu_bridge;
+        if (!mcu_bridge.open_socket()) {
+            std::cerr << "[MCU] Failed to connect to router socket\n";
+            return 1;
+        }
+
+        NavosEdgeState state;
+        navosStateInit(state);
+        state.aqi = 63.41f;
+        state.pm1_0 = 12.0f;
+        state.pm2_5 = 18.0f;
+        state.pm10 = 25.0f;
+        state.temperature = 28.5f;
+        state.humidity = 65.0f;
+        std::strncpy(state.severity, "MODERATE", sizeof(state.severity) - 1);
+        std::strncpy(state.advice, "Air quality is moderate. Sensitive groups should minimize outdoor exposure.", sizeof(state.advice) - 1);
+        std::strncpy(state.weather_advice, "Warm & humid. Stay hydrated.", sizeof(state.weather_advice) - 1);
+        
+        std::strncpy(state.actions[0], "Close windows during high PM hours", NAVOS_MAX_STRING_LEN - 1);
+        std::strncpy(state.actions[1], "Use indoor air purifier", NAVOS_MAX_STRING_LEN - 1);
+        std::strncpy(state.actions[2], "Wear N95 mask near traffic", NAVOS_MAX_STRING_LEN - 1);
+        state.action_count = 3;
+        state.valid = true;
+
+        bool ok = mcu_bridge.send_state(state);
+        return ok ? 0 : 1;
     }
 
     // Load configuration

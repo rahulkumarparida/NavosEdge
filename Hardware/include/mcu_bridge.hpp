@@ -1,17 +1,19 @@
 #pragma once
 
 /**
- * mcu_bridge.hpp — Linux ↔ MCU Serial Communication Bridge
+ * mcu_bridge.hpp — MPU (Linux) ↔ MCU MessagePack-RPC Client via Arduino Router
  *
- * Transmits NavosEdgeState JSON objects over the Arduino UNO Q serial port
- * (/dev/ttyACM0) to the MCU display application running on the STM32 MCU.
+ * Transmits NavosEdgeState over the Unix domain socket (/var/run/arduino-router.sock)
+ * to arduino-router using the MessagePack-RPC protocol on the Arduino UNO Q.
  */
 
-#include <fcntl.h>
-#include <termios.h>
+#include <sys/socket.h>
+#include <sys/un.h>
 #include <unistd.h>
 #include <string>
 #include <iostream>
+#include <vector>
+#include <cstring>
 #include <nlohmann/json.hpp>
 #include "../display/state/NavosEdgeState.h"
 
@@ -19,46 +21,39 @@ namespace navos {
 
 class McuBridge {
 public:
-    McuBridge(const std::string& device_path = "/dev/ttyACM0", int baud = 115200)
-        : device_path_(device_path), baud_(baud), fd_(-1) {}
+    McuBridge(const std::string& socket_path = "/var/run/arduino-router.sock")
+        : socket_path_(socket_path), fd_(-1), msg_id_(1) {}
 
     ~McuBridge() {
-        close_port();
+        close_socket();
     }
 
-    bool open_port() {
+    bool open_socket() {
         if (fd_ >= 0) return true;
 
-        fd_ = open(device_path_.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
+        fd_ = socket(AF_UNIX, SOCK_STREAM, 0);
         if (fd_ < 0) {
-            std::cerr << "[MCU] Warning: Unable to open MCU serial port " << device_path_ << "\n";
+            std::cerr << "[MCU] Warning: Unable to create socket\n";
             return false;
         }
 
-        fcntl(fd_, F_SETFL, 0);
+        struct sockaddr_un addr;
+        std::memset(&addr, 0, sizeof(addr));
+        addr.sun_family = AF_UNIX;
+        std::strncpy(addr.sun_path, socket_path_.c_str(), sizeof(addr.sun_path) - 1);
 
-        struct termios options;
-        tcgetattr(fd_, &options);
+        if (connect(fd_, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
+            std::cerr << "[MCU] Warning: Unable to connect to Arduino Router socket at " << socket_path_ << "\n";
+            close(fd_);
+            fd_ = -1;
+            return false;
+        }
 
-        cfsetispeed(&options, B115200);
-        cfsetospeed(&options, B115200);
-
-        options.c_cflag &= ~PARENB;
-        options.c_cflag &= ~CSTOPB;
-        options.c_cflag &= ~CSIZE;
-        options.c_cflag |= CS8;
-        options.c_cflag |= (CLOCAL | CREAD);
-
-        options.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
-        options.c_oflag &= ~OPOST;
-
-        tcsetattr(fd_, TCSANOW, &options);
-
-        std::cout << "[MCU] Serial bridge connected to MCU on " << device_path_ << "\n";
+        std::cout << "[MCU] Router connected\n";
         return true;
     }
 
-    void close_port() {
+    void close_socket() {
         if (fd_ >= 0) {
             close(fd_);
             fd_ = -1;
@@ -71,44 +66,54 @@ public:
 
     bool send_state(const NavosEdgeState& s) {
         if (fd_ < 0) {
-            if (!open_port()) return false;
+            if (!open_socket()) return false;
         }
 
-        nlohmann::json j;
-        j["aqi"] = s.aqi;
-        j["pm1_0"] = s.pm1_0;
-        j["pm2_5"] = s.pm2_5;
-        j["pm10"] = s.pm10;
-        j["temperature"] = s.temperature;
-        j["humidity"] = s.humidity;
-        j["severity"] = s.severity;
-        j["advice"] = s.advice;
-        j["weather_advice"] = s.weather_advice;
-
-        nlohmann::json actions_arr = nlohmann::json::array();
+        std::string actions_csv = "";
         for (uint8_t i = 0; i < s.action_count && i < NAVOS_MAX_ACTIONS; i++) {
-            actions_arr.push_back(s.actions[i]);
+            if (i > 0) actions_csv += ";";
+            actions_csv += s.actions[i];
         }
-        j["actions"] = actions_arr;
 
-        std::string msg = j.dump() + "\n";
-        ssize_t bytes_written = write(fd_, msg.c_str(), msg.length());
+        nlohmann::json params = nlohmann::json::array({
+            s.aqi,
+            s.pm1_0,
+            s.pm2_5,
+            s.pm10,
+            s.temperature,
+            s.humidity,
+            std::string(s.severity),
+            std::string(s.advice),
+            std::string(s.weather_advice),
+            actions_csv
+        });
+
+        // MsgPack RPC Request format: [0, msgid, "method", params]
+        nlohmann::json rpc_req = nlohmann::json::array({
+            0,
+            msg_id_++,
+            "update_display",
+            params
+        });
+
+        std::vector<uint8_t> msgpack_bytes = nlohmann::json::to_msgpack(rpc_req);
+
+        ssize_t bytes_written = write(fd_, msgpack_bytes.data(), msgpack_bytes.size());
         if (bytes_written < 0) {
-            std::cerr << "[MCU] Serial write error on " << device_path_ << "\n";
-            close_port();
+            std::cerr << "[MCU] Router write error on " << socket_path_ << "\n";
+            close_socket();
             return false;
         }
 
-        std::cout << "[MCU] Display state sent to MCU over " << device_path_
-                  << " (AQI: " << s.aqi << " | PM2.5: " << s.pm2_5
-                  << " | Temp: " << s.temperature << "C)\n";
+        std::cout << "[MCU] Display state sent via RPC\n";
+        std::cout << "[MCU] AQI=" << s.aqi << " PM2.5=" << s.pm2_5 << " TEMP=" << s.temperature << "\n";
         return true;
     }
 
 private:
-    std::string device_path_;
-    int baud_;
+    std::string socket_path_;
     int fd_;
+    uint32_t msg_id_;
 };
 
 } // namespace navos

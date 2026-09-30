@@ -55,21 +55,31 @@ if [ -n "$CONFIG_DIR" ] && [ -d "$CONFIG_DIR" ]; then
     CONFIG_ARG=(--config-dir "$CONFIG_DIR")
 fi
 
-# 3. Ensure repository-local third-party dependencies exist
+# 3. Ensure required third-party dependencies exist (auto-installed on demand)
 THIRD_PARTY_DIR="$SCRIPT_DIR/Hardware/third_party"
 mkdir -p "$THIRD_PARTY_DIR"
 
-MPI3501_LIB_DIR="$THIRD_PARTY_DIR/UNOQ_MPI3501"
-if [ ! -d "$MPI3501_LIB_DIR" ] && [ ! -d "$HOME_DIR/Arduino/libraries/UNOQ_MPI3501" ]; then
-    echo "[FLASH] UNOQ_MPI3501 library missing locally. Cloning from GitHub..."
-    git clone https://github.com/jagdishtripathy/UNOQ_MPI3501.git "$MPI3501_LIB_DIR"
-fi
+ensure_lib() {
+    local lib_name="$1"
+    local repo_url="$2"
+    local target_dir="$THIRD_PARTY_DIR/$lib_name"
 
-ARDUINOJSON_LIB_DIR="$THIRD_PARTY_DIR/ArduinoJson"
-if [ ! -d "$ARDUINOJSON_LIB_DIR" ] && [ ! -d "$HOME_DIR/Arduino/libraries/ArduinoJson" ] && [ ! -d "$CONFIG_DIR/user/libraries/ArduinoJson" ]; then
-    echo "[FLASH] ArduinoJson library missing locally. Cloning from GitHub..."
-    git clone --depth 1 https://github.com/bblanchon/ArduinoJson.git "$ARDUINOJSON_LIB_DIR"
-fi
+    if [ ! -d "$target_dir" ] && \
+       [ ! -d "$HOME_DIR/Arduino/libraries/$lib_name" ] && \
+       [ ! -d "$CONFIG_DIR/user/libraries/$lib_name" ]; then
+        echo "[FLASH] Library '$lib_name' not found locally. Auto-downloading directly on device..."
+        git clone --depth 1 "$repo_url" "$target_dir"
+    fi
+}
+
+ensure_lib "UNOQ_MPI3501" "https://github.com/jagdishtripathy/UNOQ_MPI3501.git"
+ensure_lib "ArduinoJson" "https://github.com/bblanchon/ArduinoJson.git"
+ensure_lib "Arduino_RouterBridge" "https://github.com/arduino-libraries/Arduino_RouterBridge.git"
+ensure_lib "Arduino_RPClite" "https://github.com/arduino-libraries/Arduino_RPClite.git"
+ensure_lib "ArxContainer" "https://github.com/hideakitai/ArxContainer.git"
+ensure_lib "ArxTypeTraits" "https://github.com/hideakitai/ArxTypeTraits.git"
+ensure_lib "DebugLog" "https://github.com/hideakitai/DebugLog.git"
+ensure_lib "MsgPack" "https://github.com/hideakitai/MsgPack.git"
 
 # 4. Assemble library search paths
 LIB_ARGS=()
@@ -96,6 +106,11 @@ FQBN="${ARDUINO_FQBN:-${FQBN:-arduino:zephyr:unoq}}"
 PORT="${ARDUINO_PORT:-${PORT:-/dev/ttyACM0}}"
 SKETCH_DIR="$SCRIPT_DIR/Hardware/mcu_display"
 
+PORT_ARGS=()
+if [ -e "$PORT" ]; then
+    PORT_ARGS=(-p "$PORT")
+fi
+
 # 6. Diagnostics Header
 echo "============================================================"
 echo " NavosEdge — MCU Physical Display Flasher"
@@ -106,7 +121,7 @@ echo "  Arduino CLI Path:   $ARDUINO_CLI_BIN"
 echo "  Config Directory:   ${CONFIG_DIR:-"(default)"}"
 echo "  Library Paths:      ${LIB_PATHS_DISPLAY:-"(default)"}"
 echo "  Target Board FQBN:  $FQBN"
-echo "  Serial Port:        $PORT"
+echo "  Serial Port:        ${PORT}${PORT_ARGS:+" (active)"}"
 echo "  Sketch Location:    $SKETCH_DIR"
 echo "============================================================"
 
@@ -118,8 +133,8 @@ if ! "$ARDUINO_CLI_BIN" "${CONFIG_ARG[@]}" "${LIB_ARGS[@]}" compile --fqbn "$FQB
 fi
 
 # 8. Deploy Firmware to MCU
-echo "[FLASH] Deploying firmware to Arduino UNO Q MCU over $PORT..."
-if ! "$ARDUINO_CLI_BIN" "${CONFIG_ARG[@]}" upload -p "$PORT" --discovery-timeout 5s --fqbn "$FQBN" "$SKETCH_DIR"; then
+echo "[FLASH] Deploying firmware to Arduino UNO Q MCU..."
+if ! "$ARDUINO_CLI_BIN" "${CONFIG_ARG[@]}" upload "${PORT_ARGS[@]}" --discovery-timeout 5s --fqbn "$FQBN" "$SKETCH_DIR"; then
     echo "[FLASH] ERROR: Firmware deployment to MCU failed."
     exit 1
 fi

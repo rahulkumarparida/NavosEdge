@@ -5,10 +5,10 @@ CMakeFiles/navos_hardware_bridge.dir/src/main.cpp.o
  /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/src/main.cpp
  /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/display/platform.h
  /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/display/state/NavosEdgeState.h
- /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/display/gui/NavosEdgeGUI.h
  /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/include/bridge.hpp
  /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/include/config.hpp
  /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/include/http_client.hpp
+ /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/include/mcu_bridge.hpp
  /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/include/sensor.hpp
  /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/include/sse_client.hpp
  /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/third_party/nlohmann/json.hpp
@@ -403,6 +403,7 @@ CMakeFiles/navos_hardware_bridge.dir/src/main.cpp.o
  /usr/include/sys/time.h
  /usr/include/sys/types.h
  /usr/include/sys/ucontext.h
+ /usr/include/sys/un.h
  /usr/include/time.h
  /usr/include/unistd.h
  /usr/include/wchar.h
@@ -477,6 +478,5 @@ navos_hardware_bridge
  /usr/lib32/libunistring.so.5
  /usr/lib32/libz.so.1
  /usr/lib32/libzstd.so.1
- /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/build/CMakeFiles/navos_hardware_bridge.dir/display/gui/NavosEdgeGUI.cpp.o
  /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/build/CMakeFiles/navos_hardware_bridge.dir/src/main.cpp.o
 

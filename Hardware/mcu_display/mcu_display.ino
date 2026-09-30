@@ -1,14 +1,14 @@
 /**
- * mcu_display.ino — NavosEdge MCU Physical Display Application
+ * mcu_display.ino — NavosEdge MCU Physical Display Application (Router RPC Bridge)
  *
  * Runs on Arduino UNO Q MCU (arduino:zephyr:unoq).
  * Initializes UNOQ_MPI3501 display (480x320 landscape).
- * Receives structured JSON state updates from Linux over Serial (/dev/ttyACM0).
+ * Initializes Arduino_RouterBridge and exposes RPC method `update_display`.
  * Rotates 3 NavosEdge screens non-blockingly every 10 seconds using millis().
  */
 
 #include <Arduino.h>
-#include <ArduinoJson.h>
+#include <Arduino_RouterBridge.h>
 #include <UNOQ_MPI3501.h>
 #include "NavosEdgeState.h"
 #include "NavosEdgeGUI.h"
@@ -16,97 +16,59 @@
 NavosEdgeGUI gui;
 NavosEdgeState state;
 
-static char rxBuffer[1024];
-static size_t rxIndex = 0;
+void update_display(float aqi, float pm1_0, float pm2_5, float pm10, float temp, float hum, String severity, String advice, String weather_advice, String actions_csv) {
+    state.aqi = aqi;
+    state.pm1_0 = pm1_0;
+    state.pm2_5 = pm2_5;
+    state.pm10 = pm10;
+    state.temperature = temp;
+    state.humidity = hum;
 
-void setup() {
-    Serial.begin(115200);
-    navosStateInit(state);
-    gui.begin();
-    gui.showStatus("NavosEdge MCU", "Waiting for Linux...");
-}
+    strncpy(state.severity, severity.c_str(), sizeof(state.severity) - 1);
+    state.severity[sizeof(state.severity) - 1] = '\0';
 
-void processJsonState(const char* jsonStr) {
-    JsonDocument doc;
-    DeserializationError err = deserializeJson(doc, jsonStr);
-    if (err) {
-        return;
-    }
+    strncpy(state.advice, advice.c_str(), sizeof(state.advice) - 1);
+    state.advice[sizeof(state.advice) - 1] = '\0';
 
-    if (doc.containsKey("aqi")) {
-        state.aqi = doc["aqi"].as<float>();
-    }
-    if (doc.containsKey("pm1_0")) {
-        state.pm1_0 = doc["pm1_0"].as<float>();
-    }
-    if (doc.containsKey("pm2_5")) {
-        state.pm2_5 = doc["pm2_5"].as<float>();
-    }
-    if (doc.containsKey("pm10")) {
-        state.pm10 = doc["pm10"].as<float>();
-    }
-    if (doc.containsKey("temperature")) {
-        state.temperature = doc["temperature"].as<float>();
-    }
-    if (doc.containsKey("humidity")) {
-        state.humidity = doc["humidity"].as<float>();
-    }
-    if (doc.containsKey("severity")) {
-        const char* sev = doc["severity"];
-        if (sev) {
-            strncpy(state.severity, sev, sizeof(state.severity) - 1);
-            state.severity[sizeof(state.severity) - 1] = '\0';
+    strncpy(state.weather_advice, weather_advice.c_str(), sizeof(state.weather_advice) - 1);
+    state.weather_advice[sizeof(state.weather_advice) - 1] = '\0';
+
+    // Parse actions string (semicolon separated)
+    state.action_count = 0;
+    int start = 0;
+    int len = actions_csv.length();
+    while (start < len && state.action_count < NAVOS_MAX_ACTIONS) {
+        int end = actions_csv.indexOf(';', start);
+        if (end == -1) end = len;
+        String actStr = actions_csv.substring(start, end);
+        actStr.trim();
+        if (actStr.length() > 0) {
+            strncpy(state.actions[state.action_count], actStr.c_str(), NAVOS_MAX_STRING_LEN - 1);
+            state.actions[state.action_count][NAVOS_MAX_STRING_LEN - 1] = '\0';
+            state.action_count++;
         }
-    }
-    if (doc.containsKey("advice")) {
-        const char* adv = doc["advice"];
-        if (adv) {
-            strncpy(state.advice, adv, sizeof(state.advice) - 1);
-            state.advice[sizeof(state.advice) - 1] = '\0';
-        }
-    }
-    if (doc.containsKey("weather_advice")) {
-        const char* wadv = doc["weather_advice"];
-        if (wadv) {
-            strncpy(state.weather_advice, wadv, sizeof(state.weather_advice) - 1);
-            state.weather_advice[sizeof(state.weather_advice) - 1] = '\0';
-        }
-    }
-    if (doc.containsKey("actions") && doc["actions"].is<JsonArray>()) {
-        JsonArray actions = doc["actions"].as<JsonArray>();
-        state.action_count = 0;
-        for (JsonVariant v : actions) {
-            if (state.action_count >= NAVOS_MAX_ACTIONS) break;
-            const char* actStr = v.as<const char*>();
-            if (actStr) {
-                strncpy(state.actions[state.action_count], actStr, NAVOS_MAX_STRING_LEN - 1);
-                state.actions[state.action_count][NAVOS_MAX_STRING_LEN - 1] = '\0';
-                state.action_count++;
-            }
-        }
+        start = end + 1;
     }
 
     state.valid = true;
     state.last_update_ms = millis();
 }
 
-void loop() {
-    while (Serial.available()) {
-        char c = Serial.read();
-        if (c == '\n' || c == '\r') {
-            if (rxIndex > 0) {
-                rxBuffer[rxIndex] = '\0';
-                processJsonState(rxBuffer);
-                rxIndex = 0;
-            }
-        } else {
-            if (rxIndex < sizeof(rxBuffer) - 1) {
-                rxBuffer[rxIndex++] = c;
-            } else {
-                rxIndex = 0;
-            }
-        }
-    }
+void setup() {
+    Serial.begin(115200);
+    navosStateInit(state);
+    gui.begin();
+    gui.showStatus("NavosEdge MCU", "Connecting RPC Bridge...");
 
+    Bridge.begin();
+    Bridge.provide_safe("update_display", update_display);
+
+    Serial.println(F("[MCU] Bridge initialized"));
+    Serial.println(F("[MCU] RPC method registered: update_display"));
+
+    gui.showStatus("NavosEdge MCU", "RPC Bridge Ready");
+}
+
+void loop() {
     gui.update(state);
 }

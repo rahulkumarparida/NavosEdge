@@ -4,5 +4,6 @@ venv/
 .venv/
 node_modules/
 dist/
-*.md
 /tests/
+Hardware/build/
+Hardware/third_party/

@@ -28,7 +28,7 @@ public:
         : cfg_(std::move(cfg))
         , sensor_(std::move(sensor))
         , http_(http)
-        , mcu_bridge_("/dev/ttyACM0", 115200)
+        , mcu_bridge_("/var/run/arduino-router.sock")
         , running_(true)
         , consecutive_failures_(0)
         , sampling_interval_seconds_(cfg_.sampling_interval_seconds)
@@ -44,8 +44,8 @@ public:
     void run() {
         std::cout << "[HW] Starting node: " << cfg_.node_id << "\n";
 
-        // Connect to MCU physical display bridge
-        mcu_bridge_.open_port();
+        // Connect to MCU physical display bridge via Arduino Router
+        mcu_bridge_.open_socket();
 
         // Phase 1: Wait for server health & readiness
         if (!wait_for_server()) {
@@ -81,7 +81,7 @@ public:
         }
 
         sse.stop();
-        mcu_bridge_.close_port();
+        mcu_bridge_.close_socket();
         std::cout << "[HW] Node " << cfg_.node_id << " stopped gracefully.\n";
     }
 
