@@ -5,5 +5,5 @@
             "matchCommandLine": true
         }
     },
-    "cmake.sourceDirectory": "/home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware"
+    "cmake.sourceDirectory": "${workspaceFolder}/Hardware"
 }
