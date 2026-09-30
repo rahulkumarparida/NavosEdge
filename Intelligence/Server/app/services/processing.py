@@ -86,6 +86,7 @@ class ProcessingService:
 
         # Register with the node registry
         self.node_registry.register_reading(node_id, timestamp)
+        print("[INTELLIGENCE] Reading processed", flush=True)
 
         # Extract model input features
         mq2_v = payload.gas_sensors.MQ2.voltage_V
@@ -152,6 +153,7 @@ class ProcessingService:
                     "Source classifier error for node %s: %s", node_id, e, exc_info=True
                 )
                 # Pipeline continues without source classification
+        print("[INTELLIGENCE] Source prediction received", flush=True)
 
         # --- Phase 4: Forward to forecast plugin ---
         if self.forecast_plugin is not None and self.forecast_plugin.is_initialized:
@@ -180,6 +182,7 @@ class ProcessingService:
                 logger.error(
                     "Forecast generation error for node %s: %s", node_id, e, exc_info=True
                 )
+        print("[INTELLIGENCE] Forecast processed", flush=True)
 
         # --- AQI calculation & persistence ---
         if self.aqi_service is not None:
@@ -189,6 +192,7 @@ class ProcessingService:
                 logger.error(
                     "AQI service error for node %s: %s", node_id, e, exc_info=True
                 )
+        print("[INTELLIGENCE] AQI calculated", flush=True)
 
         # Publish SSE event
         summary = {
@@ -227,6 +231,7 @@ class ProcessingService:
             inference=inference_result,
             forecast=forecast_result,
         )
+        print("[INTELLIGENCE] Advisory generated", flush=True)
         self._latest_results[node_id] = result
 
         result_dict = result.model_dump(mode="json")

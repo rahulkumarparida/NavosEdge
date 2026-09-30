@@ -1,18 +1,18 @@
 {
   "status": "available",
-  "aqi": 56.95,
+  "aqi": 57.94,
   "category": "Moderate",
   "dominant_pollutant": "PM2_5",
   "pm": {
-    "PM1_0": 7.47,
-    "PM2_5": 14.93,
-    "PM10": 16.6
+    "PM1_0": 10.27,
+    "PM2_5": 15.4,
+    "PM10": 21.54
   },
   "sub_indices": {
-    "PM1_0": 31.12,
-    "PM2_5": 56.95,
-    "PM10": 15.37
+    "PM1_0": 42.79,
+    "PM2_5": 57.94,
+    "PM10": 19.94
   },
-  "timestamp": "2026-09-28T18:30:20.002660Z",
-  "node_id": "navos-02"
+  "timestamp": "2026-09-30T19:52:24Z",
+  "node_id": "navos-node-01"
 }

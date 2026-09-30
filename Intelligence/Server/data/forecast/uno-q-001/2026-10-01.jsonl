@@ -1,0 +1,6 @@
+{"timestamp": "2026-09-30T19:16:42+00:00", "node_id": "uno-q-001", "is_synthetic": false, "PM1_0": 45.0, "PM2_5": 75.0, "PM10": 110.0}
+{"timestamp": "2026-09-30T19:16:46+00:00", "node_id": "uno-q-001", "is_synthetic": false, "PM1_0": 45.2, "PM2_5": 75.3, "PM10": 110.4}
+{"timestamp": "2026-09-30T19:16:50+00:00", "node_id": "uno-q-001", "is_synthetic": false, "PM1_0": 45.4, "PM2_5": 75.6, "PM10": 110.79}
+{"timestamp": "2026-09-30T19:16:55+00:00", "node_id": "uno-q-001", "is_synthetic": false, "PM1_0": 45.59, "PM2_5": 75.89, "PM10": 111.18}
+{"timestamp": "2026-09-30T19:16:59+00:00", "node_id": "uno-q-001", "is_synthetic": false, "PM1_0": 45.78, "PM2_5": 76.17, "PM10": 111.56}
+{"timestamp": "2026-09-30T19:17:03+00:00", "node_id": "uno-q-001", "is_synthetic": false, "PM1_0": 45.96, "PM2_5": 76.44, "PM10": 111.92}

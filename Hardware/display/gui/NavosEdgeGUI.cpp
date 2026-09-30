@@ -68,6 +68,11 @@ void NavosEdgeGUI::update(const NavosEdgeState& state) {
 }
 
 void NavosEdgeGUI::forceRedraw(const NavosEdgeState& state) {
+#ifdef ARDUINO
+    Serial.println(F("[DISPLAY] MPI3501 rendering new data"));
+#else
+    printf("[DISPLAY] MPI3501 rendering new data\n");
+#endif
     tftFillScreen(GUI_BG_COLOR);
 
     switch (_currentScreen) {

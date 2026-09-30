@@ -157,7 +157,7 @@ private:
 
     void handle_sse_event(const std::string& event, const std::string& data_json) {
         if (event == "connected") {
-            std::cout << "[HW] SSE: registration confirmed\n";
+            std::cout << "[HW] SSE connected\n";
         } else if (event == "heartbeat") {
             // Heartbeat keeps SSE alive
         } else if (event == "config") {
@@ -176,6 +176,9 @@ private:
             }
         } else if (event == "intelligence_update" || event == "new_reading") {
             try {
+                if (event == "intelligence_update") {
+                    std::cout << "[HW] SSE intelligence_update received\n";
+                }
                 auto j = nlohmann::json::parse(data_json);
                 update_display_state(j);
             } catch (const std::exception& e) {
@@ -234,6 +237,7 @@ private:
         }
         app_state_.valid = true;
         app_state_.last_update_ms = millis();
+        std::cout << "[DISPLAY] State updated\n";
         std::cout << "[HW] Shared NavosEdgeState updated via SSE (AQI: " << app_state_.aqi
                   << " | PM2.5: " << app_state_.pm2_5 << " | Temp: " << app_state_.temperature << "C)\n";
     }

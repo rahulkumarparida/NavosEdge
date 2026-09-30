@@ -51,8 +51,17 @@ int main(int argc, char* argv[]) {
     try {
         cfg = navos::load_config(config_path);
     } catch (const std::exception& e) {
-        std::cerr << e.what() << "\n";
-        return 1;
+        if (config_path == "config/hardware_config.json") {
+            try {
+                cfg = navos::load_config("Hardware/config/hardware_config.json");
+            } catch (...) {
+                std::cerr << e.what() << "\n";
+                return 1;
+            }
+        } else {
+            std::cerr << e.what() << "\n";
+            return 1;
+        }
     }
 
     if (!override_node_id.empty()) {
@@ -71,6 +80,7 @@ int main(int argc, char* argv[]) {
     std::unique_ptr<navos::SensorSource> sensor;
     if (cfg.mock_mode) {
         sensor = std::make_unique<navos::MockSensorSource>(cfg.node_id, scenario_enum);
+        std::cout << "[HW] Mock sensor initialized\n";
     } else {
         std::cerr << "[NAVOS] Physical sensor mode not yet connected. Set mock_mode=true in config.\n";
         return 1;
