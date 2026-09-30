@@ -69,8 +69,11 @@ The **NavosEdge GUI rendering runs directly on the Arduino UNO Q MCU (Zephyr / S
 
 4. **Linux ↔ MCU Router MessagePack-RPC Transport**:
    - Communication uses MessagePack-RPC over `/var/run/arduino-router.sock`.
-   - RPC request payload format: `[0, msgid, "update_display", [aqi, pm1_0, pm2_5, pm10, temp, hum, severity, advice, weather_advice, actions_csv]]`.
-   - MCU handles request via `Bridge.provide_safe("update_display", update_display)`.
+   - Requests are split into 3 modular sub-calls to keep each payload safely under the 1024-byte RPClite decoder limit:
+     - `update_environment`: `[0, msgid, "update_environment", [aqi, pm1_0, pm2_5, pm10, temp, hum]]`
+     - `update_advice`: `[0, msgid, "update_advice", [severity, advice, weather_advice]]`
+     - `update_actions`: `[0, msgid, "update_actions", [actions_csv]]`
+   - MCU registers all three RPC handlers via `Bridge.provide_safe(...)`.
 
 5. **Dedicated Flashing & Simulation Scripts**:
    - `./flash_display.sh`: Compiles `Hardware/mcu_display` using `arduino-cli` and deploys it to the UNO Q MCU (`arduino:zephyr:unoq`). Fully portable across users.

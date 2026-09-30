@@ -1,13 +1,15 @@
 #pragma once
 
 /**
- * mcu_bridge.hpp — MPU (Linux) ↔ MCU MessagePack-RPC Client via Arduino Router
+ * mcu_bridge.hpp — MPU (Linux) ↔ MCU Modular MessagePack-RPC Client via Arduino Router
  *
- * Fault-tolerant MessagePack-RPC client over Unix domain socket (/var/run/arduino-router.sock).
- * Sends MessagePack-RPC requests: [0, msg_id, "update_display", params]
- * Reads and decodes MessagePack-RPC responses: [1, msg_id, error, result]
- * Manages connection lifecycle (DISCONNECTED, CONNECTING, CONNECTED), non-blocking retry with backoff,
- * rate-limited diagnostic logging, and automatic state re-transmission upon MCU reconnection.
+ * Transmits NavosEdgeState over Unix domain socket (/var/run/arduino-router.sock)
+ * using 3 small, modular RPC calls:
+ *   1. update_environment (aqi, pm1_0, pm2_5, pm10, temp, hum)  [~48 bytes]
+ *   2. update_advice (severity, advice, weather_advice)        [~320 bytes]
+ *   3. update_actions (actions_csv)                             [~340 bytes]
+ *
+ * Every individual RPC payload is safely below the Arduino RPClite 1024-byte buffer limit.
  */
 
 #include <sys/socket.h>
@@ -85,7 +87,7 @@ public:
 
                 if (has_latest_state_ && latest_state_.valid) {
                     std::cout << "[MCU] Resending latest display state\n";
-                    transmit_rpc(latest_state_);
+                    send_state_rpc_all(latest_state_);
                 }
             } else {
                 state_ = BridgeState::DISCONNECTED;
@@ -110,7 +112,7 @@ public:
             return false;
         }
 
-        return transmit_rpc(latest_state_);
+        return send_state_rpc_all(latest_state_);
     }
 
     bool open_socket() {
@@ -159,35 +161,77 @@ private:
         return true;
     }
 
-    bool transmit_rpc(const NavosEdgeState& s) {
-        if (fd_ < 0) return false;
+    bool send_state_rpc_all(const NavosEdgeState& s) {
+        bool env_ok = send_rpc_environment(s);
+        bool adv_ok = send_rpc_advice(s);
+        bool act_ok = send_rpc_actions(s);
+        return env_ok && adv_ok && act_ok;
+    }
 
-        std::string actions_csv = "";
-        for (uint8_t i = 0; i < s.action_count && i < NAVOS_MAX_ACTIONS; i++) {
-            if (i > 0) actions_csv += ";";
-            actions_csv += s.actions[i];
-        }
-
+    bool send_rpc_environment(const NavosEdgeState& s) {
         nlohmann::json params = nlohmann::json::array({
             s.aqi,
             s.pm1_0,
             s.pm2_5,
             s.pm10,
             s.temperature,
-            s.humidity,
-            std::string(s.severity),
-            std::string(s.advice),
-            std::string(s.weather_advice),
+            s.humidity
+        });
+
+        if (send_rpc_call("update_environment", params)) {
+            std::cout << "[MCU] Environment RPC sent\n";
+            return true;
+        }
+        return false;
+    }
+
+    bool send_rpc_advice(const NavosEdgeState& s) {
+        std::string severity = truncate_string(s.severity, 30);
+        std::string advice = truncate_string(s.advice, 140);
+        std::string weather_advice = truncate_string(s.weather_advice, 140);
+
+        nlohmann::json params = nlohmann::json::array({
+            severity,
+            advice,
+            weather_advice
+        });
+
+        if (send_rpc_call("update_advice", params)) {
+            std::cout << "[MCU] Advice RPC sent\n";
+            return true;
+        }
+        return false;
+    }
+
+    bool send_rpc_actions(const NavosEdgeState& s) {
+        std::string actions_csv = "";
+        uint8_t count = std::min(s.action_count, (uint8_t)4);
+        for (uint8_t i = 0; i < count; i++) {
+            if (i > 0) actions_csv += ";";
+            actions_csv += truncate_string(s.actions[i], 70);
+        }
+
+        nlohmann::json params = nlohmann::json::array({
             actions_csv
         });
 
+        if (send_rpc_call("update_actions", params)) {
+            std::cout << "[MCU] Actions RPC sent\n";
+            return true;
+        }
+        return false;
+    }
+
+    bool send_rpc_call(const std::string& method_name, const nlohmann::json& params) {
+        if (fd_ < 0) return false;
+
         uint32_t req_id = msg_id_++;
 
-        // MessagePack-RPC Request format: [0, msg_id, "update_display", params]
+        // MessagePack-RPC Request format: [0, msg_id, method, params]
         nlohmann::json rpc_req = nlohmann::json::array({
             0,
             req_id,
-            "update_display",
+            method_name,
             params
         });
 
@@ -244,9 +288,6 @@ private:
             return false;
         }
 
-        // 4. Successful RPC Response Received & Verified
-        std::cout << "[MCU] Display state sent via RPC\n";
-        std::cout << "[MCU] AQI=" << s.aqi << " PM2.5=" << s.pm2_5 << " TEMP=" << s.temperature << " HUM=" << s.humidity << "\n";
         return true;
     }
 
@@ -257,6 +298,15 @@ private:
             std::cout << "[MCU] RPC call failed: " << reason << "\n";
             last_unavailable_log_time_ = now;
         }
+    }
+
+    static std::string truncate_string(const char* src, size_t max_len) {
+        if (!src) return "";
+        std::string s(src);
+        if (s.length() > max_len) {
+            s = s.substr(0, max_len);
+        }
+        return s;
     }
 
     std::string socket_path_;

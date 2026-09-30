@@ -33,10 +33,10 @@ The pipeline validates that synthetic hardware sensor telemetry streams from C++
         │ Updates in-memory NavosEdgeState
         ▼
 [ McuBridge MessagePack-RPC Client (C++) ]
-        │ Sends RPC Request `update_display` over /var/run/arduino-router.sock
+        │ Sends RPC Requests (update_environment, update_advice, update_actions) over /var/run/arduino-router.sock
         ▼
 [ Arduino_RouterBridge (MCU Zephyr/STM32U5) ]
-        │ Dispatches call to update_display()
+        │ Dispatches calls to update_environment(), update_advice(), update_actions()
         ▼
 [ NavosEdgeGUI Renderer (C++) ]
         │ Redraws current screen non-blockingly (10s millis() rotation)
@@ -139,6 +139,8 @@ When running, the system produces visible logs tracking every step of the end-to
 [HW] SSE intelligence_update received
 [DISPLAY] State updated
 [HW] Shared NavosEdgeState updated via SSE (AQI: 63.41 | PM2.5: 18 | Temp: 28.5C)
-[MCU] Display state sent via RPC
+[MCU] Environment RPC sent
+[MCU] Advice RPC sent
+[MCU] Actions RPC sent
 [MCU] AQI=63.41 PM2.5=18 TEMP=28.5
 ```

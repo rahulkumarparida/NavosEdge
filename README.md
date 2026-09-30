@@ -48,7 +48,7 @@ It combines synthetic/physical environmental sensor telemetry, real-time machine
 
 ### Key Responsibilities
 - **Linux (MPU)**: Sensor sampling, Python Intelligence Server (FastAPI + PyTorch/NumPy ML models + AQI & Advisory Engines), SSE control stream, and MessagePack-RPC socket client over `/var/run/arduino-router.sock`.
-- **MCU (STM32U5)**: `Arduino_RouterBridge` RPC handler (`update_display`), `NavosEdgeGUI` renderer utilizing `UNOQ_MPI3501` hardware SPI display driver, and non-blocking 10-second 3-screen display rotation (`millis()`).
+- **MCU (STM32U5)**: `Arduino_RouterBridge` RPC handlers (`update_environment`, `update_advice`, `update_actions`), `NavosEdgeGUI` renderer utilizing `UNOQ_MPI3501` hardware SPI display driver, and non-blocking 10-second 3-screen display rotation (`millis()`).
 
 ---
 

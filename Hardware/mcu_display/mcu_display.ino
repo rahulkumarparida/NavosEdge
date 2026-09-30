@@ -1,9 +1,12 @@
 /**
- * mcu_display.ino — NavosEdge MCU Physical Display Application (Router RPC Bridge)
+ * mcu_display.ino — NavosEdge MCU Physical Display Application (Modular Router RPC Bridge)
  *
  * Runs on Arduino UNO Q MCU (arduino:zephyr:unoq).
  * Initializes UNOQ_MPI3501 display (480x320 landscape).
- * Initializes Arduino_RouterBridge and exposes RPC method `update_display`.
+ * Exposes 3 small RPC methods:
+ *   - update_environment
+ *   - update_advice
+ *   - update_actions
  * Rotates 3 NavosEdge screens non-blockingly every 10 seconds using millis().
  */
 
@@ -16,14 +19,18 @@
 NavosEdgeGUI gui;
 NavosEdgeState state;
 
-void update_display(float aqi, float pm1_0, float pm2_5, float pm10, float temp, float hum, String severity, String advice, String weather_advice, String actions_csv) {
+void update_environment(float aqi, float pm1_0, float pm2_5, float pm10, float temp, float hum) {
     state.aqi = aqi;
     state.pm1_0 = pm1_0;
     state.pm2_5 = pm2_5;
     state.pm10 = pm10;
     state.temperature = temp;
     state.humidity = hum;
+    state.valid = true;
+    state.last_update_ms = millis();
+}
 
+void update_advice(String severity, String advice, String weather_advice) {
     strncpy(state.severity, severity.c_str(), sizeof(state.severity) - 1);
     state.severity[sizeof(state.severity) - 1] = '\0';
 
@@ -33,7 +40,11 @@ void update_display(float aqi, float pm1_0, float pm2_5, float pm10, float temp,
     strncpy(state.weather_advice, weather_advice.c_str(), sizeof(state.weather_advice) - 1);
     state.weather_advice[sizeof(state.weather_advice) - 1] = '\0';
 
-    // Parse actions string (semicolon separated)
+    state.valid = true;
+    state.last_update_ms = millis();
+}
+
+void update_actions(String actions_csv) {
     state.action_count = 0;
     int start = 0;
     int len = actions_csv.length();
@@ -61,10 +72,12 @@ void setup() {
     gui.showStatus("NavosEdge MCU", "Connecting RPC Bridge...");
 
     Bridge.begin();
-    Bridge.provide_safe("update_display", update_display);
+    Bridge.provide_safe("update_environment", update_environment);
+    Bridge.provide_safe("update_advice", update_advice);
+    Bridge.provide_safe("update_actions", update_actions);
 
     Serial.println(F("[MCU] Bridge initialized"));
-    Serial.println(F("[MCU] RPC method registered: update_display"));
+    Serial.println(F("[MCU] RPC methods registered: update_environment, update_advice, update_actions"));
 
     gui.showStatus("NavosEdge MCU", "RPC Bridge Ready");
 }

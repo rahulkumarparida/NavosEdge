@@ -50,7 +50,7 @@ Linux and MCU communicate using the official **Arduino UNO Q Router MessagePack-
 
 ### Runtime Architecture Rules
 - **Physical GUI Execution**: The GUI runs on the UNO Q MCU (`mcu_display.ino`) and renders on the physical MPI3501 LCD via `UNOQ_MPI3501`.
-- **Router MessagePack-RPC Transport**: Linux application connects to `/var/run/arduino-router.sock` and invokes the `update_display` method registered by `Arduino_RouterBridge` on the MCU.
+- **Router MessagePack-RPC Transport**: Linux application connects to `/var/run/arduino-router.sock` and invokes the `update_environment`, `update_advice`, and `update_actions` methods registered by `Arduino_RouterBridge` on the MCU.
 - **Portability**: All scripts (`flash_display.sh`, `run_display_simulation.sh`) dynamically resolve paths and libraries without hardcoded username paths (`/home/rahulroxx`).
 - **Terminal Cleanliness**: Terminals display operational logs (`[HW]`, `[INTELLIGENCE]`, `[MCU]`). Console `[TFT]` print statements are disabled.
 - **Non-Blocking Rotation**: Screen rotation occurs every **10 seconds** independently on MCU using `millis()`.
@@ -117,7 +117,9 @@ Expected log output:
 ```text
 [MCU] Standalone RPC test mode
 [MCU] Router connected
-[MCU] Display state sent via RPC
+[MCU] Environment RPC sent
+[MCU] Advice RPC sent
+[MCU] Actions RPC sent
 [MCU] AQI=63.41 PM2.5=18 TEMP=28.5
 ```
 
