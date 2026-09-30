@@ -48,6 +48,19 @@ void NavosEdgeGUI::begin() {
 // Main update loop (non-blocking)
 // ─────────────────────────────────────────────────────────────
 void NavosEdgeGUI::update(const NavosEdgeState& state) {
+    if (!state.valid) {
+        if (_needsFullRedraw || _lastDrawnScreen != 254) {
+            showStatus("NavosEdge MCU", "Waiting for NavosEdge...");
+            _lastDrawnScreen = 254;
+            _needsFullRedraw = false;
+        }
+        return;
+    }
+
+    if (_lastDrawnScreen == 254) {
+        _needsFullRedraw = true;
+    }
+
     unsigned long now = millis();
 
     // Check if it's time to rotate screens

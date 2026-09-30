@@ -76,6 +76,9 @@ public:
                 last_transmit_time = std::chrono::steady_clock::now();
             }
 
+            // Periodic non-blocking MCU router RPC tick/reconnect
+            mcu_bridge_.tick();
+
             // Yield CPU (~50ms)
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
         }

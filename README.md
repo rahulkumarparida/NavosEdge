@@ -75,6 +75,13 @@ Run the synthetic sensor pipeline, Intelligence Server, and RPC display bridge:
 ./run_display_simulation.sh --scenario traffic --interval 5
 ```
 
+### 4. Check System Status
+Check status of Intelligence Server, Router Socket, MCU RPC availability, and C++ Bridge:
+
+```bash
+./run_display_simulation.sh --status
+```
+
 ---
 
 ## 📚 Documentation & Modules

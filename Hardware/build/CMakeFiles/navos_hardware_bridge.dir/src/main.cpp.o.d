@@ -177,7 +177,7 @@ CMakeFiles/navos_hardware_bridge.dir/src/main.cpp.o: \
  /usr/include/c++/16/x86_64-pc-linux-gnu/bits/basic_file.h \
  /usr/include/c++/16/x86_64-pc-linux-gnu/bits/c++io.h \
  /usr/include/c++/16/bits/fstream.tcc \
- /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/third_party/nlohmann/json.hpp \
+ /home/arduino/NavosEdge/NavosEdge/Hardware/include/nlohmann/json.hpp \
  /usr/include/c++/16/algorithm /usr/include/c++/16/bits/stl_algo.h \
  /usr/include/c++/16/bits/algorithmfwd.h \
  /usr/include/c++/16/bits/stl_heap.h \
@@ -273,6 +273,10 @@ CMakeFiles/navos_hardware_bridge.dir/src/main.cpp.o: \
  /usr/include/c++/16/bits/this_thread_sleep.h \
  /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/include/sse_client.hpp \
  /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/include/mcu_bridge.hpp \
- /usr/include/sys/un.h \
+ /usr/include/sys/un.h /usr/include/fcntl.h /usr/include/bits/fcntl.h \
+ /usr/include/bits/fcntl-linux.h /usr/include/bits/cloexec.h \
+ /usr/include/linux/falloc.h /usr/include/linux/openat2.h \
+ /usr/include/bits/openat2.h /usr/include/bits/stat.h \
+ /usr/include/bits/struct_stat.h \
  /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/include/../display/state/NavosEdgeState.h \
  /home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/include/../display/state/../platform.h

@@ -6,6 +6,7 @@
 #   ./run_display_simulation.sh
 #   ./run_display_simulation.sh --scenario traffic
 #   ./run_display_simulation.sh --scenario dust --interval 5
+#   ./run_display_simulation.sh --status
 # ==============================================================================
 
 set -e
@@ -16,6 +17,7 @@ cd "$SCRIPT_DIR"
 NODE_ID="uno-q-001"
 SCENARIO="normal"
 INTERVAL=60
+CHECK_STATUS=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -31,8 +33,12 @@ while [[ $# -gt 0 ]]; do
       INTERVAL="$2"
       shift 2
       ;;
+    --status)
+      CHECK_STATUS=true
+      shift
+      ;;
     --help|-h)
-      echo "Usage: $0 [--scenario normal|high_pm|traffic|dust] [--interval <seconds>] [--node-id <id>]"
+      echo "Usage: $0 [--scenario normal|high_pm|traffic|dust] [--interval <seconds>] [--node-id <id>] [--status]"
       exit 0
       ;;
     *)
@@ -41,11 +47,52 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+if [ "$CHECK_STATUS" = "true" ]; then
+    echo "============================================================"
+    echo " NavosEdge — System Status Check"
+    echo "============================================================"
+
+    # 1. Intelligence Server Status
+    if curl -s "http://127.0.0.1:8420/health" 2>/dev/null | grep -q "ok"; then
+        echo "  Intelligence Server:   RUNNING (http://127.0.0.1:8420)"
+    else
+        echo "  Intelligence Server:   STOPPED"
+    fi
+
+    # 2. Arduino Router Socket Status
+    if [ -S "/var/run/arduino-router.sock" ]; then
+        echo "  Arduino Router Socket: ACTIVE (/var/run/arduino-router.sock)"
+    else
+        echo "  Arduino Router Socket: UNAVAILABLE"
+    fi
+
+    # 3. MCU RPC Availability Status
+    if [ -f "./Hardware/build/navos_hardware_bridge" ]; then
+        if ./Hardware/build/navos_hardware_bridge --test-rpc >/dev/null 2>&1; then
+            echo "  MCU RPC Availability:  AVAILABLE"
+        else
+            echo "  MCU RPC Availability:  UNAVAILABLE / REBOOTING"
+        fi
+    else
+        echo "  MCU RPC Availability:  UNKNOWN (binary not built)"
+    fi
+
+    # 4. C++ Hardware Bridge Status
+    HW_PIDS=$(pgrep -f "navos_hardware_bridge" 2>/dev/null || true)
+    if [ -n "$HW_PIDS" ]; then
+        echo "  C++ Hardware Bridge:   RUNNING (PID: $HW_PIDS)"
+    else
+        echo "  C++ Hardware Bridge:   STOPPED"
+    fi
+    echo "============================================================"
+    exit 0
+fi
+
 PIDS=()
 
 cleanup() {
     echo ""
-    echo "[NAVOS] Shutting down simulation pipeline cleanly..."
+    echo "[NAVOS] Shutting down simulation pipeline processes launched by this session..."
     for pid in "${PIDS[@]}"; do
         if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
             kill "$pid" 2>/dev/null || true
@@ -71,9 +118,9 @@ free_port() {
 echo "============================================================"
 echo " NavosEdge — Synthetic Hardware → Intelligence → MCU Display"
 echo "============================================================"
-echo "  Node ID:          $NODE_ID"
-echo "  Scenario:         $SCENARIO"
-echo "  Interval:         ${INTERVAL}s (default 60s)"
+echo "  Node ID:            $NODE_ID"
+echo "  Scenario:           $SCENARIO"
+echo "  Interval:           ${INTERVAL}s (default 60s)"
 echo "  Arduino Router RPC: /var/run/arduino-router.sock"
 echo "============================================================"
 
@@ -130,11 +177,16 @@ if [ ! -f "navos_hardware_bridge" ]; then
 fi
 cd "$SCRIPT_DIR"
 
-# 4. Launch C++ Hardware application (Mock Sensor + HTTP POST + SSE + MCU Serial Bridge)
-echo "[NAVOS] Launching C++ Hardware application..."
-./Hardware/build/navos_hardware_bridge --config Hardware/config/hardware_config.json --node-id "$NODE_ID" --scenario "$SCENARIO" --interval "$INTERVAL" &
-HW_PID=$!
-PIDS+=($HW_PID)
+# 4. Launch C++ Hardware application (if not already running)
+HW_PIDS=$(pgrep -f "navos_hardware_bridge" 2>/dev/null || true)
+if [ -n "$HW_PIDS" ]; then
+    echo "[NAVOS] C++ Hardware application already running (PID: $HW_PIDS)"
+else
+    echo "[NAVOS] Launching C++ Hardware application..."
+    ./Hardware/build/navos_hardware_bridge --config Hardware/config/hardware_config.json --node-id "$NODE_ID" --scenario "$SCENARIO" --interval "$INTERVAL" &
+    HW_PID=$!
+    PIDS+=($HW_PID)
+fi
 
 echo "============================================================"
 echo "          End-to-End Pipeline Active"
