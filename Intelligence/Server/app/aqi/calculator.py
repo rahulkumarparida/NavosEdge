@@ -6,51 +6,7 @@ from datetime import datetime, timezone
 from typing import Dict, List, Optional, Tuple
 
 from app.aqi.schemas import AQICalculationResult
-
-# Breakpoints tuple: (c_low, c_high, i_low, i_high)
-BREAKPOINTS_EPA: Dict[str, List[Tuple[float, float, float, float]]] = {
-    "PM2_5": [
-        (0.0, 12.0, 0.0, 50.0),
-        (12.1, 35.4, 51.0, 100.0),
-        (35.5, 55.4, 101.0, 150.0),
-        (55.5, 150.4, 151.0, 200.0),
-        (150.5, 250.4, 201.0, 300.0),
-        (250.5, 350.4, 301.0, 400.0),
-        (350.5, 500.4, 401.0, 500.0),
-    ],
-    "PM10": [
-        (0.0, 54.0, 0.0, 50.0),
-        (55.0, 154.0, 51.0, 100.0),
-        (155.0, 254.0, 101.0, 150.0),
-        (255.0, 354.0, 151.0, 200.0),
-        (355.0, 424.0, 201.0, 300.0),
-        (425.0, 504.0, 301.0, 400.0),
-        (505.0, 604.0, 401.0, 500.0),
-    ],
-}
-# PM1.0 shares PM2.5 scale under EPA standard
-BREAKPOINTS_EPA["PM1_0"] = BREAKPOINTS_EPA["PM2_5"]
-
-
-BREAKPOINTS_CPCB: Dict[str, List[Tuple[float, float, float, float]]] = {
-    "PM2_5": [
-        (0.0, 30.0, 0.0, 50.0),
-        (30.1, 60.0, 51.0, 100.0),
-        (60.1, 90.0, 101.0, 200.0),
-        (90.1, 120.0, 201.0, 300.0),
-        (120.1, 250.0, 301.0, 400.0),
-        (250.1, 500.0, 401.0, 500.0),
-    ],
-    "PM10": [
-        (0.0, 50.0, 0.0, 50.0),
-        (50.1, 100.0, 51.0, 100.0),
-        (100.1, 250.0, 101.0, 200.0),
-        (251.0, 350.0, 201.0, 300.0),
-        (351.0, 430.0, 301.0, 400.0),
-        (430.1, 500.0, 401.0, 500.0),
-    ],
-}
-BREAKPOINTS_CPCB["PM1_0"] = BREAKPOINTS_CPCB["PM2_5"]
+from app.core.constants import BREAKPOINTS_EPA, BREAKPOINTS_CPCB
 
 
 class AQICalculator:

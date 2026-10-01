@@ -2,41 +2,40 @@ import random
 from datetime import datetime, timezone, timedelta
 from typing import Dict, Any
 
+try:
+    from simulation.constants import (
+        DEFAULT_SCENARIO,
+        DEFAULT_SIM_NODE_ID,
+        DEFAULT_SAMPLING_INTERVAL_SECONDS,
+        ADC_VREF,
+        ADC_MAX,
+        SCENARIO_PROFILES,
+    )
+except ImportError:
+    from constants import (
+        DEFAULT_SCENARIO,
+        DEFAULT_SIM_NODE_ID,
+        DEFAULT_SAMPLING_INTERVAL_SECONDS,
+        ADC_VREF,
+        ADC_MAX,
+        SCENARIO_PROFILES,
+    )
+
 class SensorSimulator:
-    def __init__(self, scenario: str = 'clean_indoor', node_id: str = "sim_node_01", seed: int = None):
+    def __init__(self, scenario: str = DEFAULT_SCENARIO, node_id: str = DEFAULT_SIM_NODE_ID, seed: int = None):
         self.scenario = scenario
         self.node_id = node_id
         if seed is not None:
             random.seed(seed)
         self.current_time = datetime.now(timezone.utc)
-        self.interval = timedelta(seconds=60)
+        self.interval = timedelta(seconds=DEFAULT_SAMPLING_INTERVAL_SECONDS)
 
     def generate(self) -> Dict[str, Any]:
         scenario = self.scenario
         
-        # Base values
-        if scenario == 'clean_indoor':
-            pm25, pm10, mq2, mq9, mq135, temp, hum = (5, 15), (10, 25), (0.8, 1.2), (0.6, 1.0), (0.7, 1.1), (22, 26), (40, 55)
-        elif scenario == 'traffic':
-            pm25, pm10, mq2, mq9, mq135, temp, hum = (35, 80), (60, 120), (1.3, 2.0), (1.5, 2.5), (1.2, 1.8), (28, 35), (30, 50)
-        elif scenario == 'dust_construction':
-            pm25, pm10, mq2, mq9, mq135, temp, hum = (50, 120), (150, 400), (0.9, 1.3), (0.7, 1.1), (0.8, 1.2), (30, 38), (25, 40)
-        elif scenario == 'combustion_smoke':
-            pm25, pm10, mq2, mq9, mq135, temp, hum = (80, 200), (100, 250), (2.5, 4.0), (2.0, 3.5), (2.0, 3.5), (32, 40), (30, 50)
-        elif scenario == 'high_humidity':
-            pm25, pm10, mq2, mq9, mq135, temp, hum = (10, 25), (15, 35), (0.9, 1.3), (0.7, 1.1), (0.8, 1.2), (24, 30), (85, 98)
-        elif scenario == 'pm_spike':
-            pm25, pm10, mq2, mq9, mq135, temp, hum = (200, 500), (300, 700), (1.0, 1.5), (0.8, 1.2), (0.9, 1.3), (25, 32), (40, 60)
-        elif scenario == 'gas_spike':
-            pm25, pm10, mq2, mq9, mq135, temp, hum = (10, 30), (15, 40), (3.0, 4.5), (2.5, 4.0), (3.0, 4.5), (25, 35), (35, 55)
-        elif scenario == 'mixed_pollution':
-            pm25, pm10, mq2, mq9, mq135, temp, hum = (60, 150), (100, 250), (1.8, 3.0), (1.5, 2.8), (1.5, 2.8), (28, 35), (40, 60)
-        elif scenario == 'stable':
-            pm25, pm10, mq2, mq9, mq135, temp, hum = (12, 12), (20, 20), (1.0, 1.0), (0.8, 0.8), (0.9, 0.9), (25, 25), (50, 50)
-        elif scenario == 'sensor_fault':
-            pm25, pm10, mq2, mq9, mq135, temp, hum = (5, 15), (10, 25), (0.8, 1.2), (0.6, 1.0), (0.7, 1.1), (22, 26), (40, 55)
-        else:
-            pm25, pm10, mq2, mq9, mq135, temp, hum = (5, 15), (10, 25), (0.8, 1.2), (0.6, 1.0), (0.7, 1.1), (22, 26), (40, 55)
+        # Base values from centralized SCENARIO_PROFILES
+        profile = SCENARIO_PROFILES.get(scenario, SCENARIO_PROFILES['clean_indoor'])
+        pm25, pm10, mq2, mq9, mq135, temp, hum = profile
             
         def r(r_tuple):
             val = random.uniform(r_tuple[0], r_tuple[1])
@@ -74,7 +73,7 @@ class SensorSimulator:
         v_hum = r(hum)
         
         def to_adc(volts):
-            return int(max(0, min(1023, (volts / 5.0) * 1023)))
+            return int(max(0, min(ADC_MAX, (volts / ADC_VREF) * ADC_MAX)))
 
         payload = {
             "node_id": self.node_id,

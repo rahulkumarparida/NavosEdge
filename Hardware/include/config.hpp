@@ -7,22 +7,24 @@
 #include <stdexcept>
 #include <nlohmann/json.hpp>
 
+#include "constants.hpp"
+
 namespace navos {
 
 struct HardwareConfig {
-    std::string server_url        = "http://localhost:8420";
-    std::string node_id           = "uno-q-001";
-    int  sampling_interval_seconds = 10;
-    int  retry_max_attempts        = 5;
-    int  retry_base_delay_seconds  = 2;
-    int  http_timeout_seconds      = 10;
-    bool mock_mode                 = true;
-    std::string scenario           = "normal";
+    std::string server_url        = constants::DEFAULT_SERVER_URL;
+    std::string node_id           = constants::DEFAULT_NODE_ID;
+    int  sampling_interval_seconds = constants::DEFAULT_SAMPLING_INTERVAL_SECONDS;
+    int  retry_max_attempts        = constants::DEFAULT_RETRY_MAX_ATTEMPTS;
+    int  retry_base_delay_seconds  = constants::DEFAULT_RETRY_BASE_DELAY_SECONDS;
+    int  http_timeout_seconds      = constants::DEFAULT_HTTP_TIMEOUT_SECONDS;
+    bool mock_mode                 = constants::DEFAULT_MOCK_MODE;
+    std::string scenario           = constants::DEFAULT_SCENARIO;
 
     // Physical sensor serial connection
-    std::string serial_port       = "/dev/ttyACM0";
-    int  serial_baud              = 115200;
-    int  serial_timeout_ms        = 5000;
+    std::string serial_port       = constants::DEFAULT_SERIAL_PORT;
+    int  serial_baud              = constants::DEFAULT_SERIAL_BAUD;
+    int  serial_timeout_ms        = constants::DEFAULT_SERIAL_TIMEOUT_MS;
 };
 
 inline HardwareConfig load_config(const std::string& path) {

@@ -9,7 +9,10 @@ Tiny client for mq_service. Import this everywhere you need a prediction.
 import json
 import socket
 
-SOCK_PATH = "/tmp/mq_service.sock"
+try:
+    from Training.constants import SOCK_PATH
+except ImportError:
+    from constants import SOCK_PATH
 
 def classify(mq2, mq9, mq135, t=25.0, h=45.0):
     with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:

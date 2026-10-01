@@ -13,6 +13,7 @@
 #include <iostream>
 
 #include "sensor.hpp"
+#include "constants.hpp"
 
 namespace navos {
 
@@ -43,24 +44,24 @@ struct ValidationResult {
 class SensorValidator {
 public:
     // ADC bounds (10-bit: 0-1023)
-    static constexpr int ADC_MIN = 0;
-    static constexpr int ADC_MAX = 1023;
+    static constexpr int ADC_MIN = constants::ADC_MIN;
+    static constexpr int ADC_MAX = constants::ADC_MAX;
 
     // Voltage bounds (5V reference)
-    static constexpr double VOLTAGE_MIN = 0.0;
-    static constexpr double VOLTAGE_MAX = 5.0;
+    static constexpr double VOLTAGE_MIN = constants::VOLTAGE_MIN;
+    static constexpr double VOLTAGE_MAX = constants::VOLTAGE_MAX;
 
     // DHT22 operating range
-    static constexpr double TEMP_MIN = -40.0;
-    static constexpr double TEMP_MAX = 85.0;
-    static constexpr double HUM_MIN  = 0.0;
-    static constexpr double HUM_MAX  = 100.0;
+    static constexpr double TEMP_MIN = constants::TEMP_MIN;
+    static constexpr double TEMP_MAX = constants::TEMP_MAX;
+    static constexpr double HUM_MIN  = constants::HUM_MIN;
+    static constexpr double HUM_MAX  = constants::HUM_MAX;
 
     // PM max sane value (µg/m³) — WHO says >500 is extreme
-    static constexpr double PM_MAX = 1000.0;
+    static constexpr double PM_MAX = constants::PM_MAX;
 
     // PM ordering tolerance (matches Python schema)
-    static constexpr double PM_TOLERANCE = 0.5;
+    static constexpr double PM_TOLERANCE = constants::PM_TOLERANCE;
 
     /**
      * Validate a SensorData reading.

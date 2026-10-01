@@ -11,94 +11,40 @@ import pandas as pd
 from datetime import datetime, timedelta
 
 # ------------------------------------------------------------------
-# 1. Configuration
+# 1. Configuration (Imported from constants.py single source)
 # ------------------------------------------------------------------
-RANDOM_SEED = 42
-N_SAMPLES = 12000
-V_C = 5.0                     # supply voltage (V)
-R_L = 10_000.0               # load resistor (Ω)
-ADC_MAX = 1023               # 10-bit ADC
-ADC_REF = 3.3                # ADC reference (V)
-DIVIDER_RATIO = 0.5          # 2:1 divider before ADC
-
-# Gas-specific model parameters: (log-log slope a, intercept b)
-# Derived from typical sensitivity curves in datasheets.
-# Format: {sensor: {gas: (a, b)}}
-SENSOR_MODEL = {
-    'MQ2': {
-        'LPG':      (-0.45, 2.30),   # high sensitivity
-        'Methane':  (-0.35, 2.10),
-        'Propane':  (-0.50, 2.35),
-        'Hydrogen': (-0.40, 2.20),
-        'CO':       (-0.25, 1.90),   # low sensitivity
-        'Alcohol':  (-0.30, 2.00),
-        'Smoke':    (-0.55, 2.40),
-        'CleanAir': ( 0.00, 0.00),   # baseline
-    },
-    'MQ9': {
-        'LPG':      (-0.40, 2.20),
-        'Methane':  (-0.45, 2.25),
-        'Propane':  (-0.35, 2.10),
-        'Hydrogen': (-0.30, 2.00),
-        'CO':       (-0.50, 2.40),   # high sensitivity
-        'Alcohol':  (-0.25, 1.90),
-        'Smoke':    (-0.35, 2.05),
-        'CleanAir': ( 0.00, 0.00),
-    },
-    'MQ135': {
-        'LPG':      (-0.30, 2.00),
-        'Methane':  (-0.25, 1.90),
-        'Propane':  (-0.35, 2.05),
-        'Hydrogen': (-0.40, 2.15),
-        'CO':       (-0.30, 2.00),
-        'Alcohol':  (-0.45, 2.30),   # high sensitivity
-        'Smoke':    (-0.50, 2.35),   # high sensitivity
-        'CleanAir': ( 0.00, 0.00),
-    },
-}
-
-# Baseline resistance R0 in clean air (Ω) for each sensor
-R0 = {
-    'MQ2':   5_000.0,
-    'MQ9':   8_000.0,
-    'MQ135': 20_000.0,
-}
-
-# Gas concentration ranges (ppm)
-CONC_RANGE = {
-    'LPG':      (200, 5000),
-    'Methane':  (5000, 20000),
-    'Propane':  (200, 5000),
-    'Hydrogen': (300, 5000),
-    'CO':       (20, 2000),
-    'Alcohol':  (100, 2000),
-    'Smoke':    (10, 1000),
-    'CleanAir': (0, 0),
-}
-
-# Sampling probabilities (class imbalance)
-GAS_PROBS = {
-    'LPG':      0.10,
-    'Methane':  0.08,
-    'Propane':  0.08,
-    'Hydrogen': 0.08,
-    'CO':       0.08,
-    'Alcohol':  0.08,
-    'Smoke':    0.09,
-    'CleanAir': 0.41,
-}
-
-# Safety thresholds (ppm) – 8-hour TWA unless noted
-SAFETY_LIMIT = {
-    'LPG':      1000,
-    'Methane':  1000,
-    'Propane':  1000,
-    'Hydrogen': 8000,
-    'CO':       50,
-    'Alcohol':  1000,
-    'Smoke':    50,
-    'CleanAir': np.inf,
-}
+try:
+    from Training.constants import (
+        RANDOM_SEED,
+        N_SAMPLES_DEFAULT as N_SAMPLES,
+        V_C,
+        R_L,
+        ADC_MAX,
+        ADC_REF,
+        DIVIDER_RATIO,
+        SENSOR_MODEL,
+        R0_DEFAULTS as R0,
+        CONC_RANGE,
+        GAS_PROBS,
+        SAFETY_LIMIT,
+        DATASET_FILENAME,
+    )
+except ImportError:
+    from constants import (
+        RANDOM_SEED,
+        N_SAMPLES_DEFAULT as N_SAMPLES,
+        V_C,
+        R_L,
+        ADC_MAX,
+        ADC_REF,
+        DIVIDER_RATIO,
+        SENSOR_MODEL,
+        R0_DEFAULTS as R0,
+        CONC_RANGE,
+        GAS_PROBS,
+        SAFETY_LIMIT,
+        DATASET_FILENAME,
+    )
 
 # ------------------------------------------------------------------
 # 2. Helper functions

@@ -81,31 +81,10 @@ SOURCE_DESCRIPTIONS: Dict[SourceCategory, str] = {
 }
 
 
-# Feature names used by the source classifier.
-# These are the 8 raw features extracted from SensorPayload.
-SOURCE_CLASSIFIER_FEATURES = [
-    "mq2_v",
-    "mq9_v",
-    "mq135_v",
-    "temp_c",
-    "hum_pct",
-    "pm1_0",
-    "pm2_5",
-    "pm10",
-]
-
-# Derived ratio features calculated from raw features.
-SOURCE_CLASSIFIER_DERIVED_FEATURES = [
-    "pm_coarse_ratio",   # PM10 / PM2.5 — dust vs combustion discriminator
-    "pm_fine_ratio",     # PM2.5 / PM1.0 — fine particle enrichment
-    "mq_mean_v",         # mean(MQ2, MQ9, MQ135) voltage
-    "mq_max_v",          # max(MQ2, MQ9, MQ135) voltage
-    "mq2_mq9_ratio",    # MQ2 / MQ9 — smoke vs CO discriminator
-    "mq135_mq2_ratio",  # MQ135 / MQ2 — air quality vs smoke
-]
-
-ALL_SOURCE_CLASSIFIER_FEATURES = (
-    SOURCE_CLASSIFIER_FEATURES + SOURCE_CLASSIFIER_DERIVED_FEATURES
+from app.core.constants import (
+    RAW_FEATURES as SOURCE_CLASSIFIER_FEATURES,
+    DERIVED_FEATURES as SOURCE_CLASSIFIER_DERIVED_FEATURES,
+    ALL_CLASSIFIER_FEATURES as ALL_SOURCE_CLASSIFIER_FEATURES,
 )
 
 

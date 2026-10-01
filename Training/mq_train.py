@@ -14,20 +14,55 @@ from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.metrics import classification_report, f1_score, accuracy_score
 import joblib
 
+try:
+    from Training.constants import (
+        RANDOM_SEED as SEED,
+        FEATURES,
+        DATASET_FILENAME,
+        MODEL_PT_FILENAME,
+        PREPROCESS_PKL_FILENAME,
+        HIDDEN1_DEFAULT,
+        HIDDEN2_DEFAULT,
+        DROPOUT_DEFAULT,
+        EPOCHS_DEFAULT as EPOCHS,
+        BATCH_SIZE_TRAIN,
+        BATCH_SIZE_EVAL,
+        LEARNING_RATE_DEFAULT,
+        WEIGHT_DECAY_DEFAULT,
+        TRAIN_SPLIT_RATIO,
+        VAL_SPLIT_RATIO,
+    )
+except ImportError:
+    from constants import (
+        RANDOM_SEED as SEED,
+        FEATURES,
+        DATASET_FILENAME,
+        MODEL_PT_FILENAME,
+        PREPROCESS_PKL_FILENAME,
+        HIDDEN1_DEFAULT,
+        HIDDEN2_DEFAULT,
+        DROPOUT_DEFAULT,
+        EPOCHS_DEFAULT as EPOCHS,
+        BATCH_SIZE_TRAIN,
+        BATCH_SIZE_EVAL,
+        LEARNING_RATE_DEFAULT,
+        WEIGHT_DECAY_DEFAULT,
+        TRAIN_SPLIT_RATIO,
+        VAL_SPLIT_RATIO,
+    )
+
 # ------------------------------------------------------------------
 # Reproducibility
 # ------------------------------------------------------------------
-SEED = 42
 np.random.seed(SEED)
 torch.manual_seed(SEED)
 
 # ------------------------------------------------------------------
 # Load & prepare data
 # ------------------------------------------------------------------
-df = pd.read_csv('mq_synthetic_dataset.csv')
+df = pd.read_csv(DATASET_FILENAME)
 df = df.sort_values('timestamp').reset_index(drop=True)
 
-FEATURES = ['MQ2_V', 'MQ9_V', 'MQ135_V', 'temperature_C', 'humidity_pct']
 X = df[FEATURES].values.astype(np.float32)
 
 le = LabelEncoder()
