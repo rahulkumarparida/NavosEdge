@@ -1,8 +1,0 @@
-{"timestamp": "2026-09-27T07:28:46+00:00", "node_id": "node-high-pm", "is_synthetic": false, "PM1_0": 120.0, "PM2_5": 180.0, "PM10": 260.0}
-{"timestamp": "2026-09-27T07:28:48+00:00", "node_id": "node-high-pm", "is_synthetic": false, "PM1_0": 120.2, "PM2_5": 180.3, "PM10": 260.4}
-{"timestamp": "2026-09-27T07:28:50+00:00", "node_id": "node-high-pm", "is_synthetic": false, "PM1_0": 120.4, "PM2_5": 180.6, "PM10": 260.79}
-{"timestamp": "2026-09-27T07:28:53+00:00", "node_id": "node-high-pm", "is_synthetic": false, "PM1_0": 120.59, "PM2_5": 180.89, "PM10": 261.18}
-{"timestamp": "2026-09-27T07:28:55+00:00", "node_id": "node-high-pm", "is_synthetic": false, "PM1_0": 120.78, "PM2_5": 181.17, "PM10": 261.56}
-{"timestamp": "2026-09-27T07:28:56+00:00", "node_id": "node-high-pm", "is_synthetic": false, "PM1_0": 120.96, "PM2_5": 181.44, "PM10": 261.92}
-{"timestamp": "2026-09-27T07:28:57+00:00", "node_id": "node-high-pm", "is_synthetic": false, "PM1_0": 121.13, "PM2_5": 181.69, "PM10": 262.26}
-{"timestamp": "2026-09-27T07:28:58+00:00", "node_id": "node-high-pm", "is_synthetic": false, "PM1_0": 121.29, "PM2_5": 181.93, "PM10": 262.58}

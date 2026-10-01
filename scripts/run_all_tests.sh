@@ -44,7 +44,7 @@ export PYTHONPATH="$SERVER_DIR:$PROJECT_DIR:$PYTHONPATH"
 
 # --- Schema Tests ---
 run_test "Sensor Schema Validation" \
-    "python3 -c \"
+    "python3 -u -c \"
 from app.schemas.sensor import SensorPayload
 from datetime import datetime, timezone
 p = SensorPayload(
@@ -63,7 +63,7 @@ print(f'  Schema valid: {p.node_id}')
 
 # --- Malformed Data Rejection ---
 run_test "Reject Malformed Data" \
-    "python3 -c \"
+    "python3 -u -c \"
 from app.schemas.sensor import SensorPayload
 from datetime import datetime, timezone
 import traceback
@@ -87,7 +87,7 @@ except Exception as e:
 
 # --- Inference Schema ---
 run_test "Inference Result Schema" \
-    "python3 -c \"
+    "python3 -u -c \"
 from app.schemas.inference import InferenceResult, InferenceStatus
 r = InferenceResult.not_configured()
 assert r.status == InferenceStatus.NOT_CONFIGURED
@@ -98,7 +98,7 @@ print('  InferenceResult schemas OK')
 
 # --- AQI Calculator ---
 run_test "AQI Calculator" \
-    "python3 -c \"
+    "python3 -u -c \"
 from app.aqi.calculator import AQICalculator
 calc = AQICalculator()
 r = calc.calculate(pm1_0=10.0, pm2_5=35.0, pm10=50.0)
@@ -108,7 +108,7 @@ assert r.aqi > 0
 
 # --- NumPy Inference Backend ---
 run_test "NumPy Inference Backend Load" \
-    "python3 -c \"
+    "python3 -u -c \"
 try:
     from app.services.numpy_inference import NumpyGasNetAdapter
     from app.core.config import get_settings
@@ -124,7 +124,7 @@ except Exception as e:
 
 # --- NumPy Inference Prediction ---
 run_test "NumPy Inference Prediction" \
-    "python3 -c \"
+    "python3 -u -c \"
 import asyncio
 try:
     from app.services.numpy_inference import NumpyGasNetAdapter
@@ -146,7 +146,7 @@ except ImportError:
 
 # --- Anomaly Engine ---
 run_test "Anomaly Engine" \
-    "python3 -c \"
+    "python3 -u -c \"
 from app.anomaly.engine import AnomalyEngine
 engine = AnomalyEngine()
 print('  AnomalyEngine initialized successfully')
@@ -154,7 +154,7 @@ print('  AnomalyEngine initialized successfully')
 
 # --- Source Classifier ---
 run_test "Source Classifier" \
-    "python3 -c \"
+    "python3 -u -c \"
 from app.source_classifier.classifier import SourceClassifier
 from app.core.config import get_settings
 settings = get_settings()
@@ -165,7 +165,7 @@ print(f'  Source classifier loaded: {loaded}')
 
 # --- Forecast Plugin ---
 run_test "Forecast Plugin" \
-    "python3 -c \"
+    "python3 -u -c \"
 from app.forecast.plugin import ForecastPlugin
 fp = ForecastPlugin()
 print(f'  ForecastPlugin initialized: {not fp.is_initialized}')
@@ -173,7 +173,7 @@ print(f'  ForecastPlugin initialized: {not fp.is_initialized}')
 
 # --- Advisory Engine ---
 run_test "Advisory Engine" \
-    "python3 -c \"
+    "python3 -u -c \"
 from app.advisory.engine import AdvisoryEngine
 from app.advisory.rules import AdvisoryConfig
 engine = AdvisoryEngine(AdvisoryConfig())
@@ -182,7 +182,7 @@ print('  AdvisoryEngine initialized')
 
 # --- Simulator ---
 run_test "Sensor Simulator" \
-    "cd '$PROJECT_DIR' && python3 -c \"
+    "cd '$PROJECT_DIR' && python3 -u -c \"
 import sys
 sys.path.insert(0, 'Intelligence/Server')
 sys.path.insert(0, '.')
@@ -198,7 +198,7 @@ print(f'  Simulator reading validated: PM2.5={p.particulate_matter.PM2_5}')
 # --- Multiple Scenarios ---
 for scenario in clean_indoor traffic dust_construction combustion_smoke high_humidity stable; do
     run_test "Simulator Scenario: $scenario" \
-        "cd '$PROJECT_DIR' && python3 -c \"
+        "cd '$PROJECT_DIR' && python3 -u -c \"
 import sys
 sys.path.insert(0, 'Intelligence/Server')
 sys.path.insert(0, '.')
@@ -213,7 +213,7 @@ done
 
 # --- Model Missing Graceful ---
 run_test "Missing Model Graceful Handling" \
-    "python3 -c \"
+    "python3 -u -c \"
 from app.services.numpy_inference import NumpyGasNetAdapter
 from pathlib import Path
 adapter = NumpyGasNetAdapter(artifacts_dir=Path('/nonexistent'))
@@ -224,7 +224,7 @@ assert not adapter._loaded
 
 # --- Pipeline ---
 run_test "Modular Pipeline" \
-    "python3 -c \"
+    "python3 -u -c \"
 from app.services.pipeline import ModularPipeline
 from app.schemas.sensor import SensorPayload
 from app.schemas.inference import InferenceResult, InferenceStatus

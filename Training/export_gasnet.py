@@ -1,107 +1,71 @@
+#!/usr/bin/env python3
+"""
+Export script for TinyGasNet model weights & metadata (PyTorch-Free / Pure NumPy).
+
+Copies and validates gasnet_weights.npz, model_metadata.json, and preprocess.pkl
+between Training/models and Intelligence/Server/artifacts without requiring PyTorch.
+"""
+
 import os
 import sys
 import json
 import joblib
 import numpy as np
-import time
-from datetime import datetime
 import shutil
-
-try:
-    import torch
-except ImportError:
-    print("PyTorch is required to run the export script.")
-    sys.exit(1)
+from datetime import datetime
 
 def find_files():
     search_paths = [
         "Training/models/",
-        "Intelligence/Server/artifacts/"
+        "Intelligence/Server/artifacts/",
+        "Intelligence/Server/models/"
     ]
     
-    pt_path = None
+    npz_path = None
+    meta_path = None
     pkl_path = None
     
     for path in search_paths:
-        if pt_path is None and os.path.exists(os.path.join(path, "gasnet.pt")):
-            pt_path = os.path.join(path, "gasnet.pt")
+        if npz_path is None and os.path.exists(os.path.join(path, "gasnet_weights.npz")):
+            npz_path = os.path.join(path, "gasnet_weights.npz")
+        if meta_path is None and os.path.exists(os.path.join(path, "model_metadata.json")):
+            meta_path = os.path.join(path, "model_metadata.json")
         if pkl_path is None and os.path.exists(os.path.join(path, "preprocess.pkl")):
             pkl_path = os.path.join(path, "preprocess.pkl")
             
-    return pt_path, pkl_path
+    return npz_path, meta_path, pkl_path
 
 def main():
-    pt_path, pkl_path = find_files()
-    if not pt_path or not pkl_path:
-        print("Could not find gasnet.pt or preprocess.pkl")
+    npz_path, meta_path, pkl_path = find_files()
+    if not npz_path or not meta_path:
+        print("Could not find gasnet_weights.npz or model_metadata.json")
         sys.exit(1)
         
-    print(f"Loading weights from {pt_path}")
-    state_dict = torch.load(pt_path, map_location='cpu')
+    print(f"Validating NumPy weights from {npz_path}")
+    weights = np.load(npz_path)
     
-    print(f"Loading preprocessing from {pkl_path}")
-    bundle = joblib.load(pkl_path)
-    
-    scaler = bundle['scaler']
-    le = bundle['label_encoder']
-    t_cal = bundle.get('temperature', 1.0)
-    
-    # Extract weights to numpy
-    weights = {}
-    for key, tensor in state_dict.items():
-        weights[key] = tensor.numpy()
+    print(f"Validating metadata from {meta_path}")
+    with open(meta_path) as f:
+        meta = json.load(f)
         
     # Create directories
     os.makedirs("Training/models", exist_ok=True)
     os.makedirs("Intelligence/Server/models", exist_ok=True)
     os.makedirs("Intelligence/Server/artifacts", exist_ok=True)
     
-    npz_path = "Training/models/gasnet_weights.npz"
-    meta_path = "Training/models/model_metadata.json"
+    dest_npz = "Training/models/gasnet_weights.npz"
+    dest_meta = "Training/models/model_metadata.json"
     
-    print(f"Saving weights to {npz_path}")
-    np.savez_compressed(npz_path, **weights)
-    
-    metadata = {
-        "model_version": datetime.now().strftime("%Y%m%d_%H%M%S"),
-        "architecture": {
-            "n_features": 5,
-            "hidden1": 32,
-            "hidden2": 16,
-            "n_classes": len(le.classes_),
-            "p_drop": 0.1
-        },
-        "feature_order": ['MQ2_V', 'MQ9_V', 'MQ135_V', 'temperature_C', 'humidity_pct'],
-        "class_labels": le.classes_.tolist(),
-        "calibration_temperature": float(t_cal),
-        "preprocessing": {
-            "scaler_mean": scaler.mean_.tolist(),
-            "scaler_scale": scaler.scale_.tolist()
-        },
-        "expected_input_ranges": {
-            "MQ2_V": [0.0, 5.0],
-            "MQ9_V": [0.0, 5.0],
-            "MQ135_V": [0.0, 5.0],
-            "temperature_C": [-20.0, 80.0],
-            "humidity_pct": [0.0, 100.0]
-        },
-        "export_timestamp": datetime.now().isoformat(),
-        "source_weights_file": pt_path
-    }
-    
-    print(f"Saving metadata to {meta_path}")
-    with open(meta_path, 'w') as f:
-        json.dump(metadata, f, indent=2)
-        
-    # Copy to artifacts
+    print(f"Deploying artifacts...")
     shutil.copy2(npz_path, "Intelligence/Server/artifacts/gasnet_weights.npz")
     shutil.copy2(meta_path, "Intelligence/Server/artifacts/model_metadata.json")
-    
-    # Copy to models
     shutil.copy2(npz_path, "Intelligence/Server/models/gasnet_weights.npz")
     shutil.copy2(meta_path, "Intelligence/Server/models/model_metadata.json")
+    if pkl_path and os.path.exists(pkl_path):
+        shutil.copy2(pkl_path, "Intelligence/Server/artifacts/preprocess.pkl")
+        shutil.copy2(pkl_path, "Training/models/preprocess.pkl")
     
-    print("Export completed successfully.")
+    print("PyTorch-Free export completed successfully.")
 
 if __name__ == "__main__":
     main()

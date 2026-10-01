@@ -1,8 +1,8 @@
 {
-  "version": "0.1.0-synthetic",
-  "created_at": "2026-09-20T06:20:52.935745",
+  "version": "1.0.0-retrained-20261002",
+  "created_at": "2026-10-01T21:12:17.983964+00:00",
   "model_type": "DecisionTreeClassifier",
-  "training_data": "SYNTHETIC \u2014 not validated against real-world sources",
+  "training_data": "Calibrated from real dataset (2672 aligned samples)",
   "classes": [
     "BIOMASS_OR_WASTE_BURNING",
     "CLEAN_OR_BACKGROUND",
@@ -30,85 +30,10 @@
     "mq135_mq2_ratio"
   ],
   "evaluation": {
-    "accuracy": 0.8277777777777777,
+    "accuracy": 0.2383654937570942,
     "tree_depth": 8,
-    "n_leaves": 76,
-    "n_train": 1440,
-    "n_test": 360
-  },
-  "per_class_metrics": {
-    "BIOMASS_OR_WASTE_BURNING": {
-      "precision": 0.8392857142857143,
-      "recall": 0.94,
-      "f1_score": 0.8867924528301887,
-      "support": 50.0
-    },
-    "CLEAN_OR_BACKGROUND": {
-      "precision": 0.8983050847457628,
-      "recall": 0.8833333333333333,
-      "f1_score": 0.8907563025210085,
-      "support": 60.0
-    },
-    "CONSTRUCTION_ACTIVITY": {
-      "precision": 0.7555555555555555,
-      "recall": 0.85,
-      "f1_score": 0.8,
-      "support": 40.0
-    },
-    "COOKING_OR_FUEL_COMBUSTION": {
-      "precision": 0.7647058823529411,
-      "recall": 0.65,
-      "f1_score": 0.7027027027027027,
-      "support": 40.0
-    },
-    "HEAVY_DUST": {
-      "precision": 0.95,
-      "recall": 0.95,
-      "f1_score": 0.95,
-      "support": 40.0
-    },
-    "INDOOR_ACTIVITY": {
-      "precision": 0.8095238095238095,
-      "recall": 0.85,
-      "f1_score": 0.8292682926829268,
-      "support": 40.0
-    },
-    "INDUSTRIAL_OR_GENERATOR_EMISSIONS": {
-      "precision": 0.825,
-      "recall": 0.825,
-      "f1_score": 0.825,
-      "support": 40.0
-    },
-    "TRAFFIC": {
-      "precision": 0.75,
-      "recall": 0.66,
-      "f1_score": 0.7021276595744681,
-      "support": 50.0
-    }
-  },
-  "config": {
-    "tolerance_fraction": 0.1,
-    "near_zero_threshold": 1.0,
-    "near_zero_absolute_tolerance": 0.5,
-    "dt_probability_weight": 0.6,
-    "similarity_weight": 0.4,
-    "uncertainty_score_threshold": 0.35,
-    "uncertainty_gap_threshold": 0.1,
-    "missing_feature_degraded_threshold": 0.3,
-    "missing_feature_invalid_threshold": 0.6,
-    "top_n": 5,
-    "min_score_threshold": 0.05,
-    "mixed_pollution_threshold": 0.4,
-    "mixed_pollution_min_sources": 3,
-    "model_filename": "source_classifier_model.pkl",
-    "reference_stats_filename": "source_classifier_stats.json",
-    "metadata_filename": "source_classifier_metadata.json",
-    "model_version": "0.1.0-synthetic"
-  },
-  "warnings": [
-    "Trained on synthetic data only",
-    "Source classifications are hypotheses, not confirmed identities",
-    "MQ-series sensors cannot uniquely identify gases",
-    "Requires validation with labelled field data"
-  ]
+    "n_leaves": 74,
+    "n_train": 7044,
+    "n_test": 1762
+  }
 }

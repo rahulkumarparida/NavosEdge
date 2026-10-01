@@ -1,242 +1,223 @@
 #!/usr/bin/env python3
 """
-Train a tiny two-head MLP for gas classification and safety detection
-using MQ-2/MQ-9/MQ-135 voltages + T + RH.
+Train TinyGasNet for gas classification and safety detection (PyTorch-Free / Pure NumPy).
 """
 
 import numpy as np
 import pandas as pd
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from torch.utils.data import DataLoader, TensorDataset
+import joblib
+import json
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.metrics import classification_report, f1_score, accuracy_score
-import joblib
 
 try:
-    from Training.constants import (
-        RANDOM_SEED as SEED,
-        FEATURES,
-        DATASET_FILENAME,
-        MODEL_PT_FILENAME,
-        PREPROCESS_PKL_FILENAME,
-        HIDDEN1_DEFAULT,
-        HIDDEN2_DEFAULT,
-        DROPOUT_DEFAULT,
-        EPOCHS_DEFAULT as EPOCHS,
-        BATCH_SIZE_TRAIN,
-        BATCH_SIZE_EVAL,
-        LEARNING_RATE_DEFAULT,
-        WEIGHT_DECAY_DEFAULT,
-        TRAIN_SPLIT_RATIO,
-        VAL_SPLIT_RATIO,
-    )
+    from Training.constants import RANDOM_SEED as SEED, FEATURES, DATASET_FILENAME
 except ImportError:
-    from constants import (
-        RANDOM_SEED as SEED,
-        FEATURES,
-        DATASET_FILENAME,
-        MODEL_PT_FILENAME,
-        PREPROCESS_PKL_FILENAME,
-        HIDDEN1_DEFAULT,
-        HIDDEN2_DEFAULT,
-        DROPOUT_DEFAULT,
-        EPOCHS_DEFAULT as EPOCHS,
-        BATCH_SIZE_TRAIN,
-        BATCH_SIZE_EVAL,
-        LEARNING_RATE_DEFAULT,
-        WEIGHT_DECAY_DEFAULT,
-        TRAIN_SPLIT_RATIO,
-        VAL_SPLIT_RATIO,
-    )
+    from constants import RANDOM_SEED as SEED, FEATURES, DATASET_FILENAME
 
-# ------------------------------------------------------------------
-# Reproducibility
-# ------------------------------------------------------------------
 np.random.seed(SEED)
-torch.manual_seed(SEED)
 
 # ------------------------------------------------------------------
-# Load & prepare data
+# Pure NumPy TinyGasNet MLP
 # ------------------------------------------------------------------
-df = pd.read_csv(DATASET_FILENAME)
-df = df.sort_values('timestamp').reset_index(drop=True)
+class NumPyTinyGasNet:
+    def __init__(self, n_features: int = 5, n_classes: int = 8, hidden1: int = 32, hidden2: int = 16):
+        self.n_features = n_features
+        self.n_classes = n_classes
+        self.hidden1 = hidden1
+        self.hidden2 = hidden2
 
-X = df[FEATURES].values.astype(np.float32)
+        rng = np.random.RandomState(SEED)
+        self.W1 = (rng.randn(hidden1, n_features) * np.sqrt(2.0 / n_features)).astype(np.float32)
+        self.b1 = np.zeros(hidden1, dtype=np.float32)
+        self.W2 = (rng.randn(hidden2, hidden1) * np.sqrt(2.0 / hidden1)).astype(np.float32)
+        self.b2 = np.zeros(hidden2, dtype=np.float32)
+        self.Wc = (rng.randn(n_classes, hidden2) * np.sqrt(2.0 / hidden2)).astype(np.float32)
+        self.bc = np.zeros(n_classes, dtype=np.float32)
+        self.Ws = (rng.randn(1, hidden2) * np.sqrt(2.0 / hidden2)).astype(np.float32)
+        self.bs = np.zeros(1, dtype=np.float32)
 
-le = LabelEncoder()
-y_class  = le.fit_transform(df['gas_label'].values)                 # 0..7
-y_safety = (df['safety_status'] == 'unsafe').astype(np.float32).values
+    def forward(self, x: np.ndarray, train: bool = False, p_drop: float = 0.1, rng: np.random.RandomState = None):
+        h1 = np.maximum(0, x @ self.W1.T + self.b1)
+        if train and p_drop > 0:
+            mask1 = (rng.rand(*h1.shape) >= p_drop).astype(np.float32) / (1.0 - p_drop)
+            h1 = h1 * mask1
 
-# Chronological split (avoids temporal leakage)
-n = len(df)
-n_train = int(0.70 * n)
-n_val   = int(0.15 * n)
+        h2 = np.maximum(0, h1 @ self.W2.T + self.b2)
+        if train and p_drop > 0:
+            mask2 = (rng.rand(*h2.shape) >= p_drop).astype(np.float32) / (1.0 - p_drop)
+            h2 = h2 * mask2
 
-X_train, X_val, X_test = X[:n_train], X[n_train:n_train+n_val], X[n_train+n_val:]
-yc_train, yc_val, yc_test = y_class[:n_train], y_class[n_train:n_train+n_val], y_class[n_train+n_val:]
-ys_train, ys_val, ys_test = y_safety[:n_train], y_safety[n_train:n_train+n_val], y_safety[n_train+n_val:]
+        logits_c = h2 @ self.Wc.T + self.bc
+        logit_s = (h2 @ self.Ws.T + self.bs).squeeze(-1)
+        return h1, h2, logits_c, logit_s
 
-# Feature scaling (fit ONLY on train)
-scaler = StandardScaler().fit(X_train)
-X_train = scaler.transform(X_train).astype(np.float32)
-X_val   = scaler.transform(X_val).astype(np.float32)
-X_test  = scaler.transform(X_test).astype(np.float32)
+    def state_dict(self) -> dict:
+        return {
+            "fc1.weight": self.W1.copy(), "fc1.bias": self.b1.copy(),
+            "fc2.weight": self.W2.copy(), "fc2.bias": self.b2.copy(),
+            "class_head.weight": self.Wc.copy(), "class_head.bias": self.bc.copy(),
+            "safety_head.weight": self.Ws.copy(), "safety_head.bias": self.bs.copy(),
+        }
 
-# Class weights (handles clean-air over-representation)
-counts = np.bincount(yc_train, minlength=len(le.classes_))
-cw = 1.0 / np.maximum(counts, 1)
-cw = cw / cw.sum() * len(cw)
-class_weights = torch.tensor(cw, dtype=torch.float32)
+    def load_state_dict(self, state_dict: dict):
+        self.W1 = state_dict["fc1.weight"].astype(np.float32)
+        self.b1 = state_dict["fc1.bias"].astype(np.float32)
+        self.W2 = state_dict["fc2.weight"].astype(np.float32)
+        self.b2 = state_dict["fc2.bias"].astype(np.float32)
+        self.Wc = state_dict["class_head.weight"].astype(np.float32)
+        self.bc = state_dict["class_head.bias"].astype(np.float32)
+        self.Ws = state_dict["safety_head.weight"].astype(np.float32)
+        self.bs = state_dict["safety_head.bias"].astype(np.float32)
 
-# Safety pos_weight (handles safe/unsafe imbalance)
-pos = ys_train.sum()
-neg = len(ys_train) - pos
-pos_weight = torch.tensor([neg / max(pos, 1.0)], dtype=torch.float32)
+    def fit(self, X_train: np.ndarray, yc_train: np.ndarray, ys_train: np.ndarray,
+            X_val: np.ndarray, yc_val: np.ndarray, ys_val: np.ndarray,
+            epochs: int = 40, lr: float = 0.005, batch_size: int = 64):
+        rng = np.random.RandomState(SEED)
+        counts = np.bincount(yc_train, minlength=self.n_classes)
+        cw = 1.0 / np.maximum(counts, 1)
+        class_weights = (cw / cw.sum() * len(cw)).astype(np.float32)
 
-# ------------------------------------------------------------------
-# Model
-# ------------------------------------------------------------------
-class TinyGasNet(nn.Module):
-    def __init__(self, n_features=5, n_classes=8,
-                 hidden1=32, hidden2=16, p_drop=0.1):
-        super().__init__()
-        self.fc1 = nn.Linear(n_features, hidden1)
-        self.fc2 = nn.Linear(hidden1, hidden2)
-        self.drop = nn.Dropout(p_drop)
-        self.class_head  = nn.Linear(hidden2, n_classes)
-        self.safety_head = nn.Linear(hidden2, 1)
+        pos = ys_train.sum()
+        neg = len(ys_train) - pos
+        pos_weight = float(neg / max(pos, 1.0))
 
-    def forward(self, x):
-        h = F.relu(self.fc1(x))
-        h = self.drop(h)
-        h = F.relu(self.fc2(h))
-        h = self.drop(h)
-        return self.class_head(h), self.safety_head(h).squeeze(-1)
+        m = {k: np.zeros_like(v) for k, v in self.state_dict().items()}
+        v = {k: np.zeros_like(val) for k, val in self.state_dict().items()}
+        beta1, beta2, eps = 0.9, 0.999, 1e-8
+        t_step = 0
+        best_loss = float("inf")
+        best_weights = None
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-model = TinyGasNet(n_classes=len(le.classes_)).to(device)
-n_params = sum(p.numel() for p in model.parameters())
-print(f"Model parameters: {n_params}")
+        n = len(X_train)
+        for epoch in range(1, epochs + 1):
+            indices = rng.permutation(n)
+            for i in range(0, n, batch_size):
+                idx = indices[i:i + batch_size]
+                xb, ycb, ysb = X_train[idx], yc_train[idx], ys_train[idx]
+                batch_len = len(xb)
 
-# ------------------------------------------------------------------
-# DataLoaders
-# ------------------------------------------------------------------
-train_ds = TensorDataset(torch.tensor(X_train),
-                         torch.tensor(yc_train, dtype=torch.long),
-                         torch.tensor(ys_train))
-val_ds   = TensorDataset(torch.tensor(X_val),
-                         torch.tensor(yc_val, dtype=torch.long),
-                         torch.tensor(ys_val))
-test_ds  = TensorDataset(torch.tensor(X_test),
-                         torch.tensor(yc_test, dtype=torch.long),
-                         torch.tensor(ys_test))
+                h1, h2, logits_c, logit_s = self.forward(xb, train=True, rng=rng)
 
-train_loader = DataLoader(train_ds, batch_size=64,  shuffle=True)
-val_loader   = DataLoader(val_ds,   batch_size=256, shuffle=False)
-test_loader  = DataLoader(test_ds,  batch_size=256, shuffle=False)
+                exp_c = np.exp(logits_c - np.max(logits_c, axis=-1, keepdims=True))
+                probs_c = exp_c / np.sum(exp_c, axis=-1, keepdims=True)
+                prob_s = 1.0 / (1.0 + np.exp(-np.clip(logit_s, -15.0, 15.0)))
 
-# ------------------------------------------------------------------
-# Training loop
-# ------------------------------------------------------------------
-opt = torch.optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1e-4)
-EPOCHS = 60
-best_val_f1 = -1.0
+                dlogits_c = probs_c.copy()
+                dlogits_c[np.arange(batch_len), ycb] -= 1.0
+                dlogits_c *= class_weights[ycb][:, None]
+                dlogits_c /= batch_len
 
-for epoch in range(1, EPOCHS + 1):
-    model.train()
-    for xb, ycb, ysb in train_loader:
-        xb, ycb, ysb = xb.to(device), ycb.to(device), ysb.to(device)
-        opt.zero_grad()
-        logits_c, logit_s = model(xb)
+                w_s = np.where(ysb == 1.0, pos_weight, 1.0)
+                dlogit_s = ((prob_s - ysb) * w_s / batch_len * 0.5)
 
-        loss_c = F.cross_entropy(logits_c, ycb, weight=class_weights.to(device))
-        loss_s = F.binary_cross_entropy_with_logits(
-            logit_s, ysb, pos_weight=pos_weight.to(device))
-        loss = loss_c + 0.5 * loss_s
-        loss.backward()
-        opt.step()
+                dWc = dlogits_c.T @ h2
+                dbc = np.sum(dlogits_c, axis=0)
 
-    # ---- validation (macro-F1 on class, F1 on safety) ----
-    model.eval()
-    pred_c_all, true_c_all, pred_s_all, true_s_all = [], [], [], []
-    with torch.no_grad():
-        for xb, ycb, ysb in val_loader:
-            xb = xb.to(device)
-            logits_c, logit_s = model(xb)
-            pred_c_all.append(logits_c.argmax(1).cpu().numpy())
-            true_c_all.append(ycb.numpy())
-            pred_s_all.append((torch.sigmoid(logit_s) > 0.5).cpu().numpy().astype(int))
-            true_s_all.append(ysb.numpy().astype(int))
-    pc = np.concatenate(pred_c_all); tc = np.concatenate(true_c_all)
-    ps = np.concatenate(pred_s_all); ts = np.concatenate(true_s_all)
-    val_f1_c = f1_score(tc, pc, average='macro', zero_division=0)
-    val_f1_s = f1_score(ts, ps, zero_division=0)
-    score = 0.7 * val_f1_c + 0.3 * val_f1_s
+                dWs = dlogit_s[:, None].T @ h2
+                dbs = np.sum(dlogit_s, axis=0, keepdims=True)
 
-    if score > best_val_f1:
-        best_val_f1 = score
-        torch.save(model.state_dict(), 'gasnet.pt')
+                dh2 = dlogits_c @ self.Wc + dlogit_s[:, None] @ self.Ws
+                dh2[h2 <= 0] = 0.0
 
-    if epoch % 10 == 0 or epoch == 1:
-        print(f"Epoch {epoch:3d} | val macroF1(class)={val_f1_c:.4f} "
-              f"| val F1(safety)={val_f1_s:.4f}")
+                dW2 = dh2.T @ h1
+                db2 = np.sum(dh2, axis=0)
 
-# ------------------------------------------------------------------
-# Test set evaluation
-# ------------------------------------------------------------------
-model.load_state_dict(torch.load('gasnet.pt', map_location=device))
-model.eval()
+                dh1 = dh2 @ self.W2
+                dh1[h1 <= 0] = 0.0
 
-pred_c_all, true_c_all, pred_s_all, true_s_all = [], [], [], []
-with torch.no_grad():
-    for xb, ycb, ysb in test_loader:
-        xb = xb.to(device)
-        logits_c, logit_s = model(xb)
-        pred_c_all.append(logits_c.argmax(1).cpu().numpy())
-        true_c_all.append(ycb.numpy())
-        pred_s_all.append((torch.sigmoid(logit_s) > 0.5).cpu().numpy().astype(int))
-        true_s_all.append(ysb.numpy().astype(int))
+                dW1 = dh1.T @ xb
+                db1 = np.sum(dh1, axis=0)
 
-pc = np.concatenate(pred_c_all); tc = np.concatenate(true_c_all)
-ps = np.concatenate(pred_s_all); ts = np.concatenate(true_s_all)
+                grads = {
+                    "fc1.weight": dW1, "fc1.bias": db1,
+                    "fc2.weight": dW2, "fc2.bias": db2,
+                    "class_head.weight": dWc, "class_head.bias": dbc,
+                    "safety_head.weight": dWs, "safety_head.bias": dbs,
+                }
 
-print("\n=== Test — Gas Classification ===")
-print(classification_report(tc, pc, target_names=le.classes_, zero_division=0))
-print(f"Test — Safety:  acc={accuracy_score(ts, ps):.4f}  F1={f1_score(ts, ps):.4f}")
+                t_step += 1
+                curr_state = self.state_dict()
+                for key in grads:
+                    g = grads[key] + 1e-4 * curr_state[key]
+                    m[key] = beta1 * m[key] + (1.0 - beta1) * g
+                    v[key] = beta2 * v[key] + (1.0 - beta2) * (g ** 2)
+                    m_hat = m[key] / (1.0 - beta1 ** t_step)
+                    v_hat = v[key] / (1.0 - beta2 ** t_step)
+                    curr_state[key] -= lr * m_hat / (np.sqrt(v_hat) + eps)
+                self.load_state_dict(curr_state)
+
+            _, _, val_logits_c, val_logit_s = self.forward(X_val, train=False)
+            val_exp_c = np.exp(val_logits_c - np.max(val_logits_c, axis=-1, keepdims=True))
+            val_probs_c = val_exp_c / np.sum(val_exp_c, axis=-1, keepdims=True)
+            val_prob_s = 1.0 / (1.0 + np.exp(-np.clip(val_logit_s, -15.0, 15.0)))
+
+            v_loss_c = -np.mean(np.log(val_probs_c[np.arange(len(X_val)), yc_val] + 1e-12))
+            v_loss_s = -np.mean(ys_val * np.log(val_prob_s + 1e-12) + (1 - ys_val) * np.log(1 - val_prob_s + 1e-12))
+            val_loss = v_loss_c + 0.5 * v_loss_s
+
+            if val_loss < best_loss:
+                best_loss = val_loss
+                best_weights = self.state_dict()
+
+        if best_weights:
+            self.load_state_dict(best_weights)
 
 # ------------------------------------------------------------------
-# Temperature scaling for calibrated confidence
+# Main execution
 # ------------------------------------------------------------------
-val_logits_c, val_labels_c = [], []
-with torch.no_grad():
-    for xb, ycb, _ in val_loader:
-        xb = xb.to(device)
-        logits_c, _ = model(xb)
-        val_logits_c.append(logits_c.cpu())
-        val_labels_c.append(ycb)
-val_logits_c = torch.cat(val_logits_c)
-val_labels_c = torch.cat(val_labels_c)
+if __name__ == "__main__":
+    df = pd.read_csv(DATASET_FILENAME)
+    df = df.sort_values("timestamp").reset_index(drop=True)
 
-T_param = nn.Parameter(torch.ones(1))
-opt_T = torch.optim.LBFGS([T_param], lr=0.1, max_iter=60)
+    X = df[FEATURES].values.astype(np.float32)
 
-def closure():
-    opt_T.zero_grad()
-    loss = F.cross_entropy(val_logits_c / T_param, val_labels_c)
-    loss.backward()
-    return loss
+    le = LabelEncoder()
+    y_class = le.fit_transform(df["gas_label"].values)
+    y_safety = (df["safety_status"] == "unsafe").astype(np.float32).values
 
-opt_T.step(closure)
-optimal_T = float(T_param.item())
-print(f"\nCalibration temperature: T = {optimal_T:.4f}")
+    n = len(df)
+    n_train = int(0.70 * n)
+    n_val = int(0.15 * n)
 
-# ------------------------------------------------------------------
-# Persist artifacts
-# ------------------------------------------------------------------
-joblib.dump(
-    {'scaler': scaler, 'label_encoder': le, 'temperature': optimal_T},
-    'preprocess.pkl'
-)
-print("Saved: gasnet.pt, preprocess.pkl")
+    X_train, X_val, X_test = X[:n_train], X[n_train:n_train + n_val], X[n_train + n_val:]
+    yc_train, yc_val, yc_test = y_class[:n_train], y_class[n_train:n_train + n_val], y_class[n_train + n_val:]
+    ys_train, ys_val, ys_test = y_safety[:n_train], y_safety[n_train:n_train + n_val], y_safety[n_train + n_val:]
+
+    scaler = StandardScaler().fit(X_train)
+    X_train_s = scaler.transform(X_train).astype(np.float32)
+    X_val_s = scaler.transform(X_val).astype(np.float32)
+    X_test_s = scaler.transform(X_test).astype(np.float32)
+
+    model = NumPyTinyGasNet(n_classes=len(le.classes_))
+    model.fit(X_train_s, yc_train, ys_train, X_val_s, yc_val, ys_val, epochs=40)
+
+    # Temperature Scaling
+    _, _, val_logits_c, _ = model.forward(X_val_s, train=False)
+    best_T = 1.0
+    best_nll = float("inf")
+    for T_cand in np.linspace(0.2, 5.0, 97):
+        scaled_c = val_logits_c / T_cand
+        exp_c = np.exp(scaled_c - np.max(scaled_c, axis=-1, keepdims=True))
+        probs_c = exp_c / np.sum(exp_c, axis=-1, keepdims=True)
+        nll = -np.mean(np.log(probs_c[np.arange(len(X_val_s)), yc_val] + 1e-12))
+        if nll < best_nll:
+            best_nll = nll
+            best_T = float(T_cand)
+    optimal_T = float(best_T)
+
+    # Test set evaluation
+    _, _, test_logits_c, test_logit_s = model.forward(X_test_s, train=False)
+    scaled_test = test_logits_c / optimal_T
+    pc = scaled_test.argmax(axis=1)
+    prob_s = 1.0 / (1.0 + np.exp(-np.clip(test_logit_s, -15.0, 15.0)))
+    ps = (prob_s > 0.5).astype(int)
+
+    print("\n=== Test — Gas Classification ===")
+    print(classification_report(yc_test, pc, target_names=le.classes_, zero_division=0))
+    print(f"Test — Safety:  acc={accuracy_score(ys_test, ps):.4f}  F1={f1_score(ys_test, ps, zero_division=0):.4f}")
+    print(f"\nCalibration temperature: T = {optimal_T:.4f}")
+
+    joblib.dump({"scaler": scaler, "label_encoder": le, "temperature": optimal_T}, "preprocess.pkl")
+    np.savez_compressed("gasnet_weights.npz", **model.state_dict())
+    print("Saved: gasnet_weights.npz, preprocess.pkl (PyTorch-Free)")

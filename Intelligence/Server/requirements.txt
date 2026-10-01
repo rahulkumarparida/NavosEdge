@@ -4,8 +4,7 @@ pydantic>=2.9.0
 pydantic-settings>=2.5.0
 sse-starlette>=2.0.0
 
-# ML inference (optional — server runs without these)
-torch>=2.0.0
+# ML inference (100% PyTorch-Free / Pure NumPy & Scikit-learn)
 numpy>=1.24.0
 joblib>=1.3.0
 scikit-learn>=1.3.0
