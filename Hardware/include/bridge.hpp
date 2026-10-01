@@ -13,6 +13,7 @@
 
 #include "config.hpp"
 #include "sensor.hpp"
+#include "sensor_validator.hpp"
 #include "http_client.hpp"
 #include "sse_client.hpp"
 #include "mcu_bridge.hpp"
@@ -280,6 +281,18 @@ private:
 
     void transmit_reading() {
         SensorData data = sensor_->read();
+
+        // Validate sensor data before transmission
+        auto validation = SensorValidator::validate(data);
+        if (!validation.valid) {
+            std::cerr << "[HW] Invalid sensor reading — skipping transmission\n";
+            validation.print_summary();
+            return;
+        }
+        if (!validation.warnings.empty()) {
+            validation.print_summary();
+        }
+
         std::string payload = build_payload(data);
         std::string post_url = cfg_.server_url + "/hardware/data";
 

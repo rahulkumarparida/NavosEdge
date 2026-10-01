@@ -5,5 +5,9 @@
     "retry_max_attempts": 5,
     "retry_base_delay_seconds": 2,
     "http_timeout_seconds": 10,
-    "mock_mode": true
+    "mock_mode": true,
+    "scenario": "normal",
+    "serial_port": "/dev/ttyACM0",
+    "serial_baud": 115200,
+    "serial_timeout_ms": 5000
 }

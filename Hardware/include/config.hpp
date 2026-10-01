@@ -18,6 +18,11 @@ struct HardwareConfig {
     int  http_timeout_seconds      = 10;
     bool mock_mode                 = true;
     std::string scenario           = "normal";
+
+    // Physical sensor serial connection
+    std::string serial_port       = "/dev/ttyACM0";
+    int  serial_baud              = 115200;
+    int  serial_timeout_ms        = 5000;
 };
 
 inline HardwareConfig load_config(const std::string& path) {
@@ -44,6 +49,9 @@ inline HardwareConfig load_config(const std::string& path) {
     if (j.contains("http_timeout_seconds"))       cfg.http_timeout_seconds    = j["http_timeout_seconds"].get<int>();
     if (j.contains("mock_mode"))                  cfg.mock_mode               = j["mock_mode"].get<bool>();
     if (j.contains("scenario"))                   cfg.scenario                = j["scenario"].get<std::string>();
+    if (j.contains("serial_port"))                 cfg.serial_port             = j["serial_port"].get<std::string>();
+    if (j.contains("serial_baud"))                 cfg.serial_baud             = j["serial_baud"].get<int>();
+    if (j.contains("serial_timeout_ms"))           cfg.serial_timeout_ms       = j["serial_timeout_ms"].get<int>();
 
     // Environment variable overrides (useful for unified deployment via .env)
     if (const char* env_host = std::getenv("NAVOS_HOST")) {
@@ -77,6 +85,13 @@ inline HardwareConfig load_config(const std::string& path) {
         cfg.scenario = env_scenario;
     }
 
+    if (const char* env_serial = std::getenv("NAVOS_SERIAL_PORT")) {
+        cfg.serial_port = env_serial;
+    }
+    if (const char* env_baud = std::getenv("NAVOS_SERIAL_BAUD")) {
+        try { cfg.serial_baud = std::stoi(env_baud); } catch (...) {}
+    }
+
     // Validate
     if (cfg.node_id.empty()) {
         throw std::runtime_error("[NAVOS] node_id must not be empty");
@@ -98,6 +113,8 @@ inline HardwareConfig load_config(const std::string& path) {
               << "        timeout:       " << cfg.http_timeout_seconds << "s\n"
               << "        scenario:      " << cfg.scenario << "\n"
               << "        mock_mode:     " << (cfg.mock_mode ? "true" : "false") << "\n"
+              << "        serial_port:   " << cfg.serial_port << "\n"
+              << "        serial_baud:   " << cfg.serial_baud << "\n"
               << "        max_retries:   " << cfg.retry_max_attempts << "\n";
 
     return cfg;

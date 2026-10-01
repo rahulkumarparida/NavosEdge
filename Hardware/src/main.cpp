@@ -16,6 +16,8 @@
 
 #include "config.hpp"
 #include "sensor.hpp"
+#include "serial_sensor.hpp"
+#include "sensor_validator.hpp"
 #include "http_client.hpp"
 #include "bridge.hpp"
 
@@ -115,10 +117,12 @@ int main(int argc, char* argv[]) {
     std::unique_ptr<navos::SensorSource> sensor;
     if (cfg.mock_mode) {
         sensor = std::make_unique<navos::MockSensorSource>(cfg.node_id, scenario_enum);
-        std::cout << "[HW] Mock sensor initialized\n";
+        std::cout << "[HW] Mock sensor initialized (scenario: " << cfg.scenario << ")\n";
     } else {
-        std::cerr << "[NAVOS] Physical sensor mode not yet connected. Set mock_mode=true in config.\n";
-        return 1;
+        sensor = std::make_unique<navos::SerialSensorSource>(
+            cfg.node_id, cfg.serial_port, cfg.serial_baud, cfg.serial_timeout_ms);
+        std::cout << "[HW] Physical sensor initialized on " << cfg.serial_port
+                  << " @ " << cfg.serial_baud << " baud\n";
     }
 
     // Create HTTP client
