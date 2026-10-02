@@ -3,11 +3,16 @@
  *
  * Runs on Arduino UNO Q MCU (arduino:zephyr:unoq).
  * Initializes UNOQ_MPI3501 display (480x320 landscape).
- * Exposes 3 small RPC methods:
+ * Exposes 4 small RPC methods:
  *   - update_environment
  *   - update_advice
  *   - update_actions
- * Rotates 3 NavosEdge screens non-blockingly every 10 seconds using millis().
+ *   - update_predictions
+ * Rotates 4 NavosEdge screens non-blockingly using millis():
+ *   1. Environment (15s)
+ *   2. Advisory (10s)
+ *   3. Forecast (10s)
+ *   4. Intelligence (10s)
  */
 
 #include <Arduino.h>
@@ -31,14 +36,12 @@ void update_environment(float aqi, float pm1_0, float pm2_5, float pm10, float t
 }
 
 void update_advice(String severity, String advice, String weather_advice) {
+    (void)weather_advice; // Weather omitted from Screen 2 as per specification
     strncpy(state.severity, severity.c_str(), sizeof(state.severity) - 1);
     state.severity[sizeof(state.severity) - 1] = '\0';
 
     strncpy(state.advice, advice.c_str(), sizeof(state.advice) - 1);
     state.advice[sizeof(state.advice) - 1] = '\0';
-
-    strncpy(state.weather_advice, weather_advice.c_str(), sizeof(state.weather_advice) - 1);
-    state.weather_advice[sizeof(state.weather_advice) - 1] = '\0';
 
     state.valid = true;
     state.last_update_ms = millis();
@@ -65,6 +68,26 @@ void update_actions(String actions_csv) {
     state.last_update_ms = millis();
 }
 
+void update_predictions(String source, float source_conf, String forecast_trend, float forecast_conf, float pm25_pred0, float pm25_pred1, String anomaly_status) {
+    strncpy(state.source_value, source.c_str(), sizeof(state.source_value) - 1);
+    state.source_value[sizeof(state.source_value) - 1] = '\0';
+    state.source_confidence = source_conf;
+
+    strncpy(state.forecast_trend, forecast_trend.c_str(), sizeof(state.forecast_trend) - 1);
+    state.forecast_trend[sizeof(state.forecast_trend) - 1] = '\0';
+    state.forecast_confidence = forecast_conf;
+
+    state.forecast_pm2_5_pred[0] = pm25_pred0;
+    state.forecast_pm2_5_pred[1] = pm25_pred1;
+    state.forecast_pm2_5_count = (pm25_pred0 > 0.0f || pm25_pred1 > 0.0f) ? 2 : 0;
+
+    strncpy(state.anomaly_status, anomaly_status.c_str(), sizeof(state.anomaly_status) - 1);
+    state.anomaly_status[sizeof(state.anomaly_status) - 1] = '\0';
+
+    state.valid = true;
+    state.last_update_ms = millis();
+}
+
 void setup() {
     Serial.begin(115200);
     navosStateInit(state);
@@ -75,9 +98,10 @@ void setup() {
     Bridge.provide_safe("update_environment", update_environment);
     Bridge.provide_safe("update_advice", update_advice);
     Bridge.provide_safe("update_actions", update_actions);
+    Bridge.provide_safe("update_predictions", update_predictions);
 
     Serial.println(F("[MCU] Bridge initialized"));
-    Serial.println(F("[MCU] RPC methods registered: update_environment, update_advice, update_actions"));
+    Serial.println(F("[MCU] RPC methods registered: update_environment, update_advice, update_actions, update_predictions"));
 
     gui.showStatus("NavosEdge MCU", "RPC Bridge Ready");
 }

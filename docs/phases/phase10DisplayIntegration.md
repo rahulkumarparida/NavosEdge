@@ -2,13 +2,37 @@
 
 ## Executive Summary
 
-Phase 10 establishes the end-to-end local synthetic hardware pipeline for the **NavosEdge** edge node running on the **Arduino UNO Q** paired with the **MPI3501 3.5" (480×320) TFT Display**.
+Phase 10 establishes the end-to-end local hardware and desktop simulation pipeline for the **NavosEdge** edge node running on the **Arduino UNO Q** paired with the **MPI3501 3.5" (480×320) TFT Display**.
 
-The **NavosEdge GUI rendering runs directly on the Arduino UNO Q MCU (Zephyr / STM32U5)** via the `UNOQ_MPI3501` driver over hardware SPI. The Linux environment runs synthetic sensor generation, HTTP telemetry POST, machine learning inference, advisory generation, and SSE event streaming. Linux transmits structured display state updates over the **Arduino UNO Q Router MessagePack-RPC** protocol (`/var/run/arduino-router.sock`) to the MCU (`Arduino_RouterBridge`), while Linux SSH terminals strictly display system diagnostic and operational logs.
+The display is structured into a clean, 4-screen visual storytelling flow: **Observe → Decide → Predict → Explain**.
+
+The **NavosEdge GUI rendering runs directly on the Arduino UNO Q MCU (Zephyr / STM32U5)** via the `UNOQ_MPI3501` driver over hardware SPI (and in desktop simulation via `navos_display_sim`). Linux handles telemetry generation, HTTP data POST, machine learning inference, advisory generation, time-series forecasting, and SSE streaming. Structured display state updates are transmitted over the **Arduino UNO Q Router MessagePack-RPC** protocol (`/var/run/arduino-router.sock`) to the MCU (`Arduino_RouterBridge`).
 
 ---
 
-## Hardware / MCU Architecture
+## Final 4-Screen GUI Architecture
+
+The display application automatically cycles non-blockingly across 4 screens using `millis()`:
+
+```text
+[Screen 1: ENVIRONMENT] (15s)  --->  [Screen 2: ADVISORY] (10s)
+          ^                                        |
+          |                                        v
+[Screen 4: INTELLIGENCE] (10s) <---  [Screen 3: FORECAST] (10s)
+```
+
+### Screen Breakdown & Narrative Flow
+
+| Screen | Name | Duration | Story Role | Display Contents |
+|---|---|---|---|---|
+| **Screen 1** | **ENVIRONMENT** | **15 seconds** | **Observe** | • Large AQI card with color severity coding (`Good`, `Moderate`, `Unhealthy`, `Hazardous`)<br>• Particulate Matter cards ($\text{PM}_{1.0}$, $\text{PM}_{2.5}$, $\text{PM}_{10}$ in $\mu\text{g/m}^3$)<br>• Ambient Temperature (°C) and Humidity (%)<br>• Real-time `[LIVE]` / `[OFFLINE]` system connection status |
+| **Screen 2** | **ADVISORY** | **10 seconds** | **Decide** | • Severity Badge (`NORMAL`, `MODERATE`, `HIGH`, `SEVERE`, `CRITICAL`)<br>• Primary Advisory Outlook text block (`state.advice`)<br>• 3–4 Actionable Bullet Recommendations (`state.actions`)<br>• Weather text is hidden on this screen to focus on local pollution decisions |
+| **Screen 3** | **FORECAST** | **10 seconds** | **Predict** | • Current $\text{PM}_{2.5}$ value vs Forecast Trend (`RISING ↑`, `FALLING ↓`, `STABLE →`)<br>• Model Confidence percentage<br>• Visual step horizon flow cards ($\text{NOW} \rightarrow +15\text{m} \rightarrow +30\text{m} \rightarrow +60\text{m}$)<br>• Human-readable forecast outlook summary |
+| **Screen 4** | **INTELLIGENCE** | **10 seconds** | **Explain** | • 4 Quad Conclusion Cards explaining **WHY** the system reached its decision:<br>  1. **Anomaly Detection**: Status (`NORMAL` / `ANOMALOUS`) & confidence<br>  2. **Pollution Source**: ML classified source (`TRAFFIC`, `DUST`, `CONSTRUCTION`, `COMBUSTION`, `INDUSTRIAL`, `INDOOR_ACTIVITY`) & confidence<br>  3. **Air Quality Index**: Calculated AQI score & EPA breakpoint category<br>  4. **Time-Series Forecast**: AR(p) model trend & horizon |
+
+---
+
+## Hardware / MCU Architecture & Data Flow
 
 ```text
 +---------------------------------------------------------------------------------------------------+
@@ -38,7 +62,7 @@ The **NavosEdge GUI rendering runs directly on the Arduino UNO Q MCU (Zephyr / S
 |                                          |                                                        |
 |                                          v Updates NavosEdgeState                                 |
 |                                +-------------------+                                              |
-|                                | NavosEdgeGUI (C++)| (3-screen 10s non-blocking rotation)           |
+|                                | NavosEdgeGUI (C++)| (4-screen non-blocking rotation)             |
 |                                +-------------------+                                              |
 |                                          | Hardware SPI (MOSI=D11, SCK=D13, CS=D10, DC=D2)        |
 |                                          v                                                        |
@@ -50,70 +74,61 @@ The **NavosEdge GUI rendering runs directly on the Arduino UNO Q MCU (Zephyr / S
 
 ---
 
-## Key Features & Compliance
+## Router MessagePack-RPC Specification
 
-1. **Physical LCD Display Execution**:
-   - The MPI3501 GUI executes physically on the UNO Q MCU (`mcu_display.ino`).
-   - Terminal outputs contain useful operational logs (`[HW]`, `[INTELLIGENCE]`, `[MCU]`).
-   - Console `[TFT]` print statements have been removed from the physical display execution path.
+Communication from Linux MPU to MCU uses **4 lightweight, non-blocking MessagePack-RPC methods** over `/var/run/arduino-router.sock`:
 
-2. **Authorized Display Driver**:
-   - Built exclusively using the official `UNOQ_MPI3501` repository/library (`UNOQ_MPI3501.h` / `UNOQ_MPI3501.cpp`).
-   - Operating in landscape 480×320 mode (ILI9486 over SPI).
+1. `update_environment(aqi, pm1_0, pm2_5, pm10, temp, hum)`
+2. `update_advice(severity, advice, weather_advice)`
+3. `update_actions(actions_csv)`
+4. `update_predictions(source, source_conf, forecast_trend, forecast_conf, pm25_pred0, pm25_pred1, anomaly_status)`
 
-3. **3-Screen Non-Blocking GUI Rotation**:
-   - **Screen 0**: Environment Dashboard (AQI index box, PM1.0, PM2.5, PM10, Temperature, Humidity, PM progress bars).
-   - **Screen 1**: Advisory (Severity badge, advice text, weather advice).
-   - **Screen 2**: Actions (Numbered list of actionable recommendations).
-   - Rotates screens every **10 seconds** using non-blocking `millis()` logic without `delay()`.
-
-4. **Linux ↔ MCU Router MessagePack-RPC Transport**:
-   - Communication uses MessagePack-RPC over `/var/run/arduino-router.sock`.
-   - Requests are split into 3 modular sub-calls to keep each payload safely under the 1024-byte RPClite decoder limit:
-     - `update_environment`: `[0, msgid, "update_environment", [aqi, pm1_0, pm2_5, pm10, temp, hum]]`
-     - `update_advice`: `[0, msgid, "update_advice", [severity, advice, weather_advice]]`
-     - `update_actions`: `[0, msgid, "update_actions", [actions_csv]]`
-   - MCU registers all three RPC handlers via `Bridge.provide_safe(...)`.
-
-5. **Dedicated Flashing & Simulation Scripts**:
-   - `./flash_display.sh`: Compiles `Hardware/mcu_display` using `arduino-cli` and deploys it to the UNO Q MCU (`arduino:zephyr:unoq`). Fully portable across users.
-   - `./run_display_simulation.sh`: Starts Python Intelligence Server, launches C++ synthetic hardware bridge, connects Router MessagePack-RPC bridge, and streams live data updates.
+Each message payload is safely constrained under 350 bytes, far below the Arduino RPClite 1024-byte buffer threshold.
 
 ---
 
-## Files Created & Modified
+## File Registry
 
 | File Path | Status | Description |
 |---|---|---|
-| [`flash_display.sh`](flash_display.sh) | **Modified** | Dynamic, portable MCU display flashing script |
-| [`Hardware/mcu_display/mcu_display.ino`](Hardware/mcu_display/mcu_display.ino) | **Modified** | MCU sketch registering `Arduino_RouterBridge` RPC handler & driving MPI3501 GUI |
-| [`Hardware/mcu_display/NavosEdgeGUI.h`](Hardware/mcu_display/NavosEdgeGUI.h) | **Created** | MCU display renderer header using `UNOQ_MPI3501` driver |
-| [`Hardware/mcu_display/NavosEdgeGUI.cpp`](Hardware/mcu_display/NavosEdgeGUI.cpp) | **Created** | MCU display renderer implementation |
-| [`Hardware/mcu_display/NavosEdgeState.h`](Hardware/mcu_display/NavosEdgeState.h) | **Created** | Shared MCU display state structure |
-| [`Hardware/include/mcu_bridge.hpp`](Hardware/include/mcu_bridge.hpp) | **Modified** | Linux C++ MessagePack-RPC client transmitting state over `/var/run/arduino-router.sock` |
-| [`Hardware/include/bridge.hpp`](Hardware/include/bridge.hpp) | **Modified** | Integrated `McuBridge` socket transport |
-| [`Hardware/src/main.cpp`](Hardware/src/main.cpp) | **Modified** | Added `--test-rpc` standalone testing argument |
-| [`run_display_simulation.sh`](run_display_simulation.sh) | **Modified** | Updated launcher script to run pipeline without repeated MCU flashing |
+| [`Hardware/mcu_display/NavosEdgeState.h`](Hardware/mcu_display/NavosEdgeState.h) | **Updated** | Shared state struct supporting 4-screen intelligence payload |
+| [`Hardware/display/state/NavosEdgeState.h`](Hardware/display/state/NavosEdgeState.h) | **Updated** | Desktop simulation state struct |
+| [`Hardware/mcu_display/NavosEdgeGUI.h`](Hardware/mcu_display/NavosEdgeGUI.h) | **Updated** | 4-screen MCU renderer header with non-blocking timing |
+| [`Hardware/mcu_display/NavosEdgeGUI.cpp`](Hardware/mcu_display/NavosEdgeGUI.cpp) | **Updated** | 4-screen MCU renderer implementation (Observe → Decide → Predict → Explain) |
+| [`Hardware/display/gui/NavosEdgeGUI.h`](Hardware/display/gui/NavosEdgeGUI.h) | **Updated** | Desktop simulation GUI header |
+| [`Hardware/display/gui/NavosEdgeGUI.cpp`](Hardware/display/gui/NavosEdgeGUI.cpp) | **Updated** | Desktop simulation GUI implementation |
+| [`Hardware/mcu_display/mcu_display.ino`](Hardware/mcu_display/mcu_display.ino) | **Updated** | Arduino sketch with `update_predictions` RPC handler |
+| [`Hardware/include/mcu_bridge.hpp`](Hardware/include/mcu_bridge.hpp) | **Updated** | Linux C++ socket client sending environment, advisory, actions, and predictions RPCs |
+| [`Hardware/include/bridge.hpp`](Hardware/include/bridge.hpp) | **Updated** | Parses predictions object from Intelligence Server SSE / HTTP response |
+| [`Hardware/display/network/ServerClient.cpp`](Hardware/display/network/ServerClient.cpp) | **Updated** | Desktop simulation HTTP parser for prediction objects |
+| [`flash_display.sh`](flash_display.sh) | **Maintained** | Portable Arduino CLI firmware build & upload script |
+| [`run_display_simulation.sh`](run_display_simulation.sh) | **Maintained** | Pipeline execution & simulation launcher |
 
 ---
 
-## How to Flash and Run
+## How to Build, Upload & Run
 
-### Step 1: Flash the MCU Display Application
+### 1. Flash the MCU Display Application to Arduino UNO Q
 ```bash
 ./flash_display.sh
 ```
 
-### Step 2: Standalone MessagePack-RPC Test (Optional)
+### 2. Build C++ Desktop Simulation / Hardware Targets
 ```bash
-./Hardware/build/navos_hardware_bridge --test-rpc
+cd Hardware/build
+cmake .. -DCMAKE_BUILD_TYPE=Release
+make navos_hardware_bridge -j$(nproc)
+
+cd ../display/build
+cmake .. -DCMAKE_BUILD_TYPE=Release
+make navos_display_sim -j$(nproc)
 ```
 
-### Step 3: Run the Simulation Pipeline
+### 3. Run the End-to-End Simulation Pipeline
 ```bash
-# Default mode (normal scenario, 60s sensor interval, 10s display rotation)
+# Default pipeline (normal scenario, 60s sensor interval)
 ./run_display_simulation.sh
 
-# Fast verification mode (traffic scenario, 5s sensor interval)
+# Fast verification mode (traffic scenario, 5s sensor update)
 ./run_display_simulation.sh --scenario traffic --interval 5
 ```

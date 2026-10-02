@@ -302,6 +302,54 @@ private:
                 }
             }
         }
+        if (j.contains("predictions") && j["predictions"].is_object()) {
+            auto preds = j["predictions"];
+            if (preds.contains("source") && preds["source"].is_object()) {
+                auto src = preds["source"];
+                if (src.contains("value") && src["value"].is_string()) {
+                    std::string s_val = src["value"].get<std::string>();
+                    strncpy(app_state_.source_value, s_val.c_str(), sizeof(app_state_.source_value) - 1);
+                    app_state_.source_value[sizeof(app_state_.source_value) - 1] = '\0';
+                }
+                if (src.contains("confidence") && src["confidence"].is_number()) {
+                    app_state_.source_confidence = src["confidence"].get<float>();
+                }
+            }
+            if (preds.contains("forecast") && preds["forecast"].is_object()) {
+                auto fc = preds["forecast"];
+                if (fc.contains("confidence") && fc["confidence"].is_number()) {
+                    app_state_.forecast_confidence = fc["confidence"].get<float>();
+                }
+                if (fc.contains("value") && fc["value"].is_object()) {
+                    auto fv = fc["value"];
+                    if (fv.contains("PM2_5") && fv["PM2_5"].is_array()) {
+                        app_state_.forecast_pm2_5_count = 0;
+                        for (const auto& v : fv["PM2_5"]) {
+                            if (app_state_.forecast_pm2_5_count >= NAVOS_MAX_FORECAST_STEPS) break;
+                            if (v.is_number()) {
+                                app_state_.forecast_pm2_5_pred[app_state_.forecast_pm2_5_count++] = v.get<float>();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (app_state_.forecast_pm2_5_count > 0 && app_state_.pm2_5 > 0.0f) {
+            float lastP = app_state_.forecast_pm2_5_pred[app_state_.forecast_pm2_5_count - 1];
+            if (lastP >= app_state_.pm2_5 * 1.10f && (lastP - app_state_.pm2_5) >= 2.0f) {
+                strncpy(app_state_.forecast_trend, "RISING", sizeof(app_state_.forecast_trend) - 1);
+                snprintf(app_state_.forecast_outlook, sizeof(app_state_.forecast_outlook),
+                         "PM2.5 forecasted to increase (+%.1f ug/m3) over next hour.", lastP - app_state_.pm2_5);
+            } else if (lastP <= app_state_.pm2_5 * 0.90f && (app_state_.pm2_5 - lastP) >= 2.0f) {
+                strncpy(app_state_.forecast_trend, "FALLING", sizeof(app_state_.forecast_trend) - 1);
+                snprintf(app_state_.forecast_outlook, sizeof(app_state_.forecast_outlook),
+                         "PM2.5 forecasted to improve (-%.1f ug/m3) over next hour.", app_state_.pm2_5 - lastP);
+            } else {
+                strncpy(app_state_.forecast_trend, "STABLE", sizeof(app_state_.forecast_trend) - 1);
+                snprintf(app_state_.forecast_outlook, sizeof(app_state_.forecast_outlook),
+                         "PM2.5 expected to remain stable near %.1f ug/m3.", app_state_.pm2_5);
+            }
+        }
         app_state_.valid = true;
         app_state_.last_update_ms = millis();
         std::cout << "[DISPLAY] State updated\n";

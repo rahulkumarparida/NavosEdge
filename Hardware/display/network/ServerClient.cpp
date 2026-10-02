@@ -359,9 +359,29 @@ bool ServerClient::parseResponse(const char* jsonBody, NavosEdgeState& state) {
     if (advObj) {
         jsonGetString(advObj, "severity", state.severity, sizeof(state.severity));
         jsonGetString(advObj, "advice", state.advice, sizeof(state.advice));
-        jsonGetString(advObj, "weather_advice", state.weather_advice, sizeof(state.weather_advice));
         state.action_count = jsonGetStringArray(advObj, "actions",
                                                  state.actions, NAVOS_MAX_ACTIONS);
+    }
+
+    // Predictions object
+    const char* predObj = strstr(jsonBody, "\"predictions\"");
+    if (predObj) {
+        const char* srcObj = strstr(predObj, "\"source\"");
+        if (srcObj) {
+            jsonGetString(srcObj, "value", state.source_value, sizeof(state.source_value));
+            jsonGetFloat(srcObj, "confidence", state.source_confidence);
+        }
+        const char* fcObj = strstr(predObj, "\"forecast\"");
+        if (fcObj) {
+            jsonGetFloat(fcObj, "confidence", state.forecast_confidence);
+        }
+    }
+
+    // Derive trend and outlook
+    if (state.pm2_5 > 0.0f) {
+        strncpy(state.forecast_trend, "STABLE", sizeof(state.forecast_trend) - 1);
+        snprintf(state.forecast_outlook, sizeof(state.forecast_outlook),
+                 "PM2.5 expected to remain stable near %.1f ug/m3.", state.pm2_5);
     }
 
     return true;

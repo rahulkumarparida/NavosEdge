@@ -2,17 +2,15 @@
 /**
  * NavosEdgeState.h — Shared application state for the display GUI.
  *
- * This structure is populated by the network layer (ServerClient)
- * and consumed by the GUI renderer (NavosEdgeGUI). It mirrors
- * the fields from the Intelligence Server's IntelligenceResult.
+ * Consumed by the 4-screen GUI renderer (NavosEdgeGUI).
+ * Populated from Intelligence Server's IntelligenceResult.
  */
 
 #include "../platform.h"
 
-// Maximum number of action strings the display can hold.
-// Using fixed arrays to avoid dynamic allocation on UNO Q.
 #define NAVOS_MAX_ACTIONS 8
 #define NAVOS_MAX_STRING_LEN 200
+#define NAVOS_MAX_FORECAST_STEPS 4
 
 struct NavosEdgeState {
     // --- Screen 1: Environment ---
@@ -23,18 +21,29 @@ struct NavosEdgeState {
     float temperature;
     float humidity;
 
-    // --- Screen 2: Advice ---
-    char severity[32];
-    char advice[NAVOS_MAX_STRING_LEN];
-    char weather_advice[NAVOS_MAX_STRING_LEN];
-
-    // --- Screen 3: Actions ---
+    // --- Screen 2: Advisory & Actions ---
+    char severity[32];               // "NORMAL", "MODERATE", "HIGH", "SEVERE", "CRITICAL"
+    char advice[NAVOS_MAX_STRING_LEN]; // Primary advisory text
+    char weather_advice[NAVOS_MAX_STRING_LEN]; // Retained for state compatibility
     char actions[NAVOS_MAX_ACTIONS][NAVOS_MAX_STRING_LEN];
     uint8_t action_count;
 
+    // --- Screen 3: Forecast ---
+    char forecast_trend[16];          // "RISING", "FALLING", "STABLE", "UNKNOWN"
+    float forecast_confidence;        // 0.0 to 1.0 (-1.0 if unavailable)
+    float forecast_pm2_5_pred[NAVOS_MAX_FORECAST_STEPS]; // Future PM2.5 horizon steps
+    uint8_t forecast_pm2_5_count;     // Number of available forecast steps
+    char forecast_outlook[NAVOS_MAX_STRING_LEN]; // Human-readable outlook summary
+
+    // --- Screen 4: Intelligence ---
+    char source_value[32];            // "TRAFFIC", "HEAVY_DUST", "CONSTRUCTION", "COMBUSTION", "INDUSTRIAL", "INDOOR_ACTIVITY", "UNKNOWN"
+    float source_confidence;          // 0.0 to 1.0 (-1.0 if unavailable)
+    char anomaly_status[32];          // "NORMAL", "ANOMALOUS", "CLEAN"
+    float anomaly_score;              // Anomaly confidence/score (-1.0 if unavailable)
+
     // --- Metadata ---
-    bool valid;              // true once at least one successful fetch
-    unsigned long last_update_ms;  // millis() of last successful parse
+    bool valid;                       // true once at least one successful fetch/update
+    unsigned long last_update_ms;     // millis() timestamp of last update
 };
 
 /**
@@ -57,13 +66,29 @@ inline void navosStateInit(NavosEdgeState& s) {
         s.actions[i][0] = '\0';
     }
 
+    strncpy(s.forecast_trend, "STABLE", sizeof(s.forecast_trend) - 1);
+    s.forecast_trend[sizeof(s.forecast_trend) - 1] = '\0';
+    s.forecast_confidence = -1.0f;
+    s.forecast_pm2_5_count = 0;
+    for (uint8_t i = 0; i < NAVOS_MAX_FORECAST_STEPS; i++) {
+        s.forecast_pm2_5_pred[i] = 0.0f;
+    }
+    s.forecast_outlook[0] = '\0';
+
+    strncpy(s.source_value, "UNKNOWN", sizeof(s.source_value) - 1);
+    s.source_value[sizeof(s.source_value) - 1] = '\0';
+    s.source_confidence = -1.0f;
+
+    strncpy(s.anomaly_status, "NORMAL", sizeof(s.anomaly_status) - 1);
+    s.anomaly_status[sizeof(s.anomaly_status) - 1] = '\0';
+    s.anomaly_score = 0.0f;
+
     s.valid = false;
     s.last_update_ms = 0;
 }
 
 /**
  * Compare two states to detect if displayed data changed.
- * Returns true if anything that would affect the display is different.
  */
 inline bool navosStateChanged(const NavosEdgeState& a, const NavosEdgeState& b) {
     if (a.aqi != b.aqi) return true;
@@ -79,5 +104,15 @@ inline bool navosStateChanged(const NavosEdgeState& a, const NavosEdgeState& b) 
     for (uint8_t i = 0; i < a.action_count && i < NAVOS_MAX_ACTIONS; i++) {
         if (strcmp(a.actions[i], b.actions[i]) != 0) return true;
     }
+    if (strcmp(a.forecast_trend, b.forecast_trend) != 0) return true;
+    if (a.forecast_confidence != b.forecast_confidence) return true;
+    if (a.forecast_pm2_5_count != b.forecast_pm2_5_count) return true;
+    for (uint8_t i = 0; i < a.forecast_pm2_5_count && i < NAVOS_MAX_FORECAST_STEPS; i++) {
+        if (a.forecast_pm2_5_pred[i] != b.forecast_pm2_5_pred[i]) return true;
+    }
+    if (strcmp(a.forecast_outlook, b.forecast_outlook) != 0) return true;
+    if (strcmp(a.source_value, b.source_value) != 0) return true;
+    if (a.source_confidence != b.source_confidence) return true;
+    if (strcmp(a.anomaly_status, b.anomaly_status) != 0) return true;
     return false;
 }

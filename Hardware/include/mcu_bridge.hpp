@@ -165,7 +165,8 @@ private:
         bool env_ok = send_rpc_environment(s);
         bool adv_ok = send_rpc_advice(s);
         bool act_ok = send_rpc_actions(s);
-        return env_ok && adv_ok && act_ok;
+        bool pred_ok = send_rpc_predictions(s);
+        return env_ok && adv_ok && act_ok && pred_ok;
     }
 
     bool send_rpc_environment(const NavosEdgeState& s) {
@@ -188,7 +189,7 @@ private:
     bool send_rpc_advice(const NavosEdgeState& s) {
         std::string severity = truncate_string(s.severity, 30);
         std::string advice = truncate_string(s.advice, 140);
-        std::string weather_advice = truncate_string(s.weather_advice, 140);
+        std::string weather_advice = "";
 
         nlohmann::json params = nlohmann::json::array({
             severity,
@@ -217,6 +218,32 @@ private:
 
         if (send_rpc_call("update_actions", params)) {
             std::cout << "[MCU] Actions RPC sent\n";
+            return true;
+        }
+        return false;
+    }
+
+    bool send_rpc_predictions(const NavosEdgeState& s) {
+        std::string source = truncate_string(s.source_value, 30);
+        float source_conf = s.source_confidence;
+        std::string trend = truncate_string(s.forecast_trend, 15);
+        float forecast_conf = s.forecast_confidence;
+        float pm25_0 = s.forecast_pm2_5_count > 0 ? s.forecast_pm2_5_pred[0] : 0.0f;
+        float pm25_1 = s.forecast_pm2_5_count > 1 ? s.forecast_pm2_5_pred[1] : 0.0f;
+        std::string anomaly = truncate_string(s.anomaly_status, 20);
+
+        nlohmann::json params = nlohmann::json::array({
+            source,
+            source_conf,
+            trend,
+            forecast_conf,
+            pm25_0,
+            pm25_1,
+            anomaly
+        });
+
+        if (send_rpc_call("update_predictions", params)) {
+            std::cout << "[MCU] Predictions RPC sent\n";
             return true;
         }
         return false;
