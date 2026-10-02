@@ -5,7 +5,7 @@
  *   - MQ2   (Analog A0) — Combustible gas / smoke
  *   - MQ9   (Analog A1) — CO / flammable gas
  *   - MQ135 (Analog A2) — Air quality (NH3, NOx, benzene, CO2)
- *   - DHT22 (Digital D2) — Temperature & humidity
+ *   - DHT22 (Digital D8) — Temperature & humidity
  *   - MPM10-CS (Hardware Serial1: D0 RX, D1 TX) — PM1.0, PM2.5, PM10
  *
  * Output format (one JSON line per reading):
@@ -15,7 +15,7 @@
  *   MQ2   AOUT → A0
  *   MQ9   AOUT → A1
  *   MQ135 AOUT → A2
- *   DHT22 DATA → D2  (10kΩ pull-up to VCC)
+ *   DHT22 DATA → D8  (10kΩ pull-up to VCC)
  *   MPM10-CS TX → D0 (RX on Serial1)
  *   MPM10-CS RX → D1 (TX on Serial1, optional for SET/RESET)
  */
@@ -24,7 +24,7 @@
 #define MQ2_PIN    A0
 #define MQ9_PIN    A1
 #define MQ135_PIN  A2
-#define DHT22_PIN  2
+#define DHT22_PIN  8
 // MPM10-CS uses hardware Serial1 (D0/RX, D1/TX) — no pin defines needed
 
 // ─── Timing ──────────────────────────────────────────────────────
