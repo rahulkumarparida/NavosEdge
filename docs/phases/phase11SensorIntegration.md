@@ -125,7 +125,7 @@ The Python backend required **zero changes**. The existing pipeline handles ever
 | Parameter | Value |
 |:---|:---|
 | Type | UART (9600 baud) |
-| Arduino Pins | D4 (RX), D5 (TX) via SoftwareSerial |
+| Arduino Pins | D0 (RX), D1 (TX) via hardware Serial1 |
 | Protocol | PMS binary (32-byte frames, checksum verified) |
 | Outputs | PM1.0, PM2.5, PM10 (µg/m³) |
 | Constraint | PM1.0 ≤ PM2.5 ≤ PM10 (tolerance ±0.5) |
@@ -403,8 +403,8 @@ Arduino UNO Q
 │  D2 ◄── DHT22 (DATA)        │
 │         ├── 10kΩ ── VCC      │
 │                              │
-│  D4 ◄── MPM10-CS (TX)       │
-│  D5 ──► MPM10-CS (RX)       │
+│  D0 ◄── MPM10-CS (TX)       │
+│  D1 ──► MPM10-CS (RX)       │
 │                              │
 │  USB ──► Linux Host          │
 │         (/dev/ttyACM0)       │

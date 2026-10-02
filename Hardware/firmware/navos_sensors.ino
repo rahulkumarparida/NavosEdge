@@ -6,7 +6,7 @@
  *   - MQ9   (Analog A1) — CO / flammable gas
  *   - MQ135 (Analog A2) — Air quality (NH3, NOx, benzene, CO2)
  *   - DHT22 (Digital D2) — Temperature & humidity
- *   - MPM10-CS (SoftwareSerial D4 RX, D5 TX) — PM1.0, PM2.5, PM10
+ *   - MPM10-CS (Hardware Serial1: D0 RX, D1 TX) — PM1.0, PM2.5, PM10
  *
  * Output format (one JSON line per reading):
  *   {"mq2":350,"mq9":280,"mq135":420,"t":28.50,"h":65.00,"pm1":12.0,"pm25":18.0,"pm10":25.0,"ok":true}
@@ -16,19 +16,16 @@
  *   MQ9   AOUT → A1
  *   MQ135 AOUT → A2
  *   DHT22 DATA → D2  (10kΩ pull-up to VCC)
- *   MPM10-CS TX → D4 (RX on SoftwareSerial)
- *   MPM10-CS RX → D5 (TX on SoftwareSerial, optional for SET/RESET)
+ *   MPM10-CS TX → D0 (RX on Serial1)
+ *   MPM10-CS RX → D1 (TX on Serial1, optional for SET/RESET)
  */
-
-#include <SoftwareSerial.h>
 
 // ─── Pin Configuration ───────────────────────────────────────────
 #define MQ2_PIN    A0
 #define MQ9_PIN    A1
 #define MQ135_PIN  A2
 #define DHT22_PIN  2
-#define PMS_RX_PIN 4
-#define PMS_TX_PIN 5
+// MPM10-CS uses hardware Serial1 (D0/RX, D1/TX) — no pin defines needed
 
 // ─── Timing ──────────────────────────────────────────────────────
 #define SERIAL_BAUD       115200
@@ -47,7 +44,8 @@
 // We implement DHT22 bit-banging directly to avoid library dependency
 // issues on constrained boards. This keeps the firmware self-contained.
 
-SoftwareSerial pmsSerial(PMS_RX_PIN, PMS_TX_PIN);
+// MPM10-CS on hardware Serial1 (D0=RX, D1=TX)
+#define pmsSerial Serial1
 
 // Sensor state
 struct SensorState {
@@ -248,7 +246,7 @@ void transmitJSON() {
 // ─── Arduino Setup ──────────────────────────────────────────────
 void setup() {
   Serial.begin(SERIAL_BAUD);
-  pmsSerial.begin(PMS_BAUD);
+  Serial1.begin(PMS_BAUD);   // Hardware UART for MPM10-CS (D0/RX, D1/TX)
 
   pinMode(MQ2_PIN, INPUT);
   pinMode(MQ9_PIN, INPUT);
