@@ -25,6 +25,12 @@ class ControlConfigPayload(BaseModel):
     sampling_interval: int = Field(..., gt=0)
 
 
+class HardwareReadyPayload(BaseModel):
+    node_id: str = Field(..., min_length=1)
+    status: str = Field(default="READY")
+    warmup_duration_s: float = Field(default=30.0)
+
+
 @router.post(
     "/data",
     response_model=IntelligenceResult,
@@ -40,6 +46,40 @@ async def submit_hardware_data(payload: SensorPayload, request: Request):
     processing_service = request.app.state.processing_service
     result = await processing_service.process_reading(payload)
     return result
+
+
+@router.post(
+    "/ready",
+    summary="Receive READY signal from hardware node after sensor warm-up",
+)
+async def hardware_ready(payload: HardwareReadyPayload, request: Request):
+    """
+    Called by C++ Hardware node after completing its 30-second sensor warm-up.
+    Registers node as ready and triggers data acquisition over SSE.
+    """
+    from datetime import datetime, timezone
+    logger.info(
+        "Hardware node %s sensors READY after %.1fs warm-up period",
+        payload.node_id,
+        payload.warmup_duration_s,
+    )
+    event_service = request.app.state.event_service
+    node_registry = request.app.state.node_registry
+    node_registry.register_reading(payload.node_id, datetime.now(timezone.utc))
+
+    # Send immediate data request trigger over SSE control channel
+    sub_count = await event_service.publish(
+        payload.node_id,
+        "request_data",
+        {"trigger": "handshake_ready", "cycle_interval_s": 60},
+    )
+    return {
+        "status": "ACK",
+        "node_id": payload.node_id,
+        "ready": True,
+        "sse_subscribers_notified": sub_count,
+    }
+
 
 
 @router.get(

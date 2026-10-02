@@ -34,6 +34,8 @@ public:
         , consecutive_failures_(0)
         , sampling_interval_seconds_(cfg_.sampling_interval_seconds)
         , reading_count_(0)
+        , is_warmup_complete_(false)
+        , is_ready_ack_(false)
     {
         navosStateInit(app_state_);
     }
@@ -64,8 +66,31 @@ public:
         std::cout << "[HW] SSE connected\n";
         sse.start();
 
-        // Phase 3: Main non-blocking sensor transmit loop
-        auto last_transmit_time = std::chrono::steady_clock::now() - std::chrono::seconds(cfg_.sampling_interval_seconds);
+        // Phase 3: Mandatory 30-Second Sensor Warm-up Period
+        std::cout << "[HW] Initiating mandatory 30-second sensor warm-up period...\n";
+        std::cout << "[HW] Sensors warming up (PM, MQ2, MQ9, MQ135, DHT22)... Data transmission deferred.\n";
+
+        constexpr int warmup_seconds = 30;
+        for (int i = 0; i < warmup_seconds * 2 && running_.load(); ++i) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        }
+
+        if (!running_.load()) {
+            sse.stop();
+            mcu_bridge_.close_socket();
+            return;
+        }
+
+        is_warmup_complete_.store(true);
+        std::cout << "[HW] 30-second sensor warm-up complete. Sensors are READY.\n";
+
+        // Phase 4: Send READY handshake signal to Intelligence Server
+        if (!send_ready_signal()) {
+            std::cerr << "[HW] Initial READY handshake deferred. Retrying in main cycle...\n";
+        }
+
+        // Phase 5: Main non-blocking 60-second acquisition & display loop
+        auto last_transmit_time = std::chrono::steady_clock::now();
 
         while (running_.load()) {
             auto now = std::chrono::steady_clock::now();
@@ -73,8 +98,12 @@ public:
             auto elapsed_sec = std::chrono::duration_cast<std::chrono::seconds>(now - last_transmit_time).count();
 
             if (elapsed_sec >= current_interval) {
-                transmit_reading();
-                last_transmit_time = std::chrono::steady_clock::now();
+                if (is_warmup_complete_.load() && is_ready_ack_.load()) {
+                    transmit_reading();
+                    last_transmit_time = std::chrono::steady_clock::now();
+                } else if (is_warmup_complete_.load() && !is_ready_ack_.load()) {
+                    send_ready_signal();
+                }
             }
 
             // Periodic non-blocking MCU router RPC tick/reconnect
@@ -88,6 +117,7 @@ public:
         mcu_bridge_.close_socket();
         std::cout << "[HW] Node " << cfg_.node_id << " stopped gracefully.\n";
     }
+
 
     void stop() {
         running_.store(false);
@@ -154,6 +184,8 @@ private:
     int consecutive_failures_;
     std::atomic<int> sampling_interval_seconds_;
     std::atomic<int> reading_count_;
+    std::atomic<bool> is_warmup_complete_;
+    std::atomic<bool> is_ready_ack_;
 
     static inline HardwareBridge* instance_ = nullptr;
 
@@ -176,6 +208,15 @@ private:
             } catch (const std::exception& e) {
                 std::cerr << "[HW] SSE: config parse error: " << e.what() << "\n";
             }
+        } else if (event == "request_data" || event == "poll_sensor") {
+            std::cout << "[HW] SSE request_data event received from Intelligence Server.\n";
+            if (is_warmup_complete_.load() && is_ready_ack_.load()) {
+                transmit_reading();
+            } else if (is_warmup_complete_.load() && !is_ready_ack_.load()) {
+                send_ready_signal();
+            } else {
+                std::cout << "[HW] Data request received during 30s warm-up — deferred until warm-up finishes.\n";
+            }
         } else if (event == "intelligence_update" || event == "new_reading") {
             try {
                 if (event == "intelligence_update") {
@@ -190,6 +231,30 @@ private:
             std::cout << "[HW] SSE: event received [" << event << "]: " << data_json << "\n";
         }
     }
+
+
+    bool send_ready_signal() {
+        if (!is_warmup_complete_.load()) return false;
+        nlohmann::json j;
+        j["node_id"] = cfg_.node_id;
+        j["status"] = "READY";
+        j["warmup_duration_s"] = 30.0;
+
+        std::string post_url = cfg_.server_url + "/hardware/ready";
+        std::cout << "[HW] Sending READY handshake signal to Intelligence Server (" << post_url << ")...\n";
+
+        auto resp = http_.post_json(post_url, j.dump());
+        if (resp.success && (resp.status_code == 200 || resp.status_code == 201)) {
+            is_ready_ack_.store(true);
+            std::cout << "[HW] READY handshake ACK received from Intelligence Server.\n";
+            return true;
+        } else {
+            is_ready_ack_.store(false);
+            std::cerr << "[HW] READY handshake failed (HTTP " << resp.status_code << "): " << resp.error_msg << "\n";
+            return false;
+        }
+    }
+
 
     void update_display_state(const nlohmann::json& j) {
         if (j.contains("aqi") && !j["aqi"].is_null()) {
@@ -322,15 +387,20 @@ private:
 
     void handle_failure() {
         if (consecutive_failures_ >= cfg_.retry_max_attempts) {
-            std::cerr << "[HW] Max retries reached. Re-checking server health...\n";
+            std::cerr << "[HW] Max retries reached. Intelligence Server connection lost. Re-checking server health...\n";
             consecutive_failures_ = 0;
-            wait_for_server();
+            is_ready_ack_.store(false);
+            if (wait_for_server()) {
+                std::cout << "[HW] Intelligence Server recovered. Re-sending READY handshake...\n";
+                send_ready_signal();
+            }
         } else {
             int delay = compute_backoff(consecutive_failures_);
-            std::cout << "[HW] Reconnecting in " << delay << "s...\n";
+            std::cout << "[HW] Connection error. Reconnecting in " << delay << "s...\n";
             sleep_interruptible(delay);
         }
     }
+
 
     int compute_backoff(int attempt) const {
         int delay = cfg_.retry_base_delay_seconds;

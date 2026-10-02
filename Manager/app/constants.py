@@ -21,6 +21,20 @@ INACTIVE_TIMEOUT_SECONDS_DEFAULT: int = 15
 ENV_INACTIVE_TIMEOUT_KEY: str = "NAVOS_INACTIVE_TIMEOUT_S"
 
 # ------------------------------------------------------------------
+# UNO Q Edge Node Integration & Polling Defaults
+# ------------------------------------------------------------------
+UNO_Q_HOST_DEFAULT: str = "127.0.0.1"
+UNO_Q_PORT_DEFAULT: int = 8420
+UNO_Q_POLL_INTERVAL_SECONDS_DEFAULT: float = 3600.0  # Default 1 hour polling interval
+
+ENV_UNO_Q_URL_KEY: str = "NAVOS_UNO_Q_URL"
+ENV_UNO_Q_IP_KEY: str = "NAVOS_UNO_Q_IP"
+ENV_UNO_Q_PORT_KEY: str = "NAVOS_UNO_Q_PORT"
+ENV_UNO_Q_POLL_INTERVAL_KEY: str = "NAVOS_POLL_INTERVAL_S"
+ENV_UNO_Q_POLL_ENABLED_KEY: str = "NAVOS_POLL_ENABLED"
+
+
+# ------------------------------------------------------------------
 # State Storage & File Paths
 # ------------------------------------------------------------------
 STATE_FILENAME: str = "manager_state.json"

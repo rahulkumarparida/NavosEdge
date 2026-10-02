@@ -13,12 +13,14 @@ namespace constants {
 // Default Network & Node Settings
 inline const std::string DEFAULT_SERVER_URL               = "http://localhost:8420";
 inline const std::string DEFAULT_NODE_ID                  = "uno-q-001";
-constexpr int DEFAULT_SAMPLING_INTERVAL_SECONDS           = 10;
+constexpr int DEFAULT_SAMPLING_INTERVAL_SECONDS           = 60;
+constexpr int DEFAULT_SENSOR_WARMUP_SECONDS               = 30;
 constexpr int DEFAULT_RETRY_MAX_ATTEMPTS               = 5;
 constexpr int DEFAULT_RETRY_BASE_DELAY_SECONDS         = 2;
 constexpr int DEFAULT_HTTP_TIMEOUT_SECONDS             = 10;
 constexpr bool DEFAULT_MOCK_MODE                          = true;
 inline const std::string DEFAULT_SCENARIO                 = "normal";
+
 
 // Serial Communication Defaults (USB UART / Arduino UNO Q)
 inline const std::string DEFAULT_SERIAL_PORT              = "/dev/ttyACM0";

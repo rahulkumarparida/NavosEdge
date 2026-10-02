@@ -1,7 +1,7 @@
 {
     "server_url": "http://localhost:8420",
     "node_id": "uno-q-001",
-    "sampling_interval_seconds": 10,
+    "sampling_interval_seconds": 60,
     "retry_max_attempts": 5,
     "retry_base_delay_seconds": 2,
     "http_timeout_seconds": 10,

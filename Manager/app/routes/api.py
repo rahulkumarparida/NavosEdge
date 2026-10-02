@@ -71,6 +71,13 @@ async def register_node(payload: NodeRegistrationPayload, request: Request):
     return await manager_service.register_node(payload.node_id, payload.location)
 
 
+@router.post("/api/v1/nodes/poll", response_model=OverviewResponse)
+@router.post("/nodes/poll", response_model=OverviewResponse)
+async def poll_uno_q_nodes(request: Request):
+    manager_service = request.app.state.manager_service
+    return await manager_service.poll_uno_q()
+
+
 @router.post("/api/v1/nodes/{node_id}/telemetry", response_model=NodeState)
 @router.post("/nodes/{node_id}/telemetry", response_model=NodeState)
 async def ingest_telemetry(node_id: str, payload: NodeTelemetryPayload, request: Request):
@@ -81,6 +88,7 @@ async def ingest_telemetry(node_id: str, payload: NodeTelemetryPayload, request:
 
     manager_service = request.app.state.manager_service
     return await manager_service.ingest_telemetry(payload)
+
 
 
 @router.get("/stream")

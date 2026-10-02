@@ -86,7 +86,12 @@ Check status of Intelligence Server, Router Socket, MCU RPC availability, and C+
 
 ## 📚 Documentation & Modules
 
-- [UNO Q Deployment & Setup Guide](./UNO_Q_DEPLOYMENT.md) - Complete flashing and execution manual for user `arduino`.
-- [Intelligence Server](./Intelligence/Server/README.md) - Python backend processing, model inference, and event streaming.
-- [Phase 10 Display Integration](./phase10DisplayIntegration.md) - Detailed breakdown of physical MPI3501 integration.
-- [Pipeline Flow Trace](./docs/NAVOSEDGE_RUNTIME_FLOW.md) - Runtime step-by-step pipeline trace.
+All project documentation is consolidated in the [docs/phases/](docs/phases/) directory:
+
+- [Phase 13 Runtime Flow Guide](docs/phases/phase13RuntimeFlow.md) — 30s sensor warm-up, READY handshake, 60s cycle, & display updates.
+- [Parent Manager Integration Guide](docs/phases/UNO_Q_MANAGER_INTEGRATION.md) — Wi-Fi network setup, `.env` IP configuration, & dashboard polling.
+- [UNO Q Deployment & Setup Guide](docs/phases/UNO_Q_DEPLOYMENT.md) — Complete deployment manual for Arduino UNO Q.
+- [Phase 10 Display Integration](docs/phases/phase10DisplayIntegration.md) — Breakdown of physical MPI3501 display integration.
+- [Phase 9 Parent Manager Architecture](docs/phases/phase9Manager.md) — Multi-node telemetry aggregator and React Web Dashboard.
+- [Complete Phase Runbook](docs/phases/PHASE_RUNBOOK.md) — Step-by-step development and verification log for all phases.
+

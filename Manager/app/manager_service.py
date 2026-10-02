@@ -206,6 +206,84 @@ class ManagerService:
             overview = self.get_overview()
             await self.broadcast_event("node_status_change", overview.model_dump())
 
+    async def poll_uno_q(self) -> OverviewResponse:
+        """
+        Polls the configured UNO Q Intelligence Server endpoints over HTTP.
+        Discovers active nodes on UNO Q and fetches latest intelligence data.
+        If UNO Q is unreachable, marks active nodes as inactive cleanly without crashing.
+        """
+        from app.config import UNO_Q_BASE_URL, UNO_Q_POLL_ENABLED
+
+        if not UNO_Q_POLL_ENABLED or not UNO_Q_BASE_URL:
+            return self.get_overview()
+
+        logger.info("Polling UNO Q Intelligence Server at %s", UNO_Q_BASE_URL)
+        try:
+            import httpx
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                # 1. Reuse existing GET /api/v1/nodes endpoint on UNO Q
+                resp = await client.get(f"{UNO_Q_BASE_URL}/api/v1/nodes")
+                if resp.status_code != 200:
+                    logger.warning("UNO Q at %s returned HTTP status %d for /api/v1/nodes", UNO_Q_BASE_URL, resp.status_code)
+                    await self.mark_uno_q_nodes_inactive()
+                    return self.get_overview()
+
+                nodes_data = resp.json()
+                nodes_list = nodes_data.get("nodes", [])
+                if not nodes_list:
+                    logger.info("No active nodes reported by UNO Q at %s", UNO_Q_BASE_URL)
+                    return self.get_overview()
+
+                for n_info in nodes_list:
+                    node_id = n_info.get("node_id")
+                    if not node_id:
+                        continue
+
+                    # 2. Reuse existing GET /api/v1/nodes/{node_id}/latest endpoint on UNO Q
+                    latest_resp = await client.get(f"{UNO_Q_BASE_URL}/api/v1/nodes/{node_id}/latest")
+                    if latest_resp.status_code == 200:
+                        intel_data = latest_resp.json()
+                        payload = NodeTelemetryPayload(
+                            node_id=node_id,
+                            location=DEFAULT_LOCATIONS.get(node_id, f"UNO Q ({node_id})"),
+                            aqi=intel_data.get("aqi"),
+                            pm=intel_data.get("pm", {}),
+                            temperature_C=float(intel_data.get("temperature_C", 0.0)),
+                            humidity_pct=float(intel_data.get("humidity_pct", 0.0)),
+                            predictions=intel_data.get("predictions", {}),
+                            advisory=intel_data.get("advisory", {}),
+                            timestamp=datetime.now(timezone.utc).isoformat(),
+                        )
+                        await self.ingest_telemetry(payload)
+                        logger.info("Successfully ingested latest data for node %s from UNO Q (%s)", node_id, UNO_Q_BASE_URL)
+                    elif latest_resp.status_code == 404:
+                        logger.info("UNO Q node %s is registered but has no readings available yet.", node_id)
+                    else:
+                        logger.warning("UNO Q node %s /latest returned HTTP status %d", node_id, latest_resp.status_code)
+
+        except Exception as e:
+            logger.warning("Connection failure polling UNO Q at %s: %s", UNO_Q_BASE_URL, e)
+            await self.mark_uno_q_nodes_inactive()
+
+        return self.get_overview()
+
+    async def mark_uno_q_nodes_inactive(self):
+        """Marks active nodes as inactive when UNO Q cannot be reached."""
+        status_changed = False
+        async with self._lock:
+            for node_id, data in self.nodes.items():
+                if data.get("status") == "active":
+                    logger.info("Marking node %s inactive due to unreachable UNO Q server.", node_id)
+                    data["status"] = "inactive"
+                    status_changed = True
+
+            if status_changed:
+                self.storage.save_state(self.nodes)
+
+        if status_changed:
+            overview = self.get_overview()
+            await self.broadcast_event("node_status_change", overview.model_dump())
+
     async def subscribe(self) -> asyncio.Queue:
         queue: asyncio.Queue = asyncio.Queue()
         async with self._lock:
@@ -228,3 +306,4 @@ class ManagerService:
                     queue.put_nowait(message)
                 except asyncio.QueueFull:
                     pass
+

@@ -23,7 +23,11 @@ logger = logging.getLogger("ManagerServer")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    from app.config import HOST, PORT, UNO_Q_BASE_URL, UNO_Q_POLL_INTERVAL_S, UNO_Q_POLL_ENABLED
     logger.info("Starting NavosEdge Parent Manager Server on http://%s:%s", HOST, PORT)
+    if UNO_Q_POLL_ENABLED:
+        logger.info("UNO Q Polling enabled — Base URL: %s, Interval: %.1fs", UNO_Q_BASE_URL, UNO_Q_POLL_INTERVAL_S)
+
     manager_service = ManagerService()
     app.state.manager_service = manager_service
 
@@ -38,10 +42,29 @@ async def lifespan(app: FastAPI):
             except Exception as e:
                 logger.error("Error in node timeout checker: %s", e)
 
-    bg_task = asyncio.create_task(periodic_timeout_checker())
+    # Periodic background task to poll UNO Q edge node
+    async def periodic_uno_q_poller():
+        await asyncio.sleep(1.0)
+        while True:
+            try:
+                await manager_service.poll_uno_q()
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                logger.error("Error in UNO Q poller task: %s", e)
+
+            try:
+                await asyncio.sleep(UNO_Q_POLL_INTERVAL_S)
+            except asyncio.CancelledError:
+                break
+
+    bg_task_timeout = asyncio.create_task(periodic_timeout_checker())
+    bg_task_poller = asyncio.create_task(periodic_uno_q_poller())
     yield
-    bg_task.cancel()
+    bg_task_timeout.cancel()
+    bg_task_poller.cancel()
     logger.info("Shutting down NavosEdge Parent Manager Server.")
+
 
 
 def create_app() -> FastAPI:
