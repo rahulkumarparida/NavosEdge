@@ -3,11 +3,11 @@
  * NavosEdgeGUI.h — 5-Screen Structural Display Renderer for MPI3501 3.5" (480×320 landscape).
  *
  * Sequence:
- *   Screen 0: ENVIRONMENT            (15s) — AQI hero, PM10/PM2.5/PM1.0 bars, Temp, Humidity, Status
- *   Screen 1: ADVICE + ACTIONS       (10s) — Advisory text & Action items grid
- *   Screen 2: FORECAST               (10s) — Trend, Forecast Trend, Model Confidence, Step Flow, Outlook
- *   Screen 3: MODEL CONFIDENCE SCORE (10s) — 2x2 grid: Anomaly, Source, AQ, Forecast
- *   Screen 4: RAW SENSOR READINGS    (10s) — Debugging view: PMs, DHT22, MQ2/MQ9/MQ135 ADC+Volt, AQ
+ *   Screen 0: ENVIRONMENT            (20s) — AQI hero, PM bars, Temp, Humidity, Status, dust animation
+ *   Screen 1: ADVICE + ACTIONS       (15s) — Advisory text & Action items list
+ *   Screen 2: FORECAST               (15s) — Trend, Forecast Trend, Model Confidence, Step Flow, Outlook
+ *   Screen 3: MODEL CONFIDENCE SCORE (15s) — 2x2 grid: Anomaly, Source, AQ, Forecast
+ *   Screen 4: RAW SENSOR READINGS    (15s) — Debugging view: PMs, DHT22, MQ2/MQ9/MQ135 ADC+Volt, AQ
  */
 
 #include "../state/NavosEdgeState.h"
@@ -45,12 +45,19 @@
 #define GUI_WARN_ORANGE  0xFD20   // Unhealthy for sensitive
 #define GUI_BAD_RED      0xF800   // Unhealthy / Hazardous
 
+// Dust particle color (dim grey, subtle)
+#define GUI_DUST_COLOR   0x4A69   // Muted grey-brown for dust particles
+
 // Screen dimensions (landscape)
 #define GUI_WIDTH  480
 #define GUI_HEIGHT 320
 
 // Total number of screens (EXACTLY 5)
 #define GUI_NUM_SCREENS 5
+
+// Dust particle system constants
+#define DUST_MAX_PARTICLES 30
+#define DUST_ANIM_INTERVAL_MS 120  // ~8 fps, lightweight
 
 class NavosEdgeGUI {
 public:
@@ -63,7 +70,7 @@ public:
 
     /**
      * Non-blocking update. Call every loop().
-     * Rotates screens (15s for Env, 10s for others) using millis().
+     * Rotates screens (20s for Env, 15s for others) using millis().
      */
     void update(const NavosEdgeState& state);
 
@@ -89,6 +96,24 @@ private:
     uint8_t _lastDrawnScreen;
     bool _needsFullRedraw;
 
+    // --- Dust particle animation state ---
+    struct DustParticle {
+        int16_t x, y;
+        int8_t  dx, dy;   // velocity (-1, 0, +1)
+        bool    active;
+    };
+    DustParticle _dust[DUST_MAX_PARTICLES];
+    uint8_t      _dustCount;         // current active particles (driven by AQI)
+    unsigned long _dustLastMs;       // last animation tick
+    uint16_t     _dustPrevX[DUST_MAX_PARTICLES]; // erase positions
+    uint16_t     _dustPrevY[DUST_MAX_PARTICLES];
+    uint32_t     _dustRng;           // lightweight PRNG state
+
+    uint16_t dustRand();             // simple xorshift16 PRNG
+    void     dustInit(float aqi);    // seed particles
+    void     dustTick();             // move one step, erase + draw
+    void     dustErase();            // erase all particles (on screen exit)
+
 #ifdef ARDUINO
     UNOQ_MPI3501 _tft;
 #endif
@@ -106,6 +131,9 @@ private:
     void drawCard(int16_t x, int16_t y, int16_t w, int16_t h,
                   const char* label, const char* value, uint16_t valueColor,
                   const char* unit = nullptr);
+    void drawLargeValueCard(int16_t x, int16_t y, int16_t w, int16_t h,
+                            const char* label, const char* value, uint16_t valueColor,
+                            const char* unit = nullptr);
     void drawProgressBar(int16_t x, int16_t y, int16_t w, int16_t h,
                          float value, float maxVal, uint16_t barColor);
     int16_t drawWrappedString(int16_t x, int16_t y, const char* str,
@@ -127,4 +155,5 @@ private:
                        uint16_t color, uint16_t bg, uint8_t size);
     void tftDrawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color);
     void tftDrawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color);
+    void tftDrawPixel(int16_t x, int16_t y, uint16_t color);
 };
