@@ -10,7 +10,7 @@
  *   Screen 4: RAW SENSOR READINGS    (10s) — Debugging view: PMs, DHT22, MQ2/MQ9/MQ135 ADC+Volt, AQ
  */
 
-#include "NavosEdgeState.h"
+#include "../state/NavosEdgeState.h"
 
 #ifdef ARDUINO
 #include <UNOQ_MPI3501.h>
@@ -101,7 +101,8 @@ private:
     void drawScreen4_RawSensors(const NavosEdgeState& state);
 
     // ─── UI helpers ───
-    void drawHeader(const char* title, const char* badgeStr, uint16_t badgeColor);
+    void drawHeader(const char* title);
+    void drawStatusBadge(const char* badgeStr, uint16_t badgeColor, int16_t overrideX = -1, int16_t overrideY = -1);
     void drawCard(int16_t x, int16_t y, int16_t w, int16_t h,
                   const char* label, const char* value, uint16_t valueColor,
                   const char* unit = nullptr);
@@ -110,6 +111,9 @@ private:
     int16_t drawWrappedString(int16_t x, int16_t y, const char* str,
                               uint16_t color, uint16_t bg, uint8_t size,
                               int16_t maxWidth, uint8_t maxLines = 4);
+    void drawAdaptiveString(int16_t x, int16_t y, const char* str,
+                            uint16_t color, uint16_t bg, uint8_t maxBaseSize,
+                            int16_t maxWidth, int16_t maxHeight);
 
     uint16_t aqiColor(float aqi);
     uint16_t severityColor(const char* severity);

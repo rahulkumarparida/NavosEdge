@@ -46,8 +46,8 @@ void NavosEdgeGUI::update(const NavosEdgeState& state) {
 
     unsigned long now = millis();
 
-    // Per-screen duration timing (Environment=15s, others=10s)
-    uint32_t durationMs = (_currentScreen == 0) ? 15000 : 10000;
+    // Per-screen duration timing (Environment=20s, others=15s)
+    uint32_t durationMs = (_currentScreen == 0) ? 20000 : 15000;
 
     if (now - _lastRotateMs >= durationMs) {
         _currentScreen = (_currentScreen + 1) % GUI_NUM_SCREENS;
@@ -106,7 +106,7 @@ void NavosEdgeGUI::drawScreen0_Environment(const NavosEdgeState& state) {
     tftFillScreen(GUI_BG_COLOR);
 
     bool live = state.valid && (millis() - state.last_update_ms < 60000);
-    drawHeader("1. ENVIRONMENT", live ? "LIVE" : "OFFLINE", live ? GUI_GOOD_GREEN : GUI_BAD_RED);
+    drawHeader("1. ENVIRONMENT");
 
     // --- Top Left: Main AQI Hero Panel ---
     uint16_t aCol = aqiColor(state.aqi);
@@ -170,7 +170,7 @@ void NavosEdgeGUI::drawScreen0_Environment(const NavosEdgeState& state) {
     tftDrawRect(324, 185, 150, 130, GUI_CARD_BORDER);
     tftDrawString(334, 195, "NODE STATUS", GUI_LIGHT_GREY, GUI_CARD_BG, 1);
     tftDrawString(334, 225, "uno-q-001", GUI_WHITE, GUI_CARD_BG, 2);
-    tftDrawString(334, 288, live ? "Sensor: Active" : "Sensor: Offline", live ? GUI_GOOD_GREEN : GUI_BAD_RED, GUI_CARD_BG, 1);
+    drawStatusBadge(live ? "LIVE" : "OFFLINE", live ? GUI_GOOD_GREEN : GUI_BAD_RED);
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -182,7 +182,7 @@ void NavosEdgeGUI::drawScreen1_AdviceActions(const NavosEdgeState& state) {
     uint16_t sCol = severityColor(state.severity);
     char badgeBuf[32];
     snprintf(badgeBuf, sizeof(badgeBuf), "%s", state.severity[0] ? state.severity : "NORMAL");
-    drawHeader("2. ADVICE + ACTIONS", badgeBuf, sCol);
+    drawHeader("2. ADVICE + ACTIONS");
 
     // --- Top Section: ADVICE ---
     tftFillRect(6, 34, 468, 100, GUI_CARD_BG);
@@ -192,7 +192,10 @@ void NavosEdgeGUI::drawScreen1_AdviceActions(const NavosEdgeState& state) {
     tftDrawFastHLine(16, 52, 448, GUI_DARK_GREY);
 
     const char* advText = state.advice[0] ? state.advice : "Air quality is in normal range. Proceed with regular outdoor activities.";
-    drawWrappedString(16, 58, advText, GUI_WHITE, GUI_CARD_BG, 2, 448, 3);
+    // Adaptive font size for advice
+    int advLen = strlen(advText);
+    uint8_t advSize = (advLen > 100) ? 1 : 2;
+    drawWrappedString(16, 58, advText, GUI_WHITE, GUI_CARD_BG, advSize, 448, 4);
 
     // --- Bottom Section: ACTIONS ---
     tftFillRect(6, 140, 468, 175, GUI_CARD_BG);
@@ -202,38 +205,25 @@ void NavosEdgeGUI::drawScreen1_AdviceActions(const NavosEdgeState& state) {
     tftDrawFastHLine(16, 158, 448, GUI_DARK_GREY);
 
     uint8_t count = state.action_count;
+    int currentY = 168;
+    uint8_t actSize = (count > 3) ? 1 : 2;
+
     if (count == 0) {
-        // Default Actions Grid
-        tftFillRect(14, 166, 222, 68, GUI_HEADER_BG);
-        tftDrawRect(14, 166, 222, 68, GUI_CARD_BORDER);
-        tftDrawString(20, 172, "[1]", GUI_YELLOW, GUI_HEADER_BG, 1);
-        drawWrappedString(20, 186, "No special precautions needed.", GUI_WHITE, GUI_HEADER_BG, 1, 210, 3);
-
-        tftFillRect(244, 166, 222, 68, GUI_HEADER_BG);
-        tftDrawRect(244, 166, 222, 68, GUI_CARD_BORDER);
-        tftDrawString(250, 172, "[2]", GUI_YELLOW, GUI_HEADER_BG, 1);
-        drawWrappedString(250, 186, "Enjoy fresh air and normal routine.", GUI_WHITE, GUI_HEADER_BG, 1, 210, 3);
+        currentY = drawWrappedString(16, currentY, "1. No special precautions needed.", GUI_WHITE, GUI_CARD_BG, actSize, 448, 2);
+        currentY += 4;
+        drawWrappedString(16, currentY, "2. Enjoy fresh air and normal routine.", GUI_WHITE, GUI_CARD_BG, actSize, 448, 2);
     } else {
-        // 2x2 Grid of Actions
-        struct BoxPos { int16_t x; int16_t y; } boxes[4] = {
-            {14, 166}, {244, 166},
-            {14, 240}, {244, 240}
-        };
-
-        for (uint8_t i = 0; i < count && i < 4; i++) {
-            int16_t bx = boxes[i].x;
-            int16_t by = boxes[i].y;
-
-            tftFillRect(bx, by, 222, 68, GUI_HEADER_BG);
-            tftDrawRect(bx, by, 222, 68, sCol);
-
-            char numStr[8];
-            snprintf(numStr, sizeof(numStr), "[%d]", i + 1);
-            tftDrawString(bx + 6, by + 6, numStr, GUI_YELLOW, GUI_HEADER_BG, 1);
-
-            drawWrappedString(bx + 6, by + 20, state.actions[i], GUI_WHITE, GUI_HEADER_BG, 1, 210, 3);
+        for (uint8_t i = 0; i < count; i++) {
+            if (currentY + 8 * actSize > 310) break; // Don't overflow the panel
+            
+            char lineBuf[256];
+            snprintf(lineBuf, sizeof(lineBuf), "%d. %s", i + 1, state.actions[i]);
+            currentY = drawWrappedString(16, currentY, lineBuf, GUI_WHITE, GUI_CARD_BG, actSize, 448, 2);
+            currentY += 4; // spacing
         }
     }
+
+    drawStatusBadge(badgeBuf, sCol);
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -245,7 +235,7 @@ void NavosEdgeGUI::drawScreen2_Forecast(const NavosEdgeState& state) {
     uint16_t tCol = trendColor(state.forecast_trend);
     char badgeBuf[32];
     snprintf(badgeBuf, sizeof(badgeBuf), "TREND: %s", state.forecast_trend[0] ? state.forecast_trend : "STABLE");
-    drawHeader("3. FORECAST", badgeBuf, tCol);
+    drawHeader("3. FORECAST");
 
     // --- Top Row — Three Cards ---
     drawCard(6, 34, 150, 68, "STATUS", state.forecast_trend[0] ? state.forecast_trend : "STABLE", tCol);
@@ -288,7 +278,7 @@ void NavosEdgeGUI::drawScreen2_Forecast(const NavosEdgeState& state) {
         tftDrawString(x + 6, 136, steps[i].label, GUI_YELLOW, GUI_HEADER_BG, 1);
         char pBuf[16];
         snprintf(pBuf, sizeof(pBuf), "%.1f", steps[i].val);
-        tftDrawString(x + 6, 154, pBuf, GUI_WHITE, GUI_HEADER_BG, 2);
+        drawAdaptiveString(x + 6, 154, pBuf, GUI_WHITE, GUI_HEADER_BG, 2, boxW - 12, 16);
 
         if (i < 3) {
             tftDrawString(x + boxW + 4, 154, "->", GUI_CYAN, GUI_CARD_BG, 2);
@@ -312,7 +302,10 @@ void NavosEdgeGUI::drawScreen2_Forecast(const NavosEdgeState& state) {
         snprintf(outlookBuf, sizeof(outlookBuf), "PM2.5 expected to remain stable near %.1f ug/m3 with no rapid spikes predicted.", val0);
     }
 
-    drawWrappedString(16, 238, outlookBuf, GUI_WHITE, GUI_CARD_BG, 2, 448, 3);
+    uint8_t outSize = (strlen(outlookBuf) > 100) ? 1 : 2;
+    drawWrappedString(16, 238, outlookBuf, GUI_WHITE, GUI_CARD_BG, outSize, 448, 4);
+
+    drawStatusBadge(badgeBuf, tCol);
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -321,7 +314,7 @@ void NavosEdgeGUI::drawScreen2_Forecast(const NavosEdgeState& state) {
 void NavosEdgeGUI::drawScreen3_ModelConfidence(const NavosEdgeState& state) {
     tftFillScreen(GUI_BG_COLOR);
 
-    drawHeader("4. MODEL CONFIDENCE SCORE", "SCORES", GUI_CYAN);
+    drawHeader("4. MODEL CONFIDENCE SCORE");
 
     // --- 4 Panels in 2x2 Grid Layout ---
 
@@ -333,7 +326,10 @@ void NavosEdgeGUI::drawScreen3_ModelConfidence(const NavosEdgeState& state) {
 
     bool isAnom = strcmp(state.anomaly_status, "ANOMALOUS") == 0;
     tftDrawString(16, 68, "STATUS:", GUI_LIGHT_GREY, GUI_CARD_BG, 1);
-    tftDrawString(80, 66, isAnom ? "ANOMALOUS" : "NORMAL", isAnom ? GUI_BAD_RED : GUI_GOOD_GREEN, GUI_CARD_BG, 2);
+    
+    char anomStr[16];
+    strncpy(anomStr, isAnom ? "ANOMALOUS" : "NORMAL", sizeof(anomStr));
+    drawAdaptiveString(80, 66, anomStr, isAnom ? GUI_BAD_RED : GUI_GOOD_GREEN, GUI_CARD_BG, 2, 140, 16);
 
     tftDrawString(16, 105, "CONFIDENCE:", GUI_LIGHT_GREY, GUI_CARD_BG, 1);
     tftDrawString(105, 103, "100 %", GUI_WHITE, GUI_CARD_BG, 2);
@@ -347,10 +343,7 @@ void NavosEdgeGUI::drawScreen3_ModelConfidence(const NavosEdgeState& state) {
     const char* srcStr = state.source_value[0] ? state.source_value : "UNKNOWN";
     tftDrawString(254, 68, "SOURCE:", GUI_LIGHT_GREY, GUI_CARD_BG, 1);
 
-    char srcShort[16];
-    strncpy(srcShort, srcStr, 12);
-    srcShort[12] = '\0';
-    tftDrawString(315, 66, srcShort, GUI_WHITE, GUI_CARD_BG, 2);
+    drawAdaptiveString(315, 66, srcStr, GUI_WHITE, GUI_CARD_BG, 2, 140, 16);
 
     tftDrawString(254, 105, "CONFIDENCE:", GUI_LIGHT_GREY, GUI_CARD_BG, 1);
     char srcConfBuf[16];
@@ -379,7 +372,7 @@ void NavosEdgeGUI::drawScreen3_ModelConfidence(const NavosEdgeState& state) {
     tftDrawString(254, 184, "FORECAST MODEL", GUI_LIGHT_GREY, GUI_CARD_BG, 1);
     tftDrawFastHLine(254, 196, 208, GUI_DARK_GREY);
 
-    tftDrawString(254, 208, state.forecast_trend[0] ? state.forecast_trend : "STABLE", trendColor(state.forecast_trend), GUI_CARD_BG, 2);
+    drawAdaptiveString(254, 208, state.forecast_trend[0] ? state.forecast_trend : "STABLE", trendColor(state.forecast_trend), GUI_CARD_BG, 2, 208, 16);
 
     char fcConfBuf[32];
     if (state.forecast_confidence >= 0.0f) {
@@ -387,7 +380,9 @@ void NavosEdgeGUI::drawScreen3_ModelConfidence(const NavosEdgeState& state) {
     } else {
         snprintf(fcConfBuf, sizeof(fcConfBuf), "CONFIDENCE: 85 %%");
     }
-    tftDrawString(254, 245, fcConfBuf, GUI_WHITE, GUI_CARD_BG, 1);
+    drawAdaptiveString(254, 245, fcConfBuf, GUI_WHITE, GUI_CARD_BG, 1, 208, 16);
+
+    drawStatusBadge("SCORES", GUI_CYAN);
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -396,7 +391,7 @@ void NavosEdgeGUI::drawScreen3_ModelConfidence(const NavosEdgeState& state) {
 void NavosEdgeGUI::drawScreen4_RawSensors(const NavosEdgeState& state) {
     tftFillScreen(GUI_BG_COLOR);
 
-    drawHeader("5. RAW SENSOR READINGS", "RAW", GUI_YELLOW);
+    drawHeader("5. RAW SENSOR READINGS");
 
     char buf[32];
 
@@ -408,13 +403,13 @@ void NavosEdgeGUI::drawScreen4_RawSensors(const NavosEdgeState& state) {
     tftDrawFastHLine(14, 54, 129, GUI_DARK_GREY);
 
     snprintf(buf, sizeof(buf), "PM1.0: %.1f", state.pm1_0);
-    tftDrawString(14, 66, buf, GUI_WHITE, GUI_CARD_BG, 1);
+    drawAdaptiveString(14, 64, buf, GUI_WHITE, GUI_CARD_BG, 2, 129, 16);
 
     snprintf(buf, sizeof(buf), "PM2.5: %.1f", state.pm2_5);
-    tftDrawString(14, 92, buf, GUI_WHITE, GUI_CARD_BG, 1);
+    drawAdaptiveString(14, 90, buf, GUI_WHITE, GUI_CARD_BG, 2, 129, 16);
 
     snprintf(buf, sizeof(buf), "PM10 : %.1f", state.pm10);
-    tftDrawString(14, 118, buf, GUI_WHITE, GUI_CARD_BG, 1);
+    drawAdaptiveString(14, 116, buf, GUI_WHITE, GUI_CARD_BG, 2, 129, 16);
 
     // Left-Lower Panel: Humidity, Temperature
     tftFillRect(6, 176, 145, 136, GUI_CARD_BG);
@@ -423,10 +418,10 @@ void NavosEdgeGUI::drawScreen4_RawSensors(const NavosEdgeState& state) {
     tftDrawFastHLine(14, 196, 129, GUI_DARK_GREY);
 
     snprintf(buf, sizeof(buf), "Hum : %.1f %%", state.humidity);
-    tftDrawString(14, 212, buf, GUI_WHITE, GUI_CARD_BG, 1);
+    drawAdaptiveString(14, 212, buf, GUI_WHITE, GUI_CARD_BG, 2, 129, 16);
 
     snprintf(buf, sizeof(buf), "Temp: %.1f C", state.temperature);
-    tftDrawString(14, 245, buf, GUI_WHITE, GUI_CARD_BG, 1);
+    drawAdaptiveString(14, 245, buf, GUI_WHITE, GUI_CARD_BG, 2, 129, 16);
 
     // --- Center Panel: MQ Gas Sensors (MQ2, MQ9, MQ135 ADC & Voltage) ---
     tftFillRect(157, 34, 168, 278, GUI_CARD_BG);
@@ -435,29 +430,29 @@ void NavosEdgeGUI::drawScreen4_RawSensors(const NavosEdgeState& state) {
     tftDrawFastHLine(165, 54, 152, GUI_DARK_GREY);
 
     // MQ2
-    tftDrawString(165, 64, "MQ2 (Combustible)", GUI_YELLOW, GUI_CARD_BG, 1);
-    snprintf(buf, sizeof(buf), "ADC    : %u", state.mq2_adc > 0 ? state.mq2_adc : 350);
-    tftDrawString(165, 80, buf, GUI_WHITE, GUI_CARD_BG, 1);
-    snprintf(buf, sizeof(buf), "voltage: %.2f V", state.mq2_voltage > 0.0f ? state.mq2_voltage : 1.71f);
-    tftDrawString(165, 96, buf, GUI_LIGHT_GREY, GUI_CARD_BG, 1);
+    tftDrawString(165, 62, "MQ2 (Combustible)", GUI_YELLOW, GUI_CARD_BG, 1);
+    snprintf(buf, sizeof(buf), "ADC : %u", state.mq2_adc > 0 ? state.mq2_adc : 350);
+    drawAdaptiveString(165, 76, buf, GUI_WHITE, GUI_CARD_BG, 2, 152, 16);
+    snprintf(buf, sizeof(buf), "V   : %.2f V", state.mq2_voltage > 0.0f ? state.mq2_voltage : 1.71f);
+    drawAdaptiveString(165, 96, buf, GUI_LIGHT_GREY, GUI_CARD_BG, 2, 152, 16);
 
-    tftDrawFastHLine(165, 122, 152, GUI_DARK_GREY);
+    tftDrawFastHLine(165, 120, 152, GUI_DARK_GREY);
 
     // MQ9
-    tftDrawString(165, 132, "MQ9 (Carbon Monoxide)", GUI_YELLOW, GUI_CARD_BG, 1);
-    snprintf(buf, sizeof(buf), "ADC    : %u", state.mq9_adc > 0 ? state.mq9_adc : 280);
-    tftDrawString(165, 148, buf, GUI_WHITE, GUI_CARD_BG, 1);
-    snprintf(buf, sizeof(buf), "voltage: %.2f V", state.mq9_voltage > 0.0f ? state.mq9_voltage : 1.37f);
-    tftDrawString(165, 164, buf, GUI_LIGHT_GREY, GUI_CARD_BG, 1);
+    tftDrawString(165, 128, "MQ9 (Carbon Mono)", GUI_YELLOW, GUI_CARD_BG, 1);
+    snprintf(buf, sizeof(buf), "ADC : %u", state.mq9_adc > 0 ? state.mq9_adc : 280);
+    drawAdaptiveString(165, 142, buf, GUI_WHITE, GUI_CARD_BG, 2, 152, 16);
+    snprintf(buf, sizeof(buf), "V   : %.2f V", state.mq9_voltage > 0.0f ? state.mq9_voltage : 1.37f);
+    drawAdaptiveString(165, 162, buf, GUI_LIGHT_GREY, GUI_CARD_BG, 2, 152, 16);
 
-    tftDrawFastHLine(165, 190, 152, GUI_DARK_GREY);
+    tftDrawFastHLine(165, 186, 152, GUI_DARK_GREY);
 
     // MQ135
-    tftDrawString(165, 200, "MQ135 (Air Quality)", GUI_YELLOW, GUI_CARD_BG, 1);
-    snprintf(buf, sizeof(buf), "ADC    : %u", state.mq135_adc > 0 ? state.mq135_adc : 420);
-    tftDrawString(165, 216, buf, GUI_WHITE, GUI_CARD_BG, 1);
-    snprintf(buf, sizeof(buf), "voltage: %.2f V", state.mq135_voltage > 0.0f ? state.mq135_voltage : 2.05f);
-    tftDrawString(165, 232, buf, GUI_LIGHT_GREY, GUI_CARD_BG, 1);
+    tftDrawString(165, 194, "MQ135 (Air Qual)", GUI_YELLOW, GUI_CARD_BG, 1);
+    snprintf(buf, sizeof(buf), "ADC : %u", state.mq135_adc > 0 ? state.mq135_adc : 420);
+    drawAdaptiveString(165, 208, buf, GUI_WHITE, GUI_CARD_BG, 2, 152, 16);
+    snprintf(buf, sizeof(buf), "V   : %.2f V", state.mq135_voltage > 0.0f ? state.mq135_voltage : 2.05f);
+    drawAdaptiveString(165, 228, buf, GUI_LIGHT_GREY, GUI_CARD_BG, 2, 152, 16);
 
     // --- Right Panel: Air Quality (AQ) ---
     uint16_t aCol = aqiColor(state.aqi);
@@ -481,13 +476,15 @@ void NavosEdgeGUI::drawScreen4_RawSensors(const NavosEdgeState& state) {
 
     tftFillRect(339, 180, 127, 32, aCol);
     tftDrawString(345, 186, catStr, GUI_BLACK, aCol, 2);
+
+    drawStatusBadge("RAW", GUI_YELLOW, -1, 312 - 24);
 }
 
 // ─────────────────────────────────────────────────────────────
 // UI Helpers
 // ─────────────────────────────────────────────────────────────
 
-void NavosEdgeGUI::drawHeader(const char* title, const char* badgeStr, uint16_t badgeColor) {
+void NavosEdgeGUI::drawHeader(const char* title) {
     tftFillRect(0, 0, GUI_WIDTH, 30, GUI_HEADER_BG);
     tftDrawFastHLine(0, 30, GUI_WIDTH, GUI_DARK_GREY);
 
@@ -498,13 +495,37 @@ void NavosEdgeGUI::drawHeader(const char* title, const char* badgeStr, uint16_t 
     strncpy(titleBuf, title, 32);
     titleBuf[32] = '\0';
     tftDrawString(150, 7, titleBuf, GUI_WHITE, GUI_HEADER_BG, 2);
+}
 
+void NavosEdgeGUI::drawStatusBadge(const char* badgeStr, uint16_t badgeColor, int16_t overrideX, int16_t overrideY) {
     if (badgeStr && *badgeStr) {
         int badgeW = strlen(badgeStr) * 12 + 16;
-        int badgeX = GUI_WIDTH - badgeW - 8;
-        tftFillRect(badgeX, 3, badgeW, 24, badgeColor);
-        tftDrawString(badgeX + 8, 7, badgeStr, GUI_BLACK, badgeColor, 2);
+        int badgeX = (overrideX >= 0) ? overrideX : (GUI_WIDTH - badgeW - 6);
+        int badgeY = (overrideY >= 0) ? overrideY : (GUI_HEIGHT - 24 - 6);
+        tftFillRect(badgeX, badgeY, badgeW, 24, badgeColor);
+        tftDrawString(badgeX + 8, badgeY + 4, badgeStr, GUI_BLACK, badgeColor, 2);
     }
+}
+
+void NavosEdgeGUI::drawAdaptiveString(int16_t x, int16_t y, const char* str,
+                                      uint16_t color, uint16_t bg, uint8_t maxBaseSize,
+                                      int16_t maxWidth, int16_t maxHeight) {
+    if (!str || !*str) return;
+
+    int len = strlen(str);
+    uint8_t size = maxBaseSize;
+
+    // Find the largest size that fits
+    while (size > 1) {
+        int w = len * 6 * size;
+        int h = 8 * size;
+        if (w <= maxWidth && (maxHeight == 0 || h <= maxHeight)) {
+            break;
+        }
+        size--;
+    }
+
+    tftDrawString(x, y, str, color, bg, size);
 }
 
 void NavosEdgeGUI::drawCard(int16_t x, int16_t y, int16_t w, int16_t h,
