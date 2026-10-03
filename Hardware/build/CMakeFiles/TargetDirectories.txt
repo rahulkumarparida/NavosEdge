@@ -1,3 +1,0 @@
-/home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/build/CMakeFiles/navos_hardware_bridge.dir
-/home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/build/CMakeFiles/edit_cache.dir
-/home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/build/CMakeFiles/rebuild_cache.dir

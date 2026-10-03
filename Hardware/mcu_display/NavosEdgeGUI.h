@@ -4,7 +4,7 @@
  *
  * Sequence:
  *   Screen 0: ENVIRONMENT            (15s) — AQI hero, PM10/PM2.5/PM1.0 bars, Temp, Humidity, Status
- *   Screen 1: ADVICE + ACTIONS       (10s) — Advisory text & Action items
+ *   Screen 1: ADVICE + ACTIONS       (10s) — Advisory text & Action items grid
  *   Screen 2: FORECAST               (10s) — Trend, Forecast Trend, Model Confidence, Step Flow, Outlook
  *   Screen 3: MODEL CONFIDENCE SCORE (10s) — 2x2 grid: Anomaly, Source, AQ, Forecast
  *   Screen 4: RAW SENSOR READINGS    (10s) — Debugging view: PMs, DHT22, MQ2/MQ9/MQ135 ADC+Volt, AQ
@@ -102,7 +102,6 @@ private:
 
     // ─── UI helpers ───
     void drawHeader(const char* title, const char* badgeStr, uint16_t badgeColor);
-    void drawFooter(uint8_t screenIdx, const NavosEdgeState& state);
     void drawCard(int16_t x, int16_t y, int16_t w, int16_t h,
                   const char* label, const char* value, uint16_t valueColor,
                   const char* unit = nullptr);
