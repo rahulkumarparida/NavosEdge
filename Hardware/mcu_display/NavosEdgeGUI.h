@@ -10,7 +10,7 @@
  *   Screen 4: RAW SENSOR READINGS    (15s) — Debugging view: PMs, DHT22, MQ2/MQ9/MQ135 ADC+Volt, AQ
  */
 
-#include "../state/NavosEdgeState.h"
+#include "NavosEdgeState.h"
 
 #ifdef ARDUINO
 #include <UNOQ_MPI3501.h>

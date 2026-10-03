@@ -48,11 +48,12 @@ void NavosEdgeGUI::update(const NavosEdgeState& state) {
         return;
     }
 
+    unsigned long now = millis();
+
     if (_lastDrawnScreen == 254) {
         _needsFullRedraw = true;
+        _lastRotateMs = now; // Reset rotation timer on startup so Screen 0 gets its full duration
     }
-
-    unsigned long now = millis();
 
     // Per-screen duration timing (Environment=20s, others=15s)
     uint32_t durationMs = (_currentScreen == 0) ? 20000 : 15000;
@@ -63,10 +64,9 @@ void NavosEdgeGUI::update(const NavosEdgeState& state) {
         _needsFullRedraw = true;
     }
 
-    bool stateChanged = navosStateChanged(state, _lastDrawnState);
     bool screenChanged = (_currentScreen != _lastDrawnScreen);
 
-    if (_needsFullRedraw || stateChanged || screenChanged) {
+    if (_needsFullRedraw || screenChanged) {
         forceRedraw(state);
     }
 
@@ -309,11 +309,8 @@ void NavosEdgeGUI::drawScreen1_AdviceActions(const NavosEdgeState& state) {
     tftDrawFastHLine(16, 52, 448, GUI_DARK_GREY);
 
     const char* advText = state.advice[0] ? state.advice : "Air quality is in normal range. Proceed with regular outdoor activities.";
-    // Advisory text: attempt size 2, fall back to 1 if too long to fit in 4 lines
-    int advLen = strlen(advText);
-    int charsPerLine2 = 448 / 12;  // 37 chars per line at size 2
-    int linesNeeded2 = (advLen + charsPerLine2 - 1) / charsPerLine2;
-    uint8_t advSize = (linesNeeded2 <= 4) ? 2 : 1;
+    // Advisory text: size 1 for slightly smaller, clean, compact display
+    uint8_t advSize = 1;
     drawWrappedString(16, 58, advText, GUI_WHITE, GUI_CARD_BG, advSize, 448, 4);
 
     // --- Bottom Section: ACTIONS ---
