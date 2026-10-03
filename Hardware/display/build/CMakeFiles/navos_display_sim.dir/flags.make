@@ -6,5 +6,5 @@ CXX_DEFINES = -DNAVOS_FETCH_INTERVAL_MS=10000 -DNAVOS_NODE_ID=\"uno-q-001\" -DNA
 
 CXX_INCLUDES = -I/home/rahulroxx/MyHDD/NewVolume/Study/Projects/NavosEdge/Hardware/display
 
-CXX_FLAGS = -std=gnu++17
+CXX_FLAGS = -O3 -DNDEBUG -std=gnu++17
 

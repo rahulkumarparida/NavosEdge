@@ -29,9 +29,9 @@ CMakeFiles/navos_display_sim.dir/gui/NavosEdgeGUI.cpp.o: \
  /usr/include/bits/types/FILE.h /usr/include/bits/types/struct_FILE.h \
  /usr/include/bits/types/cookie_io_functions_t.h \
  /usr/include/bits/stdio_lim.h /usr/include/bits/floatn.h \
- /usr/include/bits/floatn-common.h /usr/include/c++/16/ctime \
- /usr/include/time.h /usr/include/bits/time.h /usr/include/bits/timex.h \
- /usr/include/bits/types/struct_timeval.h \
+ /usr/include/bits/floatn-common.h /usr/include/bits/stdio.h \
+ /usr/include/c++/16/ctime /usr/include/time.h /usr/include/bits/time.h \
+ /usr/include/bits/timex.h /usr/include/bits/types/struct_timeval.h \
  /usr/include/bits/types/clock_t.h /usr/include/bits/types/time_t.h \
  /usr/include/bits/types/struct_tm.h \
  /usr/include/bits/types/struct_timespec.h /usr/include/bits/endian.h \

@@ -14,6 +14,7 @@ from app.services.events import EventService
 from app.services.inference import InferenceAdapter
 from app.services.node_registry import NodeRegistry
 from app.storage.jsonl_store import JsonlStorageService
+from app.storage.local_dataset_logger import LocalDatasetLogger
 from app.services.pipeline import ModularPipeline
 from app.anomaly.engine import AnomalyEngine
 from app.source_classifier.classifier import SourceClassifier
@@ -38,6 +39,7 @@ class ProcessingService:
         source_classifier: SourceClassifier | None = None,
         forecast_plugin: ForecastPlugin | None = None,
         aqi_service: AQIService | None = None,
+        local_dataset_logger: LocalDatasetLogger | None = None,
     ) -> None:
         self.inference_adapter = inference_adapter
         self.node_registry = node_registry
@@ -47,6 +49,7 @@ class ProcessingService:
         self.source_classifier = source_classifier
         self.forecast_plugin = forecast_plugin
         self.aqi_service = aqi_service
+        self.local_dataset_logger = local_dataset_logger or LocalDatasetLogger()
         self.pipeline = ModularPipeline()
         self._latest_results: dict[str, IntelligenceResult] = {}
         # Track which nodes have been history-primed
@@ -122,6 +125,16 @@ class ProcessingService:
 
         # Persist to JSONL (must happen BEFORE anomaly analysis so history is on disk)
         await self.storage.append_reading(node_id, record)
+
+        # Persist to local_dataset/YYYY-MM-DD.csv (Phase 14 Local Dataset Logging)
+        if self.local_dataset_logger is not None:
+            try:
+                loop = asyncio.get_event_loop()
+                await loop.run_in_executor(
+                    None, self.local_dataset_logger.log_reading, payload
+                )
+            except Exception as e:
+                logger.error("Local dataset logging error for node %s: %s", node_id, e)
 
         # --- Anomaly detection ---
         await self._ensure_history_loaded(node_id)

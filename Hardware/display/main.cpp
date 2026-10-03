@@ -153,9 +153,9 @@ int main(int argc, char* argv[]) {
         // Log screen transitions
         uint8_t curScreen = gui.getCurrentScreen();
         if (curScreen != lastScreen) {
-            const char* names[] = {"ENVIRONMENT", "ADVICE", "ACTIONS"};
+            const char* names[] = {"ENVIRONMENT", "ADVICE + ACTIONS", "FORECAST", "MODEL CONFIDENCE SCORE", "RAW SENSOR READINGS"};
             printf("\n──── SCREEN %d: %s ────\n\n", curScreen + 1,
-                   curScreen < 3 ? names[curScreen] : "?");
+                   curScreen < 5 ? names[curScreen] : "?");
             lastScreen = curScreen;
         }
 

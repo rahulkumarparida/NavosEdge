@@ -41,6 +41,14 @@ struct NavosEdgeState {
     char anomaly_status[32];          // "NORMAL", "ANOMALOUS", "CLEAN"
     float anomaly_score;              // Anomaly confidence/score (-1.0 if unavailable)
 
+    // --- Screen 5: Raw Sensors ---
+    uint16_t mq2_adc;
+    float mq2_voltage;
+    uint16_t mq9_adc;
+    float mq9_voltage;
+    uint16_t mq135_adc;
+    float mq135_voltage;
+
     // --- Metadata ---
     bool valid;                       // true once at least one successful fetch/update
     unsigned long last_update_ms;     // millis() timestamp of last update
@@ -83,6 +91,13 @@ inline void navosStateInit(NavosEdgeState& s) {
     s.anomaly_status[sizeof(s.anomaly_status) - 1] = '\0';
     s.anomaly_score = 0.0f;
 
+    s.mq2_adc = 0;
+    s.mq2_voltage = 0.0f;
+    s.mq9_adc = 0;
+    s.mq9_voltage = 0.0f;
+    s.mq135_adc = 0;
+    s.mq135_voltage = 0.0f;
+
     s.valid = false;
     s.last_update_ms = 0;
 }
@@ -114,5 +129,11 @@ inline bool navosStateChanged(const NavosEdgeState& a, const NavosEdgeState& b) 
     if (strcmp(a.source_value, b.source_value) != 0) return true;
     if (a.source_confidence != b.source_confidence) return true;
     if (strcmp(a.anomaly_status, b.anomaly_status) != 0) return true;
+    if (a.mq2_adc != b.mq2_adc) return true;
+    if (a.mq2_voltage != b.mq2_voltage) return true;
+    if (a.mq9_adc != b.mq9_adc) return true;
+    if (a.mq9_voltage != b.mq9_voltage) return true;
+    if (a.mq135_adc != b.mq135_adc) return true;
+    if (a.mq135_voltage != b.mq135_voltage) return true;
     return false;
 }

@@ -166,7 +166,8 @@ private:
         bool adv_ok = send_rpc_advice(s);
         bool act_ok = send_rpc_actions(s);
         bool pred_ok = send_rpc_predictions(s);
-        return env_ok && adv_ok && act_ok && pred_ok;
+        bool raw_ok = send_rpc_raw_sensors(s);
+        return env_ok && adv_ok && act_ok && pred_ok && raw_ok;
     }
 
     bool send_rpc_environment(const NavosEdgeState& s) {
@@ -244,6 +245,23 @@ private:
 
         if (send_rpc_call("update_predictions", params)) {
             std::cout << "[MCU] Predictions RPC sent\n";
+            return true;
+        }
+        return false;
+    }
+
+    bool send_rpc_raw_sensors(const NavosEdgeState& s) {
+        nlohmann::json params = nlohmann::json::array({
+            (int)s.mq2_adc,
+            s.mq2_voltage,
+            (int)s.mq9_adc,
+            s.mq9_voltage,
+            (int)s.mq135_adc,
+            s.mq135_voltage
+        });
+
+        if (send_rpc_call("update_raw_sensors", params)) {
+            std::cout << "[MCU] Raw sensors RPC sent\n";
             return true;
         }
         return false;

@@ -1,0 +1,20 @@
+[Unit]
+Description=NavosEdge Unified Edge Air Quality Intelligence Application
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=@SERVICE_USER@
+WorkingDirectory=@REPO_ROOT@
+ExecStart=/bin/bash @REPO_ROOT@/run_hardware.sh --no-build
+Restart=on-failure
+RestartSec=10
+KillMode=control-group
+TimeoutStopSec=15
+Environment=PYTHONUNBUFFERED=1
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

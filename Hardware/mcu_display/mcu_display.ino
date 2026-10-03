@@ -88,6 +88,18 @@ void update_predictions(String source, float source_conf, String forecast_trend,
     state.last_update_ms = millis();
 }
 
+void update_raw_sensors(int mq2_adc, float mq2_v, int mq9_adc, float mq9_v, int mq135_adc, float mq135_v) {
+    state.mq2_adc = (uint16_t)mq2_adc;
+    state.mq2_voltage = mq2_v;
+    state.mq9_adc = (uint16_t)mq9_adc;
+    state.mq9_voltage = mq9_v;
+    state.mq135_adc = (uint16_t)mq135_adc;
+    state.mq135_voltage = mq135_v;
+
+    state.valid = true;
+    state.last_update_ms = millis();
+}
+
 void setup() {
     Serial.begin(115200);
     navosStateInit(state);
@@ -99,9 +111,10 @@ void setup() {
     Bridge.provide_safe("update_advice", update_advice);
     Bridge.provide_safe("update_actions", update_actions);
     Bridge.provide_safe("update_predictions", update_predictions);
+    Bridge.provide_safe("update_raw_sensors", update_raw_sensors);
 
     Serial.println(F("[MCU] Bridge initialized"));
-    Serial.println(F("[MCU] RPC methods registered: update_environment, update_advice, update_actions, update_predictions"));
+    Serial.println(F("[MCU] RPC methods registered: update_environment, update_advice, update_actions, update_predictions, update_raw_sensors"));
 
     gui.showStatus("NavosEdge MCU", "RPC Bridge Ready");
 }

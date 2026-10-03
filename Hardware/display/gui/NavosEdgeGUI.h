@@ -1,12 +1,13 @@
 #pragma once
 /**
- * NavosEdgeGUI.h — 4-Screen Display renderer for the MPI3501 3.5" 480×320 screen.
+ * NavosEdgeGUI.h — 5-Screen Structural Display Renderer for MPI3501 3.5" (480×320 landscape).
  *
  * Sequence:
- *   Screen 0: ENVIRONMENT  (15s) — Observe (AQI, PM1.0, PM2.5, PM10, Temp, Humidity)
- *   Screen 1: ADVISORY     (10s) — Decide  (Severity, Primary Advice, Actions)
- *   Screen 2: FORECAST     (10s) — Predict (Current -> Predicted PM2.5, Trend, Outlook)
- *   Screen 3: INTELLIGENCE (10s) — Explain (Anomaly, Source, Forecast, AQI summary)
+ *   Screen 0: ENVIRONMENT            (15s) — AQI hero, PM10/PM2.5/PM1.0 bars, Temp, Humidity, Status
+ *   Screen 1: ADVICE + ACTIONS       (10s) — Advisory text & Action items
+ *   Screen 2: FORECAST               (10s) — Trend, Forecast Trend, Model Confidence, Step Flow, Outlook
+ *   Screen 3: MODEL CONFIDENCE SCORE (10s) — 2x2 grid: Anomaly, Source, AQ, Forecast
+ *   Screen 4: RAW SENSOR READINGS    (10s) — Debugging view: PMs, DHT22, MQ2/MQ9/MQ135 ADC+Volt, AQ
  */
 
 #include "../state/NavosEdgeState.h"
@@ -33,10 +34,11 @@
 #define GUI_DARK_GREY    0x39E7
 #define GUI_LIGHT_GREY   0xC618
 
-// Custom colors for dashboard
+// Custom theme colors for embedded industrial display
 #define GUI_BG_COLOR     0x0842   // Dark slate/navy background
 #define GUI_HEADER_BG    0x18C6   // Header background
 #define GUI_CARD_BG      0x10A4   // Card background
+#define GUI_CARD_BORDER  0x2965   // Card border grey/blue
 #define GUI_ACCENT       0x07FF   // Cyan accent
 #define GUI_GOOD_GREEN   0x07E0   // Good AQI
 #define GUI_WARN_YELLOW  0xFFE0   // Moderate AQI
@@ -47,8 +49,8 @@
 #define GUI_WIDTH  480
 #define GUI_HEIGHT 320
 
-// Total number of screens
-#define GUI_NUM_SCREENS 4
+// Total number of screens (EXACTLY 5)
+#define GUI_NUM_SCREENS 5
 
 class NavosEdgeGUI {
 public:
@@ -71,7 +73,7 @@ public:
     void forceRedraw(const NavosEdgeState& state);
 
     /**
-     * Get the current screen index (0-3).
+     * Get the current screen index (0-4).
      */
     uint8_t getCurrentScreen() const;
 
@@ -91,11 +93,12 @@ private:
     UNOQ_MPI3501 _tft;
 #endif
 
-    // ─── 4 Screen renderers ───
+    // ─── 5 Screen renderers ───
     void drawScreen0_Environment(const NavosEdgeState& state);
-    void drawScreen1_Advisory(const NavosEdgeState& state);
+    void drawScreen1_AdviceActions(const NavosEdgeState& state);
     void drawScreen2_Forecast(const NavosEdgeState& state);
-    void drawScreen3_Intelligence(const NavosEdgeState& state);
+    void drawScreen3_ModelConfidence(const NavosEdgeState& state);
+    void drawScreen4_RawSensors(const NavosEdgeState& state);
 
     // ─── UI helpers ───
     void drawHeader(const char* title, const char* badgeStr, uint16_t badgeColor);
@@ -103,6 +106,8 @@ private:
     void drawCard(int16_t x, int16_t y, int16_t w, int16_t h,
                   const char* label, const char* value, uint16_t valueColor,
                   const char* unit = nullptr);
+    void drawProgressBar(int16_t x, int16_t y, int16_t w, int16_t h,
+                         float value, float maxVal, uint16_t barColor);
     int16_t drawWrappedString(int16_t x, int16_t y, const char* str,
                               uint16_t color, uint16_t bg, uint8_t size,
                               int16_t maxWidth, uint8_t maxLines = 4);

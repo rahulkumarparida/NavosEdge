@@ -272,6 +272,21 @@ private:
         if (j.contains("humidity_pct") && !j["humidity_pct"].is_null()) {
             app_state_.humidity = j["humidity_pct"].get<float>();
         }
+        if (j.contains("gas_sensors") && j["gas_sensors"].is_object()) {
+            auto gs = j["gas_sensors"];
+            if (gs.contains("MQ2") && gs["MQ2"].is_object()) {
+                if (gs["MQ2"].contains("raw_adc") && !gs["MQ2"]["raw_adc"].is_null()) app_state_.mq2_adc = gs["MQ2"]["raw_adc"].get<uint16_t>();
+                if (gs["MQ2"].contains("voltage_V") && !gs["MQ2"]["voltage_V"].is_null()) app_state_.mq2_voltage = gs["MQ2"]["voltage_V"].get<float>();
+            }
+            if (gs.contains("MQ9") && gs["MQ9"].is_object()) {
+                if (gs["MQ9"].contains("raw_adc") && !gs["MQ9"]["raw_adc"].is_null()) app_state_.mq9_adc = gs["MQ9"]["raw_adc"].get<uint16_t>();
+                if (gs["MQ9"].contains("voltage_V") && !gs["MQ9"]["voltage_V"].is_null()) app_state_.mq9_voltage = gs["MQ9"]["voltage_V"].get<float>();
+            }
+            if (gs.contains("MQ135") && gs["MQ135"].is_object()) {
+                if (gs["MQ135"].contains("raw_adc") && !gs["MQ135"]["raw_adc"].is_null()) app_state_.mq135_adc = gs["MQ135"]["raw_adc"].get<uint16_t>();
+                if (gs["MQ135"].contains("voltage_V") && !gs["MQ135"]["voltage_V"].is_null()) app_state_.mq135_voltage = gs["MQ135"]["voltage_V"].get<float>();
+            }
+        }
         if (j.contains("advisory") && j["advisory"].is_object()) {
             auto adv = j["advisory"];
             if (adv.contains("severity") && adv["severity"].is_string()) {
@@ -394,6 +409,12 @@ private:
 
     void transmit_reading() {
         SensorData data = sensor_->read();
+        app_state_.mq2_adc = (uint16_t)data.mq2_raw_adc;
+        app_state_.mq2_voltage = (float)data.mq2_voltage_v;
+        app_state_.mq9_adc = (uint16_t)data.mq9_raw_adc;
+        app_state_.mq9_voltage = (float)data.mq9_voltage_v;
+        app_state_.mq135_adc = (uint16_t)data.mq135_raw_adc;
+        app_state_.mq135_voltage = (float)data.mq135_voltage_v;
 
         // Validate sensor data before transmission
         auto validation = SensorValidator::validate(data);
