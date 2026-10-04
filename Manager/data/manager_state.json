@@ -1,29 +1,82 @@
 {
   "nodes": {
-    "e2e-node-1": {
-      "node_id": "e2e-node-1",
-      "location": "Test Lab",
+    "uno-q-prod-01": {
+      "node_id": "uno-q-prod-01",
+      "location": "Location-uno-q-prod-01",
       "status": "active",
-      "last_seen": "2026-10-02T07:57:10.284521+00:00",
-      "aqi": 88.0,
+      "last_seen": "2026-10-04T16:57:18.409187+00:00",
+      "aqi": 63.03,
       "pm": {
-        "PM1_0": 10.0,
-        "PM2_5": 25.0,
-        "PM10": 50.0
+        "PM1_0": 11.88,
+        "PM2_5": 17.82,
+        "PM10": 24.77
       },
-      "temperature_C": 24.5,
-      "humidity_pct": 55.0,
-      "source_prediction": "Stable",
-      "source_confidence": 0.9,
+      "temperature_C": 28.73,
+      "humidity_pct": 64.71,
+      "source_prediction": "TRAFFIC",
+      "source_confidence": 0.3095,
       "predictions": {
         "source": {
-          "value": "Stable",
-          "confidence": 0.9
+          "value": "TRAFFIC",
+          "confidence": 0.3095
+        },
+        "forecast": {
+          "value": {
+            "status": "ok",
+            "PM1_0": [
+              11.69,
+              11.51,
+              11.34,
+              11.18,
+              11.03,
+              10.89,
+              10.77,
+              10.66,
+              10.58,
+              10.51,
+              10.45,
+              10.42
+            ],
+            "PM2_5": [
+              17.54,
+              17.27,
+              17.01,
+              16.76,
+              16.54,
+              16.34,
+              16.15,
+              16.0,
+              15.87,
+              15.76,
+              15.68,
+              15.63
+            ],
+            "PM10": [
+              24.4,
+              24.04,
+              23.69,
+              23.37,
+              23.07,
+              22.8,
+              22.56,
+              22.35,
+              22.17,
+              22.03,
+              21.93,
+              21.86
+            ]
+          },
+          "confidence": 1.0
         }
       },
       "advisory": {
-        "severity": "NORMAL",
-        "advice": "Nominal"
+        "severity": "MODERATE",
+        "advice": "Pollution is noticeable but mild. Normal activities should be okay. The source is still unclear. General air-quality precautions are recommended. The air is starting to clear. That's a good sign.",
+        "actions": [
+          "Prefer well-ventilated, lower-pollution areas.",
+          "Use general pollution precautions."
+        ],
+        "weather_advice": "The weather is at a comfortable level. Have a good day outside."
       }
     }
   }

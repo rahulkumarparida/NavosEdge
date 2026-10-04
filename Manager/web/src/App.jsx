@@ -141,7 +141,6 @@ export default function App() {
 
           {(!data.nodes || data.nodes.length === 0) ? (
             <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-12 text-center">
-              <Server className="w-10 h-10 text-slate-600 mx-auto mb-3" />
               <h3 className="text-base font-semibold text-slate-300">No Nodes Connected</h3>
               <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
                 Start nodes using sensor simulator or hardware bridge to begin stream aggregation.
