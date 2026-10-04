@@ -114,6 +114,95 @@ public:
     int get_total_reads() const { return total_reads_; }
     int get_valid_reads() const { return valid_reads_; }
 
+    /**
+     * Parse compact JSON from Arduino into SensorData.
+     *
+     * Expected format:
+     *   {"mq2":350,"mq9":280,"mq135":420,"t":28.50,"h":65.00,
+     *    "pm1":12.0,"pm25":18.0,"pm10":25.0,"dht_ok":true,"pms_ok":true,"ok":true}
+     */
+    bool parse_frame(const std::string& json_str, SensorData& out, bool print_log = true) {
+        try {
+            auto j = nlohmann::json::parse(json_str);
+
+            // Check if this is a status/boot message, not a sensor reading
+            if (j.contains("status")) {
+                std::cout << "[SERIAL] Arduino hardware message: " << j.dump() << "\n";
+                return false;
+            }
+
+            // Check for sensor error flags
+            bool dht_ok = j.value("dht_ok", true);
+            bool pms_ok = j.value("pms_ok", true);
+            bool all_ok = j.value("ok", true);
+
+            if (!dht_ok) {
+                std::cerr << "[SERIAL] [WARN] DHT22 sensor report: FAULT / UNHEALTHY\n";
+            }
+            if (!pms_ok) {
+                std::cerr << "[SERIAL] [WARN] MPM10-CS sensor report: FAULT / UNHEALTHY\n";
+            }
+
+            // Extract MQ values
+            out.mq2_raw_adc   = j.value("mq2", 0);
+            out.mq9_raw_adc   = j.value("mq9", 0);
+            out.mq135_raw_adc = j.value("mq135", 0);
+
+            // Convert ADC to voltage (Arduino 10-bit, 5V reference)
+            out.mq2_voltage_v   = adc_to_voltage(out.mq2_raw_adc);
+            out.mq9_voltage_v   = adc_to_voltage(out.mq9_raw_adc);
+            out.mq135_voltage_v = adc_to_voltage(out.mq135_raw_adc);
+
+            // DHT22
+            out.temperature_c = j.value("t", 0.0);
+            out.humidity_pct  = j.value("h", 0.0);
+
+            // PMS (MPM10-CS)
+            out.pm1_0 = j.value("pm1", 0.0);
+            out.pm2_5 = j.value("pm25", 0.0);
+            out.pm10  = j.value("pm10", 0.0);
+
+            // Metadata
+            out.node_id   = node_id_;
+            out.timestamp = now_iso8601();
+
+            if (print_log) {
+                std::ostringstream oss;
+                oss << "\n[SERIAL] ================= REAL SENSOR READING ================="
+                    << "\n[SERIAL] Hardware Node : " << out.node_id
+                    << "\n[SERIAL] Timestamp     : " << out.timestamp
+                    << "\n[SERIAL] --------------------------------------------------------"
+                    << "\n[SERIAL] Sensor 1 | MQ-2   (Combustible Gas & Smoke) :"
+                    << "\n[SERIAL]          Raw ADC = " << out.mq2_raw_adc << " / 1023"
+                    << " | Voltage = " << std::fixed << std::setprecision(3) << out.mq2_voltage_v << " V"
+                    << "\n[SERIAL] Sensor 2 | MQ-9   (CO & Flammable Gas)      :"
+                    << "\n[SERIAL]          Raw ADC = " << out.mq9_raw_adc << " / 1023"
+                    << " | Voltage = " << std::fixed << std::setprecision(3) << out.mq9_voltage_v << " V"
+                    << "\n[SERIAL] Sensor 3 | MQ-135 (Air Quality & Toxins)    :"
+                    << "\n[SERIAL]          Raw ADC = " << out.mq135_raw_adc << " / 1023"
+                    << " | Voltage = " << std::fixed << std::setprecision(3) << out.mq135_voltage_v << " V"
+                    << "\n[SERIAL] Sensor 4 | DHT22  (Temperature & Humidity)  :"
+                    << "\n[SERIAL]          Temperature = " << std::fixed << std::setprecision(2) << out.temperature_c << " °C"
+                    << " | Humidity = " << out.humidity_pct << " %"
+                    << " [Status: " << (dht_ok ? "HEALTHY" : "FAULT") << "]"
+                    << "\n[SERIAL] Sensor 5 | MPM10-CS (Particulate Matter)    :"
+                    << "\n[SERIAL]          PM1.0 = " << std::fixed << std::setprecision(1) << out.pm1_0 << " ug/m3"
+                    << " | PM2.5 = " << out.pm2_5 << " ug/m3"
+                    << " | PM10 = " << out.pm10 << " ug/m3"
+                    << " [Status: " << (pms_ok ? "HEALTHY" : "FAULT") << "]"
+                    << "\n[SERIAL] Overall State : " << (all_ok ? "READY (Sensors stabilized)" : "WARMING UP (Sensors stabilizing)")
+                    << "\n[SERIAL] ========================================================\n";
+                std::cout << oss.str() << std::flush;
+            }
+
+            return true;
+
+        } catch (const std::exception& e) {
+            std::cerr << "[SERIAL] JSON parse error: " << e.what() << "\n";
+            return false;
+        }
+    }
+
 private:
     std::string node_id_;
     std::string serial_port_;
@@ -219,14 +308,67 @@ private:
         }
     }
 
+    void drain_pending() {
+        if (fd_ < 0) return;
+        while (true) {
+            fd_set fds;
+            FD_ZERO(&fds);
+            FD_SET(fd_, &fds);
+            struct timeval tv{0, 0};
+            int ret = select(fd_ + 1, &fds, nullptr, nullptr, &tv);
+            if (ret <= 0) break;
+
+            char buf[512];
+            ssize_t n = ::read(fd_, buf, sizeof(buf));
+            if (n <= 0) break;
+            read_buffer_.append(buf, n);
+            if (read_buffer_.size() > 8192) {
+                read_buffer_ = read_buffer_.substr(read_buffer_.size() - 4096);
+                break;
+            }
+        }
+    }
+
     /**
      * Read a complete \n-terminated line from serial, with timeout.
+     * Consumes pending bytes and advances to the freshest valid sensor frame.
      */
     bool read_line(std::string& line) {
+        drain_pending();
+
         auto start = std::chrono::steady_clock::now();
 
         while (true) {
-            // Check timeout
+            // Check if buffer already contains a complete line
+            auto pos = read_buffer_.find('\n');
+            if (pos != std::string::npos) {
+                std::string candidate = read_buffer_.substr(0, pos);
+                read_buffer_.erase(0, pos + 1);
+                // Strip \r if present
+                if (!candidate.empty() && candidate.back() == '\r') {
+                    candidate.pop_back();
+                }
+                // Skip empty lines or malformed lines
+                if (candidate.empty() || candidate[0] != '{') {
+                    continue; // Try next line
+                }
+                // If this is an Arduino hardware status/boot message, log it immediately
+                if (candidate.find("\"status\"") != std::string::npos) {
+                    std::cout << "[SERIAL] Arduino hardware message: " << candidate << "\n";
+                    continue; // Continue to read actual sensor frame
+                }
+
+                // If another complete line is already queued, discard the older sensor frame
+                // to ensure the application always processes the freshest real-time reading
+                if (read_buffer_.find('\n') != std::string::npos) {
+                    continue;
+                }
+
+                line = std::move(candidate);
+                return true;
+            }
+
+            // Read more bytes from serial
             auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::steady_clock::now() - start).count();
             if (elapsed >= timeout_ms_) {
@@ -234,23 +376,6 @@ private:
                 return false;
             }
 
-            // Check if buffer already contains a complete line
-            auto pos = read_buffer_.find('\n');
-            if (pos != std::string::npos) {
-                line = read_buffer_.substr(0, pos);
-                read_buffer_.erase(0, pos + 1);
-                // Strip \r if present
-                if (!line.empty() && line.back() == '\r') {
-                    line.pop_back();
-                }
-                // Skip empty lines and boot messages
-                if (line.empty() || line[0] != '{') {
-                    continue; // Try next line
-                }
-                return true;
-            }
-
-            // Read more bytes from serial
             fd_set fds;
             FD_ZERO(&fds);
             FD_SET(fd_, &fds);
@@ -280,72 +405,7 @@ private:
                 return false;
             }
             read_buffer_.append(buf, n);
-
-            // Safety: prevent buffer from growing unbounded
-            if (read_buffer_.size() > 4096) {
-                std::cerr << "[SERIAL] Buffer overflow, clearing\n";
-                read_buffer_.clear();
-            }
-        }
-    }
-
-    /**
-     * Parse compact JSON from Arduino into SensorData.
-     *
-     * Expected format:
-     *   {"mq2":350,"mq9":280,"mq135":420,"t":28.50,"h":65.00,
-     *    "pm1":12.0,"pm25":18.0,"pm10":25.0,"dht_ok":true,"pms_ok":true,"ok":true}
-     */
-    bool parse_frame(const std::string& json_str, SensorData& out) {
-        try {
-            auto j = nlohmann::json::parse(json_str);
-
-            // Check if this is a status/boot message, not a sensor reading
-            if (j.contains("status")) {
-                std::cout << "[SERIAL] Arduino status: " << j.dump() << "\n";
-                return false;
-            }
-
-            // Check for sensor error flags
-            bool dht_ok = j.value("dht_ok", true);
-            bool pms_ok = j.value("pms_ok", true);
-            bool all_ok = j.value("ok", true);
-
-            if (!dht_ok) {
-                std::cerr << "[SERIAL] DHT22 sensor failure reported\n";
-            }
-            if (!pms_ok) {
-                std::cerr << "[SERIAL] PMS (MPM10-CS) sensor failure reported\n";
-            }
-
-            // Extract MQ values
-            out.mq2_raw_adc   = j.value("mq2", 0);
-            out.mq9_raw_adc   = j.value("mq9", 0);
-            out.mq135_raw_adc = j.value("mq135", 0);
-
-            // Convert ADC to voltage (Arduino 10-bit, 5V reference)
-            out.mq2_voltage_v   = adc_to_voltage(out.mq2_raw_adc);
-            out.mq9_voltage_v   = adc_to_voltage(out.mq9_raw_adc);
-            out.mq135_voltage_v = adc_to_voltage(out.mq135_raw_adc);
-
-            // DHT22
-            out.temperature_c = j.value("t", 0.0);
-            out.humidity_pct  = j.value("h", 0.0);
-
-            // PMS (MPM10-CS)
-            out.pm1_0 = j.value("pm1", 0.0);
-            out.pm2_5 = j.value("pm25", 0.0);
-            out.pm10  = j.value("pm10", 0.0);
-
-            // Metadata
-            out.node_id   = node_id_;
-            out.timestamp = now_iso8601();
-
-            return true;
-
-        } catch (const std::exception& e) {
-            std::cerr << "[SERIAL] JSON parse error: " << e.what() << "\n";
-            return false;
+            drain_pending();
         }
     }
 

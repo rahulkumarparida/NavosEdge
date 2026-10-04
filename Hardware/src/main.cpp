@@ -123,6 +123,8 @@ int main(int argc, char* argv[]) {
             cfg.node_id, cfg.serial_port, cfg.serial_baud, cfg.serial_timeout_ms);
         std::cout << "[HW] Physical sensor initialized on " << cfg.serial_port
                   << " @ " << cfg.serial_baud << " baud\n";
+        std::cout << "[HW] Monitored physical sensors: MQ-2 (Combustible/Smoke), MQ-9 (CO/Gas), "
+                  << "MQ-135 (Air Quality), DHT22 (Temp/Humidity), MPM10-CS (PM1.0/PM2.5/PM10)\n";
     }
 
     // Create HTTP client

@@ -17,6 +17,7 @@
 
 #include "config.hpp"
 #include "sensor.hpp"
+#include "serial_sensor.hpp"
 #include "http_client.hpp"
 #include "sse_client.hpp"
 #include "bridge.hpp"
@@ -245,6 +246,38 @@ TEST(sse_config_interval_update) {
 
     ASSERT_EQ(bridge.get_sampling_interval(), 10);
     // Bridge has handle_sse_event logic tested
+}
+
+// ──────────────────────────────────────────────────────────────────
+// Test 10: SerialSensorSource frame parsing & sensor value extraction
+// ──────────────────────────────────────────────────────────────────
+TEST(serial_sensor_frame_parsing) {
+    navos::SerialSensorSource source("test-node-hw");
+    std::string json_frame = R"({"mq2":350,"mq9":280,"mq135":420,"t":28.50,"h":65.00,"pm1":12.0,"pm25":18.0,"pm10":25.0,"dht_ok":true,"pms_ok":true,"ok":true})";
+    navos::SensorData data;
+    bool ok = source.parse_frame(json_frame, data, false);
+    ASSERT_TRUE(ok);
+    ASSERT_EQ(data.mq2_raw_adc, 350);
+    ASSERT_EQ(data.mq9_raw_adc, 280);
+    ASSERT_EQ(data.mq135_raw_adc, 420);
+    ASSERT_TRUE(std::abs(data.temperature_c - 28.50) < 0.01);
+    ASSERT_TRUE(std::abs(data.humidity_pct - 65.00) < 0.01);
+    ASSERT_TRUE(std::abs(data.pm1_0 - 12.0) < 0.01);
+    ASSERT_TRUE(std::abs(data.pm2_5 - 18.0) < 0.01);
+    ASSERT_TRUE(std::abs(data.pm10 - 25.0) < 0.01);
+    ASSERT_TRUE(data.node_id == "test-node-hw");
+    ASSERT_TRUE(!data.timestamp.empty());
+}
+
+// ──────────────────────────────────────────────────────────────────
+// Test 11: SerialSensorSource boot/status frame handling
+// ──────────────────────────────────────────────────────────────────
+TEST(serial_sensor_status_message) {
+    navos::SerialSensorSource source("test-node-hw");
+    std::string status_frame = R"({"status":"booting","firmware":"navos_sensors","version":"1.0.0"})";
+    navos::SensorData data;
+    bool ok = source.parse_frame(status_frame, data, false);
+    ASSERT_TRUE(!ok); // Status frames should not be treated as sensor readings
 }
 
 // ──────────────────────────────────────────────────────────────────

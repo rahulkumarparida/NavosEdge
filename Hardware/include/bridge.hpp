@@ -71,8 +71,24 @@ public:
         std::cout << "[HW] Sensors warming up (PM, MQ2, MQ9, MQ135, DHT22)... Data transmission deferred.\n";
 
         constexpr int warmup_seconds = 30;
-        for (int i = 0; i < warmup_seconds * 2 && running_.load(); ++i) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        constexpr int poll_interval_s = 5;
+        auto warmup_start = std::chrono::steady_clock::now();
+        auto last_poll = warmup_start;
+
+        while (running_.load()) {
+            auto now = std::chrono::steady_clock::now();
+            auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - warmup_start).count();
+            if (elapsed >= warmup_seconds) break;
+
+            auto poll_elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - last_poll).count();
+            if (poll_elapsed >= poll_interval_s) {
+                last_poll = now;
+                std::cout << "[HW] [Warm-up " << elapsed << "/" << warmup_seconds << "s] Probing hardware sensors to monitor stabilization...\n";
+                // Probe sensors to verify hardware response and display stabilization
+                sensor_->read();
+            }
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(200));
         }
 
         if (!running_.load()) {
@@ -431,7 +447,14 @@ private:
         std::string post_url = cfg_.server_url + "/hardware/data";
 
         int current_count = ++reading_count_;
-        std::cout << "[HW] Sending sensor reading #" << current_count << "\n";
+        std::ostringstream oss;
+        oss << "[HW] Sending sensor reading #" << current_count << " (node: " << cfg_.node_id << "):\n"
+            << "     • MQ-2   (Combustible/Smoke)  : ADC=" << data.mq2_raw_adc << " (" << std::fixed << std::setprecision(3) << data.mq2_voltage_v << "V)\n"
+            << "     • MQ-9   (CO/Flammable Gas)   : ADC=" << data.mq9_raw_adc << " (" << std::fixed << std::setprecision(3) << data.mq9_voltage_v << "V)\n"
+            << "     • MQ-135 (Air Quality/Toxins) : ADC=" << data.mq135_raw_adc << " (" << std::fixed << std::setprecision(3) << data.mq135_voltage_v << "V)\n"
+            << "     • DHT22  (Temp & Humidity)    : Temp=" << std::fixed << std::setprecision(2) << data.temperature_c << " °C, Hum=" << data.humidity_pct << " %\n"
+            << "     • MPM10  (Particulate Matter) : PM1.0=" << std::fixed << std::setprecision(1) << data.pm1_0 << ", PM2.5=" << data.pm2_5 << ", PM10=" << data.pm10 << " ug/m3\n";
+        std::cout << oss.str() << std::flush;
 
         auto resp = http_.post_json(post_url, payload);
 
