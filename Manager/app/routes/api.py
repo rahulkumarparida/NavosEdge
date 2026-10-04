@@ -87,7 +87,20 @@ async def ingest_telemetry(node_id: str, payload: NodeTelemetryPayload, request:
         payload.node_id = node_id
 
     manager_service = request.app.state.manager_service
-    return await manager_service.ingest_telemetry(payload)
+    try:
+        return await manager_service.ingest_telemetry(payload, node_id=node_id)
+    except ValueError as e:
+        logger.error("Validation error ingesting telemetry for node %s: %s", node_id, e)
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(e),
+        )
+    except Exception as e:
+        logger.error("Error ingesting telemetry for node %s: %s", node_id, e, exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error ingesting telemetry",
+        )
 
 
 

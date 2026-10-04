@@ -28,8 +28,10 @@ async def lifespan(app: FastAPI):
     if UNO_Q_POLL_ENABLED:
         logger.info("UNO Q Polling enabled — Base URL: %s, Interval: %.1fs", UNO_Q_BASE_URL, UNO_Q_POLL_INTERVAL_S)
 
-    manager_service = ManagerService()
-    app.state.manager_service = manager_service
+    manager_service = getattr(app.state, "manager_service", None)
+    if manager_service is None:
+        manager_service = ManagerService()
+        app.state.manager_service = manager_service
 
     # Periodic background task to check for node timeouts
     async def periodic_timeout_checker():

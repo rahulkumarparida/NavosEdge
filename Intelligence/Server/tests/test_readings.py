@@ -141,3 +141,128 @@ async def test_get_node_status_after_submit(client, sample_payload):
 async def test_get_node_status_unknown_node(client):
     resp = await client.get("/api/v1/nodes/nonexistent-node/status")
     assert resp.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_forward_to_manager_payload_structure(sample_payload):
+    """Verifies that _forward_to_manager generates the expected telemetry format."""
+    from unittest.mock import AsyncMock, patch, MagicMock
+    from app.services.processing import ProcessingService
+    from app.schemas.sensor import SensorPayload
+    from app.schemas.intelligence import IntelligenceResult, IntelligencePredictions, PredictionOutput
+    from app.advisory.schemas import AdvisoryResult
+
+    payload = SensorPayload(**sample_payload)
+    result = IntelligenceResult(
+        aqi=45.0,
+        pm={"PM1_0": 10.0, "PM2_5": 20.0, "PM10": 30.0},
+        temperature_C=25.0,
+        humidity_pct=60.0,
+        predictions=IntelligencePredictions(
+            source=PredictionOutput(value="Traffic", confidence=0.85),
+            forecast=PredictionOutput(value=None, confidence=None),
+        ),
+        advisory=AdvisoryResult(
+            severity="NORMAL",
+            advice="Good air",
+            actions=[],
+            weather_advice="Comfortable conditions",
+        ),
+    )
+
+    ps = ProcessingService(
+        inference_adapter=MagicMock(),
+        node_registry=MagicMock(),
+        storage=MagicMock(),
+        event_service=MagicMock(),
+        anomaly_engine=MagicMock(),
+    )
+
+    posted_url = None
+    posted_json = None
+
+    async def mock_post(url, json=None, **kwargs):
+        nonlocal posted_url, posted_json
+        posted_url = url
+        posted_json = json
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.text = "OK"
+        return mock_resp
+
+    mock_client = AsyncMock()
+    mock_client.post.side_effect = mock_post
+    mock_client.__aenter__.return_value = mock_client
+    mock_client.__aexit__.return_value = None
+
+    with patch("httpx.AsyncClient", return_value=mock_client):
+        await ps._forward_to_manager(payload.node_id, payload, result)
+
+    assert posted_url == f"http://127.0.0.1:8430/api/v1/nodes/{payload.node_id}/telemetry"
+    assert posted_json is not None
+    assert posted_json["node_id"] == payload.node_id
+    assert posted_json["temperature_C"] == 25.0
+    assert posted_json["humidity_pct"] == 60.0
+    assert posted_json["aqi"] == 45.0
+    assert posted_json["pm"] == {"PM1_0": 10.0, "PM2_5": 20.0, "PM10": 30.0}
+    assert posted_json["predictions"]["source"]["value"] == "Traffic"
+    assert posted_json["predictions"]["source"]["confidence"] == 0.85
+    assert posted_json["advisory"]["severity"] == "NORMAL"
+
+
+@pytest.mark.asyncio
+async def test_forward_to_manager_resilience_on_failure(sample_payload):
+    """Verifies that _forward_to_manager survives network errors and 500 status gracefully."""
+    from unittest.mock import AsyncMock, patch, MagicMock
+    from app.services.processing import ProcessingService
+    from app.schemas.sensor import SensorPayload
+    from app.schemas.intelligence import IntelligenceResult, IntelligencePredictions, PredictionOutput
+    from app.advisory.schemas import AdvisoryResult
+
+    payload = SensorPayload(**sample_payload)
+    result = IntelligenceResult(
+        aqi=50.0,
+        pm={"PM1_0": 10.0, "PM2_5": 25.0, "PM10": 40.0},
+        temperature_C=22.0,
+        humidity_pct=50.0,
+        predictions=IntelligencePredictions(
+            source=PredictionOutput(value="Unknown", confidence=None),
+            forecast=PredictionOutput(value=None, confidence=None),
+        ),
+        advisory=AdvisoryResult(
+            severity="NORMAL",
+            advice="Ok",
+            actions=[],
+            weather_advice="Mild",
+        ),
+    )
+
+    ps = ProcessingService(
+        inference_adapter=MagicMock(),
+        node_registry=MagicMock(),
+        storage=MagicMock(),
+        event_service=MagicMock(),
+        anomaly_engine=MagicMock(),
+    )
+
+    # 1. Connection error must not raise
+    fail_client = AsyncMock()
+    fail_client.post.side_effect = Exception("Connection refused to Manager")
+    fail_client.__aenter__.return_value = fail_client
+    fail_client.__aexit__.return_value = None
+
+    with patch("httpx.AsyncClient", return_value=fail_client):
+        await ps._forward_to_manager(payload.node_id, payload, result)
+
+    # 2. HTTP 500 error must not raise
+    err_resp = MagicMock()
+    err_resp.status_code = 500
+    err_resp.text = "Internal Server Error"
+    err_client = AsyncMock()
+    err_client.post.return_value = err_resp
+    err_client.__aenter__.return_value = err_client
+    err_client.__aexit__.return_value = None
+
+    with patch("httpx.AsyncClient", return_value=err_client):
+        await ps._forward_to_manager(payload.node_id, payload, result)
+

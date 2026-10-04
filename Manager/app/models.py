@@ -2,7 +2,7 @@
 Manager Data Schemas and Pydantic Models
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 from pydantic import BaseModel, Field
 from datetime import datetime, timezone
 
@@ -23,12 +23,12 @@ class PredictionsInput(BaseModel):
 
 
 class NodeTelemetryPayload(BaseModel):
-    node_id: str
+    node_id: Optional[str] = None
     location: Optional[str] = None
-    aqi: Optional[float] = None
-    pm: Dict[str, float] = Field(default_factory=dict)
-    temperature_C: float = 0.0
-    humidity_pct: float = 0.0
+    aqi: Optional[Union[float, str]] = None
+    pm: Optional[Union[Dict[str, Any], Any]] = Field(default_factory=dict)
+    temperature_C: Optional[Union[float, str]] = None
+    humidity_pct: Optional[Union[float, str]] = None
     predictions: Optional[Dict[str, Any]] = Field(default_factory=dict)
     advisory: Optional[Dict[str, Any]] = Field(default_factory=dict)
     timestamp: Optional[str] = None

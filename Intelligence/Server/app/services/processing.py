@@ -264,19 +264,23 @@ class ProcessingService:
             import httpx
             ts_str = payload.timestamp.isoformat() if hasattr(payload.timestamp, "isoformat") else str(payload.timestamp)
             location_val = getattr(payload, "location", None) or os.getenv("NAVOS_NODE_LOCATION", f"Location-{node_id}")
+            pred_dict = result.predictions.model_dump(mode="json") if hasattr(result.predictions, "model_dump") else (result.predictions or {})
+            adv_dict = result.advisory.model_dump(mode="json") if hasattr(result.advisory, "model_dump") else (result.advisory or {})
             telemetry = {
                 "node_id": node_id,
                 "location": location_val,
                 "aqi": result.aqi,
-                "pm": result.pm,
+                "pm": result.pm if result.pm is not None else {},
                 "temperature_C": result.temperature_C,
                 "humidity_pct": result.humidity_pct,
-                "predictions": result.predictions.model_dump(mode="json") if hasattr(result.predictions, "model_dump") else result.predictions,
-                "advisory": result.advisory.model_dump(mode="json") if hasattr(result.advisory, "model_dump") else result.advisory,
+                "predictions": pred_dict,
+                "advisory": adv_dict,
                 "timestamp": ts_str,
             }
             async with httpx.AsyncClient(timeout=3.0) as client:
-                await client.post(f"{manager_url}/api/v1/nodes/{node_id}/telemetry", json=telemetry)
+                resp = await client.post(f"{manager_url}/api/v1/nodes/{node_id}/telemetry", json=telemetry)
+                if resp.status_code not in (200, 201):
+                    logger.warning("Manager returned status %d forwarding telemetry for node %s: %s", resp.status_code, node_id, resp.text)
         except Exception as e:
             logger.debug("Forwarding to Manager (%s) skipped/failed: %s", manager_url, e)
 

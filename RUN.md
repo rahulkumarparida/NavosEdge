@@ -257,6 +257,222 @@ Or inspect raw stored JSON records in `data/readings/`:
 
 ---
 
+## Distributed Setup: UNO Q (Edge Node) ↔ Laptop (Parent Manager)
+
+In this deployment scenario, the **Arduino UNO Q** runs as an edge node (Intelligence Server + C++ Hardware Bridge), while your **Laptop** runs as the central regional coordinator (Parent Manager Server + React Web Dashboard).
+
+```text
+                  WiFi / LAN / Ethernet
+  ┌─────────────────────────────────┐        ┌───────────────────────────────────┐
+  │         Arduino UNO Q           │        │              Laptop               │
+  │          (Edge Node)            │        │         (Parent Manager)          │
+  │                                 │        │                                   │
+  │  C++ Hardware Bridge            │        │                                   │
+  │       ↓ HTTP POST               │        │                                   │
+  │  Intelligence Server (:8420)    │        │  Manager Server (:8430)           │
+  │       │                         │        │       ▲              ▲            │
+  │       ├─── Push (HTTP POST) ────┼────────┼───────┘              │            │
+  │       │    /api/v1/nodes/       │        │                      │            │
+  │       │    {node_id}/telemetry  │        │                      │            │
+  │       │                         │        │                      │            │
+  │       └─── Pull Fallback ◄──────┼────────┼──────────────────────┘            │
+  │            (HTTP GET /latest)   │        │     (Periodic background poller)  │
+  │                                 │        │                                   │
+  │                                 │        │  React Dashboard (:8430/)         │
+  └─────────────────────────────────┘        └───────────────────────────────────┘
+```
+
+Both machines must be connected to the **same local network** (Wi-Fi router, Ethernet switch, or direct cable).
+
+---
+
+### Step 1: Network Preparation & IP Discovery
+
+1. **Find Laptop IP Address:**
+   * Linux/macOS:
+     ```bash
+     hostname -I | awk '{print $1}'
+     # Or: ip addr show
+     ```
+   * Windows (PowerShell / CMD):
+     ```cmd
+     ipconfig
+     ```
+   * *Example:* `192.168.1.100`
+
+2. **Find UNO Q IP Address:**
+   * On the UNO Q terminal (SSH or serial console):
+     ```bash
+     hostname -I | awk '{print $1}'
+     ```
+   * *Example:* `192.168.1.50`
+
+3. **Verify Bi-Directional Ping:**
+   * From Laptop to UNO Q:
+     ```bash
+     ping -c 3 192.168.1.50
+     ```
+   * From UNO Q to Laptop:
+     ```bash
+     ping -c 3 192.168.1.100
+     ```
+
+4. **Firewall & Port Rules:**
+   * **Laptop Firewall:** Must allow incoming TCP connections on port **`8430`** (Push telemetry endpoint):
+     ```bash
+     # Ubuntu / Debian
+     sudo ufw allow 8430/tcp
+     ```
+   * **UNO Q Firewall:** Must allow incoming TCP connections on port **`8420`** (Intelligence API / Pull polling endpoint):
+     ```bash
+     # On UNO Q
+     sudo ufw allow 8420/tcp
+     ```
+
+---
+
+### Step 2: Configure & Start UNO Q (Edge Node)
+
+On the Arduino UNO Q board:
+
+1. **Set Environment Variables to Push Telemetry to the Laptop:**
+   Configure `.env` or export environment variables before starting:
+   ```bash
+   # Bind Intelligence Server to 0.0.0.0 so the Laptop can reach it
+   export NAVOS_HOST="0.0.0.0"
+   export NAVOS_PORT="8420"
+   export NAVOS_NODE_ID="uno-q-001"
+   export NAVOS_NODE_LOCATION="Lab-01 (UNO Q)"
+
+   # Set the Laptop Manager URL for the Push path
+   export NAVOS_MANAGER_URL="http://192.168.1.100:8430"
+   ```
+
+2. **Start the Edge Stack:**
+   * **Physical Hardware Mode:**
+     ```bash
+     ./run_hardware.sh
+     ```
+   * **Simulation / Mock Mode (for testing without physical sensors):**
+     ```bash
+     ./run_simulation.sh --scenario traffic --interval 10
+     ```
+   * **Or via Systemd Service (if auto-start is installed):**
+     Ensure `NAVOS_MANAGER_URL` is set in `/etc/default/navosedge` or `/etc/environment`, then:
+     ```bash
+     sudo systemctl restart navosedge.service
+     ```
+
+3. **Verify Intelligence Server is Reachable Locally:**
+   ```bash
+   curl -s http://127.0.0.1:8420/health
+   # Expected response: {"status":"healthy",...}
+   ```
+
+---
+
+### Step 3: Preparation on Laptop (Parent Manager)
+
+On your Laptop, prepare the environment **before** starting the Manager Server:
+
+1. **Clone the Repository & Navigate to Project Directory:**
+   ```bash
+   git clone <repository-url>
+   cd NavosEdge
+   ```
+
+2. **Set Up Python Virtual Environment & Dependencies:**
+   ```bash
+   python3 -m venv .venv
+   source .venv/bin/activate
+   pip install --upgrade pip
+   pip install -r Manager/requirements.txt
+   ```
+
+3. **Verify Web Dashboard Build:**
+   The compiled React frontend is located in `Manager/web/dist`. Check that `Manager/web/dist/index.html` exists:
+   ```bash
+   ls -la Manager/web/dist/index.html
+   ```
+   *(If you need to rebuild the dashboard after making UI edits: `cd Manager/web && npm install && npm run build && cd ../..`)*
+
+4. **Verify Connectivity to the UNO Q Intelligence Server:**
+   From your Laptop terminal, query the UNO Q Intelligence health endpoint:
+   ```bash
+   curl -s http://192.168.1.50:8420/health
+   ```
+   If this fails or times out:
+   * Verify UNO Q Intelligence Server is running.
+   * Verify port `8420` is open on UNO Q (`sudo ufw status`).
+   * Check Wi-Fi router AP isolation settings if ping fails.
+
+---
+
+### Step 4: Start Manager Server on Laptop
+
+1. **Configure Environment Variables:**
+   Point `NAVOS_UNO_Q_URL` to your UNO Q IP address and bind the server:
+   ```bash
+   export NAVOS_UNO_Q_URL="http://192.168.1.50:8420"
+   export NAVOS_POLL_ENABLED="true"
+   export NAVOS_UNO_Q_POLL_INTERVAL="5.0"
+   export NAVOS_MANAGER_HOST="0.0.0.0"
+   export NAVOS_MANAGER_PORT="8430"
+   ```
+
+2. **Launch the Manager:**
+   ```bash
+   ./Manager/run_manager.sh
+   ```
+
+   You will see the startup banner:
+   ```text
+   ============================================================
+         NavosEdge Parent Manager Server & Web Dashboard
+   ============================================================
+     • Manager API:       http://0.0.0.0:8430/api/v1/overview
+     • React Dashboard:   http://0.0.0.0:8430/
+   ============================================================
+   ```
+
+---
+
+### Step 5: Verify Node Connectivity & Dashboard
+
+1. **Open the Web Dashboard:**
+   In your Laptop's web browser, navigate to:
+   ```text
+   http://localhost:8430/
+   ```
+   Or from any device on your local network:
+   ```text
+   http://192.168.1.100:8430/
+   ```
+
+2. **Confirm Node Telemetry:**
+   * The node **`uno-q-001`** appears with status badge **ACTIVE**.
+   * Live environmental data displays: AQI, PM1.0, PM2.5, PM10, Temperature, Humidity.
+   * Predictive intelligence displays: Gas Source Classification and Health Advisory.
+
+3. **Verify Dual-Integration Paths:**
+   * **Push Path:** Check Laptop terminal logs for incoming POST requests from the UNO Q:
+     ```text
+     INFO: "POST /api/v1/nodes/uno-q-001/telemetry HTTP/1.1" 200 OK
+     ```
+   * **Pull Fallback Path:** In the Laptop terminal, check periodic poller logs:
+     ```text
+     INFO app.manager_service: Polling UNO Q Intelligence Server at http://192.168.1.50:8420
+     INFO app.manager_service: Successfully ingested latest data for node uno-q-001 from UNO Q
+     ```
+
+4. **Verify Resilient Fault Tolerance:**
+   * If the UNO Q is temporarily rebooted or loses Wi-Fi connection:
+     * The Manager background poller logs a connection warning without crashing.
+     * The node status transitions to **INACTIVE** after the timeout window while retaining the previous valid telemetry on the dashboard.
+     * As soon as the UNO Q reconnects, the Manager automatically recovers the node to **ACTIVE**.
+
+---
+
 ## Individual Components
 
 For debugging, you can run components separately.
