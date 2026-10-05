@@ -233,6 +233,7 @@ UNO_Q_POLL_INTERVAL_SECONDS=3600
 
 All technical documentation and phase development runbooks are consolidated in [docs/phases/](docs/phases/):
 
+- 📘 [Comprehensive Sensor & Hardware Wiring Guide](WIRING_GUIDE.md) — Complete pinout, schematic, power budget, and troubleshooting for Arduino UNO Q.
 - 📘 [Phase 13 Runtime Flow Specification](docs/phases/phase13RuntimeFlow.md) — 30s warm-up, `READY` handshake, 60s cycle, fault recovery, and shutdown flow.
 - 📘 [Parent Manager Integration Guide](docs/phases/UNO_Q_MANAGER_INTEGRATION.md) — Wi-Fi network setup, `.env` configuration, and polling specs.
 - 📘 [UNO Q Deployment Manual](docs/phases/UNO_Q_DEPLOYMENT.md) — Comprehensive guide for deploying on physical Arduino UNO Q hardware.

@@ -115,7 +115,7 @@ The Python backend required **zero changes**. The existing pipeline handles ever
 | Parameter | Value |
 |:---|:---|
 | Type | Digital (bit-bang protocol) |
-| Arduino Pin | D2 (10kΩ pull-up to VCC) |
+| Arduino Pin | D8 (10kΩ pull-up to VCC) |
 | Temperature Range | -40°C to +85°C (±0.5°C accuracy) |
 | Humidity Range | 0–100% RH (±2–5% accuracy) |
 | Min Interval | 2 seconds between reads |
@@ -400,7 +400,7 @@ Arduino UNO Q
 │  A1 ◄── MQ9 (AOUT)          │
 │  A2 ◄── MQ135 (AOUT)        │
 │                              │
-│  D2 ◄── DHT22 (DATA)        │
+│  D8 ◄── DHT22 (DATA)        │
 │         ├── 10kΩ ── VCC      │
 │                              │
 │  D0 ◄── MPM10-CS (TX)       │
