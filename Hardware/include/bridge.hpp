@@ -386,6 +386,8 @@ private:
         std::cout << "[DISPLAY] State updated\n";
         std::cout << "[HW] Shared NavosEdgeState updated via SSE (AQI: " << app_state_.aqi
                   << " | PM2.5: " << app_state_.pm2_5 << " | Temp: " << app_state_.temperature << "C)\n";
+        std::cout << "[HW] Shared NavosEdgeState Raw Data via SSE (MQ2: " << app_state_.mq2_adc
+                  << " | MQ9: " << app_state_.mq9_adc << " | MQ135: " << app_state_.mq135_adc << ")\n";
 
         // Forward state to MCU display over serial bridge
         mcu_bridge_.send_state(app_state_);

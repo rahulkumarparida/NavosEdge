@@ -40,15 +40,18 @@ fi
 INTEL_HOST="${NAVOS_HOST:-127.0.0.1}"
 INTEL_PORT="${NAVOS_PORT:-8420}"
 NODE_ID="${NAVOS_NODE_ID:-uno-q-001}"
-INTERVAL="${NAVOS_SENSOR_INTERVAL:-60}"
+INTERVAL="${NAVOS_SENSOR_INTERVAL:-12}"
 SERIAL_PORT="${ARDUINO_PORT:-/dev/ttyACM0}"
+DISPLAY_REFRESH="${NAVOS_DISPLAY_REFRESH:-40}"
 SKIP_FLASH=false
 NO_BUILD=false
+HW_LOG_FILE="/tmp/navos_hardware.log"
 
 # ── Parse CLI arguments ──────────────────────────────────────────────────────
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --interval|-i)    INTERVAL="$2";      shift 2 ;;
+        --display-refresh) DISPLAY_REFRESH="$2"; shift 2 ;;
         --node-id|-n)     NODE_ID="$2";       shift 2 ;;
         --port|-p)        SERIAL_PORT="$2";   shift 2 ;;
         --skip-flash)     SKIP_FLASH=true;    shift ;;
@@ -58,6 +61,7 @@ while [[ $# -gt 0 ]]; do
             echo ""
             echo "Options:"
             echo "  --interval, -i <sec>    Sampling interval in seconds (default: $INTERVAL)"
+            echo "  --display-refresh <sec>  Display/screen refresh interval (default: $DISPLAY_REFRESH)"
             echo "  --node-id,  -n <id>     Node identifier (default: $NODE_ID)"
             echo "  --port,     -p <dev>    Serial port for sensors (default: $SERIAL_PORT)"
             echo "  --skip-flash            Skip MCU display flashing step"
@@ -204,9 +208,10 @@ if [ -f "$HW_CONFIG" ]; then
     fi
 fi
 
-echo "  Serial Port:  $SERIAL_PORT"
-echo "  Interval:     ${INTERVAL}s"
-echo "  Node ID:      $NODE_ID"
+echo "  Serial Port:      $SERIAL_PORT"
+echo "  Sensor Interval:  ${INTERVAL}s"
+echo "  Display Refresh:  ${DISPLAY_REFRESH}s"
+echo "  Node ID:          $NODE_ID"
 
 # ══════════════════════════════════════════════════════════════════════════════
 # STEP 3: Python virtual environment & dependencies
@@ -386,10 +391,12 @@ fi
 step "Starting Physical Hardware..."
 echo "[HARDWARE] Starting"
 
-echo "  Mode:         PHYSICAL SENSORS"
-echo "  Serial Port:  $SERIAL_PORT"
-echo "  Interval:     ${INTERVAL}s"
-echo "  Node ID:      $NODE_ID"
+echo "  Mode:             PHYSICAL SENSORS"
+echo "  Serial Port:      $SERIAL_PORT"
+echo "  Sensor Interval:  ${INTERVAL}s"
+echo "  Display Refresh:  ${DISPLAY_REFRESH}s"
+echo "  Node ID:          $NODE_ID"
+echo "  Hardware Log:     $HW_LOG_FILE"
 
 # Create a temporary config override with mock_mode=false
 HW_RUNTIME_CONFIG=$(mktemp /tmp/navos_hw_config_XXXXXX.json)
@@ -398,6 +405,7 @@ cat > "$HW_RUNTIME_CONFIG" <<EOF
     "server_url": "http://localhost:${INTEL_PORT}",
     "node_id": "${NODE_ID}",
     "sampling_interval_seconds": ${INTERVAL},
+    "display_refresh_seconds": ${DISPLAY_REFRESH},
     "retry_max_attempts": 5,
     "retry_base_delay_seconds": 2,
     "http_timeout_seconds": 10,
@@ -414,11 +422,14 @@ echo "  Sensor warm-up period: 30 seconds..."
 echo "[HARDWARE] Warming sensors"
 echo "  (MQ-series gas sensors need time to stabilize)"
 
+# Stream C++ hardware output to BOTH terminal and log file via tee
+> "$HW_LOG_FILE"  # truncate old log
 "$HW_BINARY" \
     --config "$HW_RUNTIME_CONFIG" \
     --node-id "$NODE_ID" \
-    --interval "$INTERVAL" &
-register_pid $! "Physical Hardware"
+    --interval "$INTERVAL" 2>&1 | tee -a "$HW_LOG_FILE" &
+HW_TEE_PID=$!
+register_pid $HW_TEE_PID "Physical Hardware"
 
 # Warm-up countdown
 for i in $(seq 30 -5 5); do
@@ -449,7 +460,7 @@ echo "[DISPLAY] Ready"
 rm -f "$HW_RUNTIME_CONFIG"
 
 # ══════════════════════════════════════════════════════════════════════════════
-# Running
+# Running — Live sensor data logging loop
 # ══════════════════════════════════════════════════════════════════════════════
 echo ""
 echo "========================================"
@@ -457,12 +468,14 @@ echo "  NAVOSEDGE IS RUNNING (HARDWARE MODE)"
 echo "========================================"
 echo "[NAVOSEDGE] Edge application running"
 echo ""
-echo "  Intelligence : http://127.0.0.1:${INTEL_PORT}"
-echo "  Hardware     : PHYSICAL SENSORS"
-echo "  Serial Port  : ${SERIAL_PORT}"
-echo "  Display      : MPI3501"
-echo "  Interval     : ${INTERVAL}s"
-echo "  Node ID      : ${NODE_ID}"
+echo "  Intelligence     : http://127.0.0.1:${INTEL_PORT}"
+echo "  Hardware         : PHYSICAL SENSORS"
+echo "  Serial Port      : ${SERIAL_PORT}"
+echo "  Display          : MPI3501"
+echo "  Sensor Interval  : ${INTERVAL}s"
+echo "  Display Refresh  : ${DISPLAY_REFRESH}s"
+echo "  Node ID          : ${NODE_ID}"
+echo "  Hardware Log     : ${HW_LOG_FILE}"
 echo ""
 echo "  API Endpoints:"
 echo "    Health:     http://127.0.0.1:${INTEL_PORT}/health"
@@ -471,6 +484,116 @@ echo "    SSE Events: http://127.0.0.1:${INTEL_PORT}/hardware/events?node_id=${N
 echo ""
 echo "  Press Ctrl+C to stop."
 echo ""
+echo "  ┌──────────────────────────────────────────────────────────────────┐"
+echo "  │  LIVE SENSOR DATA (refreshing every ${DISPLAY_REFRESH}s)                     │"
+echo "  └──────────────────────────────────────────────────────────────────┘"
+echo ""
 
+# ── Live sensor data display loop ─────────────────────────────────────────────
+# Polls the Intelligence Server /api/v1/nodes/<node>/latest endpoint every
+# DISPLAY_REFRESH seconds and prints a formatted summary directly to the
+# terminal so you can monitor readings without switching to another window.
+LATEST_URL="http://127.0.0.1:${INTEL_PORT}/api/v1/nodes/${NODE_ID}/latest"
+REFRESH_COUNT=0
+
+while kill -0 "$HW_TEE_PID" 2>/dev/null; do
+    sleep "$DISPLAY_REFRESH"
+
+    # Guard: if hardware process died during sleep, exit the loop
+    if ! kill -0 "$HW_TEE_PID" 2>/dev/null; then
+        break
+    fi
+
+    REFRESH_COUNT=$((REFRESH_COUNT + 1))
+    TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
+
+    # Fetch latest data from Intelligence Server
+    RESPONSE=$(curl -s --max-time 5 "$LATEST_URL" 2>/dev/null || echo "")
+
+    echo ""
+    echo "┌────────────────────────────────────────────────────────────────────┐"
+    echo "│  📡 LIVE SENSOR READING #${REFRESH_COUNT}   @  ${TIMESTAMP}          │"
+    echo "├────────────────────────────────────────────────────────────────────┤"
+
+    if [ -n "$RESPONSE" ] && echo "$RESPONSE" | python3 -c "import sys,json; json.load(sys.stdin)" 2>/dev/null; then
+        # Parse and display the latest reading using Python for reliable JSON handling
+        echo "$RESPONSE" | python3 -c "
+import sys, json
+try:
+    d = json.load(sys.stdin)
+
+    # AQI
+    aqi = d.get('aqi', {}).get('value', 'N/A') if isinstance(d.get('aqi'), dict) else d.get('aqi', 'N/A')
+    severity = ''
+    if isinstance(d.get('aqi'), dict):
+        severity = d['aqi'].get('severity', '')
+    elif isinstance(d.get('advisory'), dict):
+        severity = d['advisory'].get('severity', '')
+    sev_display = f' ({severity})' if severity else ''
+    print(f'│  🌍 AQI:       {aqi}{sev_display}')
+
+    # Particulate Matter
+    pm = d.get('pm', d.get('particulate_matter', {}))
+    if pm:
+        pm1 = pm.get('PM1_0', 'N/A')
+        pm25 = pm.get('PM2_5', 'N/A')
+        pm10 = pm.get('PM10', 'N/A')
+        print(f'│  🫁 PM:        PM1.0={pm1}  PM2.5={pm25}  PM10={pm10} µg/m³')
+
+    # Environment
+    env = d.get('environment', {})
+    temp = env.get('temperature_C', d.get('temperature_C', 'N/A'))
+    hum = env.get('humidity_pct', d.get('humidity_pct', 'N/A'))
+    print(f'│  🌡️  Env:       Temp={temp}°C   Humidity={hum}%')
+
+    # Gas Sensors
+    gas = d.get('gas_sensors', {})
+    if gas:
+        for name in ['MQ2', 'MQ9', 'MQ135']:
+            g = gas.get(name, {})
+            if g:
+                adc_val = g.get('raw_adc', 'N/A')
+                v_val = g.get('voltage_V', 'N/A')
+                if isinstance(v_val, (int, float)):
+                    v_val = f'{v_val:.3f}'
+                print(f'│  ⚗️  {name:6s}:    ADC={adc_val}  ({v_val}V)')
+
+    # Advisory
+    adv = d.get('advisory', {})
+    if isinstance(adv, dict) and adv.get('advice'):
+        advice_text = adv['advice'][:60]
+        print(f'│  💡 Advice:    {advice_text}')
+
+    # Source prediction
+    preds = d.get('predictions', {})
+    if isinstance(preds, dict) and preds.get('source', {}).get('value'):
+        src = preds['source']
+        conf = src.get('confidence', 0)
+        conf_pct = f'{conf*100:.0f}%' if isinstance(conf, (int, float)) else str(conf)
+        print(f'│  🔍 Source:    {src["value"]}  (confidence: {conf_pct})')
+
+except Exception as e:
+    print(f'│  ⚠️  Parse error: {e}')
+"
+    else
+        echo "│  ⚠️  No data from Intelligence Server (may still be processing)     │"
+        # Show last few lines from the hardware log as fallback
+        if [ -f "$HW_LOG_FILE" ]; then
+            echo "│                                                                    │"
+            echo "│  Latest hardware log output:                                       │"
+            tail -5 "$HW_LOG_FILE" 2>/dev/null | while IFS= read -r line; do
+                printf '│    %s\n' "$line"
+            done
+        fi
+    fi
+
+    echo "├────────────────────────────────────────────────────────────────────┤"
+    echo "│  Next refresh in ${DISPLAY_REFRESH}s │ Sensor reads every ${INTERVAL}s │ Ctrl+C to stop │"
+    echo "└────────────────────────────────────────────────────────────────────┘"
+done
+
+# If we got here, the hardware process exited
+echo ""
+echo "[WARN] Hardware process exited. Waiting for remaining processes..."
 wait
 
