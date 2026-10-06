@@ -288,13 +288,13 @@ When running `./run_simulation.sh`:
 
 When running `./run_hardware.sh`:
 - Banner shows: `Hardware : PHYSICAL SENSORS`
-- Log displays: `[HW] Physical sensor initialized on /dev/ttyACM0 @ 115200 baud`
+- Log displays: `[HW] Physical sensor initialized on 127.0.0.1:7500 @ 115200 baud` (on UNO Q monitor proxy) or `[HW] Physical sensor initialized on /dev/ttyACMx @ 115200 baud` (on external USB Arduino)
 
 ### 2. Configuration File Setting
 
 Inspect `Hardware/config/hardware_config.json` (or `.env`):
 - `"mock_mode": true` → **Simulated Data Mode**. The C++ bridge uses `MockSensorSource` to generate synthetic values according to the active scenario profile.
-- `"mock_mode": false` → **Physical Hardware Mode**. The C++ bridge uses `SerialSensorSource` to stream live ADC and digital readings from `/dev/ttyACM0`.
+- `"mock_mode": false` → **Physical Hardware Mode**. The C++ bridge uses `SerialSensorSource` to stream live ADC and digital readings from the sensor endpoint (`127.0.0.1:7500` for UNO Q monitor proxy, or `/dev/ttyACMx` for USB Arduino).
 
 ### 3. Checking API Responses & Data Logs
 
@@ -659,10 +659,14 @@ cp .env.example .env
     "server_url": "http://localhost:8420",
     "node_id": "uno-q-001",
     "sampling_interval_seconds": 60,
-    "mock_mode": true,
+    "retry_max_attempts": 5,
+    "retry_base_delay_seconds": 2,
+    "http_timeout_seconds": 10,
+    "mock_mode": false,
     "scenario": "normal",
-    "serial_port": "/dev/ttyACM0",
-    "serial_baud": 115200
+    "serial_port": "127.0.0.1:7500",
+    "serial_baud": 115200,
+    "serial_timeout_ms": 5000
 }
 ```
 

@@ -434,10 +434,166 @@ TEST(serial_sensor_error_invalidation) {
 }
 
 // ──────────────────────────────────────────────────────────────────
+// Test 16: Router garbage, beacons and MCU logs filtering
+// ──────────────────────────────────────────────────────────────────
+TEST(tcp_router_garbage_and_beacons) {
+    int server_fd = ::socket(AF_INET, SOCK_STREAM, 0);
+    ASSERT_TRUE(server_fd >= 0);
+    int opt = 1;
+    setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+
+    struct sockaddr_in serv_addr{};
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    serv_addr.sin_port = 0; // OS assigned port
+    ASSERT_TRUE(::bind(server_fd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) == 0);
+    ASSERT_TRUE(::listen(server_fd, 1) == 0);
+
+    socklen_t len = sizeof(serv_addr);
+    ASSERT_TRUE(::getsockname(server_fd, (struct sockaddr*)&serv_addr, &len) == 0);
+    int port = ntohs(serv_addr.sin_port);
+
+    std::thread server_thread([server_fd]() {
+        struct sockaddr_in ca{};
+        socklen_t cl = sizeof(ca);
+        int cfd = ::accept(server_fd, (struct sockaddr*)&ca, &cl);
+        if (cfd >= 0) {
+            std::string noisy_stream = 
+                "[MCU] NAVOSEDGE_MCU_BOOT_OK\r\n"
+                "NAVOSEDGE_MCU_TEST\r\n"
+                "{\"status\":\"booting\",\"firmware\":\"navos_unified\",\"version\":\"1.1.0\"}\r\n"
+                "random router line noise 0x82 0x93\r\n"
+                "{\"mq2\":333,\"mq9\":222,\"mq135\":444,\"t\":27.5,\"h\":55.0,\"pm1\":8.0,\"pm25\":14.0,\"pm10\":21.0,\"dht_ok\":true,\"pms_ok\":true,\"ok\":true}\n";
+            ::write(cfd, noisy_stream.data(), noisy_stream.size());
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            ::close(cfd);
+        }
+        ::close(server_fd);
+    });
+
+    std::string endpoint = "127.0.0.1:" + std::to_string(port);
+    navos::SerialSensorSource source("uno-q-filter", endpoint, 115200, 2000);
+
+    auto d = source.read();
+    server_thread.join();
+
+    ASSERT_EQ(d.mq2_raw_adc, 333);
+    ASSERT_EQ(d.mq9_raw_adc, 222);
+    ASSERT_EQ(d.mq135_raw_adc, 444);
+    ASSERT_TRUE(std::abs(d.pm2_5 - 14.0) < 0.01);
+    auto val = navos::SensorValidator::validate(d);
+    ASSERT_TRUE(val.valid);
+}
+
+// ──────────────────────────────────────────────────────────────────
+// Test 17: Verbose schema and direct voltage ingestion
+// ──────────────────────────────────────────────────────────────────
+TEST(tcp_verbose_diagnostic_schema) {
+    int server_fd = ::socket(AF_INET, SOCK_STREAM, 0);
+    ASSERT_TRUE(server_fd >= 0);
+    int opt = 1;
+    setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+
+    struct sockaddr_in serv_addr{};
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    serv_addr.sin_port = 0;
+    ASSERT_TRUE(::bind(server_fd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) == 0);
+    ASSERT_TRUE(::listen(server_fd, 1) == 0);
+
+    socklen_t len = sizeof(serv_addr);
+    ASSERT_TRUE(::getsockname(server_fd, (struct sockaddr*)&serv_addr, &len) == 0);
+    int port = ntohs(serv_addr.sin_port);
+
+    std::thread server_thread([server_fd]() {
+        struct sockaddr_in ca{};
+        socklen_t cl = sizeof(ca);
+        int cfd = ::accept(server_fd, (struct sockaddr*)&ca, &cl);
+        if (cfd >= 0) {
+            std::string verbose_json =
+                "{\"mq2_adc\":150,\"mq2_voltage\":0.733,\"mq9_adc\":160,\"mq9_voltage\":0.782,"
+                "\"mq135_adc\":170,\"mq135_voltage\":0.831,\"temperature\":24.50,\"humidity\":51.20,"
+                "\"pm1_0\":10.5,\"pm2_5\":19.8,\"pm10\":29.1,\"ok\":true}\n";
+            ::write(cfd, verbose_json.data(), verbose_json.size());
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            ::close(cfd);
+        }
+        ::close(server_fd);
+    });
+
+    std::string endpoint = "127.0.0.1:" + std::to_string(port);
+    navos::SerialSensorSource source("uno-q-verbose", endpoint, 115200, 2000);
+
+    auto d = source.read();
+    server_thread.join();
+
+    ASSERT_EQ(d.mq2_raw_adc, 150);
+    ASSERT_TRUE(std::abs(d.mq2_voltage_v - 0.733) < 0.01);
+    ASSERT_TRUE(std::abs(d.temperature_c - 24.50) < 0.01);
+    ASSERT_TRUE(std::abs(d.pm1_0 - 10.5) < 0.01);
+    ASSERT_TRUE(std::abs(d.pm2_5 - 19.8) < 0.01);
+    ASSERT_TRUE(std::abs(d.pm10 - 29.1) < 0.01);
+    auto val = navos::SensorValidator::validate(d);
+    ASSERT_TRUE(val.valid);
+}
+
+// ──────────────────────────────────────────────────────────────────
+// Test 18: Invalid PM values rejected by validator
+// ──────────────────────────────────────────────────────────────────
+TEST(tcp_invalid_pm_values_rejection) {
+    navos::SensorData d;
+    d.node_id = "test-node";
+    d.timestamp = "2026-10-06T12:00:00Z";
+    d.mq2_raw_adc = 200;
+    d.mq2_voltage_v = 1.0;
+    d.mq9_raw_adc = 200;
+    d.mq9_voltage_v = 1.0;
+    d.mq135_raw_adc = 200;
+    d.mq135_voltage_v = 1.0;
+    d.temperature_c = 25.0;
+    d.humidity_pct = 50.0;
+    d.pm1_0 = -1.0; // Negative PM1.0
+    d.pm2_5 = 10.0;
+    d.pm10 = 15.0;
+
+    auto val = navos::SensorValidator::validate(d);
+    ASSERT_TRUE(!val.valid);
+}
+
+// ──────────────────────────────────────────────────────────────────
+// Test 19: McuBridge MessagePack array structure verification
+// ──────────────────────────────────────────────────────────────────
+TEST(mcu_bridge_rpc_encoding) {
+    uint32_t req_id = 42;
+    std::string method = "update_environment";
+    nlohmann::json params = nlohmann::json::array({55.5, 10.0, 15.0, 20.0, 24.0, 60.0});
+
+    nlohmann::json rpc_req = nlohmann::json::array({
+        0,
+        req_id,
+        method,
+        params
+    });
+
+    std::vector<uint8_t> packed = nlohmann::json::to_msgpack(rpc_req);
+    ASSERT_TRUE(!packed.empty());
+
+    // Decode back and verify array structure [0, 42, "update_environment", [...]]
+    nlohmann::json decoded = nlohmann::json::from_msgpack(packed);
+    ASSERT_TRUE(decoded.is_array());
+    ASSERT_EQ(decoded.size(), 4);
+    ASSERT_EQ(decoded[0].get<int>(), 0);
+    ASSERT_EQ(decoded[1].get<uint32_t>(), 42);
+    ASSERT_TRUE(decoded[2].get<std::string>() == "update_environment");
+    ASSERT_TRUE(decoded[3].is_array());
+    ASSERT_EQ(decoded[3].size(), 6);
+}
+
+// ──────────────────────────────────────────────────────────────────
 // Main
 // ──────────────────────────────────────────────────────────────────
 int main() {
-    std::cout << "[NAVOS] Running Hardware Bridge Tests (Phase 7B)\n"
+    std::cout << "[NAVOS] Running Hardware Bridge Tests (Phase 7B / Phase 8)\n"
               << "────────────────────────────────────────\n";
 
     std::cout << "────────────────────────────────────────\n"

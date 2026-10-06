@@ -30,12 +30,17 @@
 #include <Arduino_RouterBridge.h>
 #endif
 
+// ─── Diagnostic Mode Switch ───────────────────────────────────────
+#ifndef NAVOS_DIAGNOSTIC_MODE
+#define NAVOS_DIAGNOSTIC_MODE 0
+#endif
+
 // ─── Pin Configuration ───────────────────────────────────────────
 #define MQ2_PIN    A0
 #define MQ9_PIN    A1
 #define MQ135_PIN  A2
 #define DHT22_PIN  8
-// MPM10-CS uses hardware Serial1 (D0/RX, D1/TX) — no pin defines needed
+#define pmsSerial  Serial1   // MPM10-CS on hardware Serial1 (D0=RX, D1=TX)
 
 // ─── Timing ──────────────────────────────────────────────────────
 #define SERIAL_BAUD       115200
@@ -43,19 +48,12 @@
 #define SAMPLE_INTERVAL   3000   // ms between readings
 #define DHT_MIN_INTERVAL  2000   // DHT22 minimum 2s between reads
 #define MQ_WARMUP_MS      30000  // 30s warm-up for MQ sensors
-#define PMS_FRAME_TIMEOUT 3000   // ms to wait for a PMS frame
+#define PMS_FRAME_TIMEOUT 50     // ms non-blocking check timeout
 
 // ─── PMS Protocol Constants ─────────────────────────────────────
 #define PMS_HEADER_HIGH 0x42
 #define PMS_HEADER_LOW  0x4D
-#define PMS_FRAME_LEN   32     // Total frame length for PMS-type sensors
-
-// ─── DHT22 Manual Protocol ─────────────────────────────────────
-// We implement DHT22 bit-banging directly to avoid library dependency
-// issues on constrained boards. This keeps the firmware self-contained.
-
-// MPM10-CS on hardware Serial1 (D0=RX, D1=TX)
-#define pmsSerial Serial1
+#define PMS_FRAME_LEN   32
 
 // Sensor state
 struct SensorState {
@@ -104,12 +102,10 @@ bool readDHT22(float &temp, float &hum) {
 
   // Read 40 bits (5 bytes)
   for (uint8_t i = 0; i < 40; i++) {
-    // Wait for LOW→HIGH transition (bit start)
     timeout = micros() + 100;
     while (digitalRead(DHT22_PIN) == LOW) {
       if (micros() > timeout) return false;
     }
-    // Measure HIGH duration: >40µs = '1', <40µs = '0'
     unsigned long t0 = micros();
     timeout = t0 + 100;
     while (digitalRead(DHT22_PIN) == HIGH) {
@@ -138,7 +134,6 @@ bool readDHT22(float &temp, float &hum) {
     temp = raw_temp * 0.1f;
   }
 
-  // Sanity bounds
   if (temp < -40.0f || temp > 85.0f) return false;
   if (hum < 0.0f || hum > 100.0f) return false;
 
@@ -147,26 +142,22 @@ bool readDHT22(float &temp, float &hum) {
 
 // ─── PMS (MPM10-CS) Frame Reader ────────────────────────────────
 bool readPMS(float &pm1, float &pm25, float &pm10_val) {
+  if (!pmsSerial.available()) return false;
+
   unsigned long start = millis();
   uint8_t buf[PMS_FRAME_LEN];
   int idx = 0;
   bool header_found = false;
 
-  // Drain any stale bytes
-  while (pmsSerial.available()) pmsSerial.read();
-
-  // Wait for a complete frame
   while ((millis() - start) < PMS_FRAME_TIMEOUT) {
     if (!pmsSerial.available()) continue;
-
     uint8_t b = pmsSerial.read();
 
     if (!header_found) {
       if (b == PMS_HEADER_HIGH) {
         buf[0] = b;
         idx = 1;
-        // Look for second header byte
-        unsigned long h2_timeout = millis() + 100;
+        unsigned long h2_timeout = millis() + 20;
         while (millis() < h2_timeout) {
           if (pmsSerial.available()) {
             uint8_t b2 = pmsSerial.read();
@@ -192,7 +183,7 @@ bool readPMS(float &pm1, float &pm25, float &pm10_val) {
   uint16_t frame_len = ((uint16_t)buf[2] << 8) | buf[3];
   if (frame_len != (PMS_FRAME_LEN - 4)) return false;
 
-  // Verify checksum: sum of bytes 0..(N-3) == last 2 bytes
+  // Verify checksum
   uint16_t calc_check = 0;
   for (int i = 0; i < PMS_FRAME_LEN - 2; i++) {
     calc_check += buf[i];
@@ -201,21 +192,18 @@ bool readPMS(float &pm1, float &pm25, float &pm10_val) {
   if (calc_check != recv_check) return false;
 
   // Extract atmospheric environment PM values (bytes 10-15)
-  // Standard particle: bytes 4-9; Atmospheric: bytes 10-15
-  pm1   = (float)(((uint16_t)buf[10] << 8) | buf[11]);
-  pm25  = (float)(((uint16_t)buf[12] << 8) | buf[13]);
+  pm1      = (float)(((uint16_t)buf[10] << 8) | buf[11]);
+  pm25     = (float)(((uint16_t)buf[12] << 8) | buf[13]);
   pm10_val = (float)(((uint16_t)buf[14] << 8) | buf[15]);
 
-  // Sanity: PM values should be non-negative and PM1 <= PM2.5 <= PM10
-  if (pm1 < 0 || pm25 < 0 || pm10_val < 0) return false;
-  if (pm1 > 1000 || pm25 > 1000 || pm10_val > 1000) return false;
+  if (pm1 < 0.0f || pm25 < 0.0f || pm10_val < 0.0f) return false;
+  if (pm1 > 1000.0f || pm25 > 1000.0f || pm10_val > 1000.0f) return false;
 
   return true;
 }
 
 // ─── MQ Analog Read with Oversampling ───────────────────────────
 int readMQ(int pin) {
-  // Average 4 samples to reduce ADC noise on UNO Q
   long sum = 0;
   for (int i = 0; i < 4; i++) {
     sum += analogRead(pin);
@@ -227,30 +215,29 @@ int readMQ(int pin) {
 
 // ─── Transmit JSON Frame ────────────────────────────────────────
 void transmitJSON() {
-  // Use manual print to avoid String class heap fragmentation on UNO Q
-  Serial.print(F("{\"mq2\":"));
-  Serial.print(state.mq2_adc);
-  Serial.print(F(",\"mq9\":"));
-  Serial.print(state.mq9_adc);
-  Serial.print(F(",\"mq135\":"));
-  Serial.print(state.mq135_adc);
-  Serial.print(F(",\"t\":"));
-  Serial.print(state.temperature, 2);
-  Serial.print(F(",\"h\":"));
-  Serial.print(state.humidity, 2);
-  Serial.print(F(",\"pm1\":"));
-  Serial.print(state.pm1_0, 1);
-  Serial.print(F(",\"pm25\":"));
-  Serial.print(state.pm2_5, 1);
-  Serial.print(F(",\"pm10\":"));
-  Serial.print(state.pm10, 1);
-  Serial.print(F(",\"dht_ok\":"));
-  Serial.print(state.dht_ok ? F("true") : F("false"));
-  Serial.print(F(",\"pms_ok\":"));
-  Serial.print(state.pms_ok ? F("true") : F("false"));
-  Serial.print(F(",\"ok\":"));
-  Serial.print((state.dht_ok && state.pms_ok && state.mq_warmed) ? F("true") : F("false"));
-  Serial.println(F("}"));
+#if NAVOS_DIAGNOSTIC_MODE == 1
+  Serial.println(F("NAVOSEDGE_MCU_TEST"));
+  char diag_buf[256];
+  snprintf(diag_buf, sizeof(diag_buf),
+           "{\"mq2\":100,\"mq9\":110,\"mq135\":120,\"t\":25.00,\"h\":50.00,"
+           "\"pm1\":10.0,\"pm25\":20.0,\"pm10\":30.0,"
+           "\"dht_ok\":true,\"pms_ok\":true,\"ok\":true}");
+  Serial.println(diag_buf);
+#else
+  bool is_ready = state.dht_ok && state.pms_ok && state.mq_warmed;
+  char json_buf[256];
+  snprintf(json_buf, sizeof(json_buf),
+           "{\"mq2\":%d,\"mq9\":%d,\"mq135\":%d,\"t\":%.2f,\"h\":%.2f,"
+           "\"pm1\":%.1f,\"pm25\":%.1f,\"pm10\":%.1f,"
+           "\"dht_ok\":%s,\"pms_ok\":%s,\"ok\":%s}",
+           state.mq2_adc, state.mq9_adc, state.mq135_adc,
+           state.temperature, state.humidity,
+           state.pm1_0, state.pm2_5, state.pm10,
+           state.dht_ok ? "true" : "false",
+           state.pms_ok ? "true" : "false",
+           is_ready ? "true" : "false");
+  Serial.println(json_buf);
+#endif
 }
 
 // ─── Arduino Setup ──────────────────────────────────────────────
@@ -259,7 +246,7 @@ void setup() {
   Bridge.begin();
 #endif
   Serial.begin(SERIAL_BAUD);
-  Serial1.begin(PMS_BAUD);   // Hardware UART for MPM10-CS (D0/RX, D1/TX)
+  pmsSerial.begin(PMS_BAUD);
 
   pinMode(MQ2_PIN, INPUT);
   pinMode(MQ9_PIN, INPUT);
@@ -268,8 +255,8 @@ void setup() {
   memset(&state, 0, sizeof(state));
   boot_ms = millis();
 
-  // Signal boot
-  Serial.println(F("{\"status\":\"booting\",\"firmware\":\"navos_sensors\",\"version\":\"1.0.0\"}"));
+  Serial.println(F("[MCU] NAVOSEDGE_MCU_BOOT_OK"));
+  Serial.println(F("{\"status\":\"booting\",\"firmware\":\"navos_sensors\",\"version\":\"1.1.0\"}"));
 }
 
 // ─── Arduino Loop ───────────────────────────────────────────────
@@ -282,23 +269,16 @@ void loop() {
   // Check MQ warm-up status
   state.mq_warmed = (now - boot_ms) >= MQ_WARMUP_MS;
 
-  // Read MQ sensors (always read, but flag if not warmed)
+  // Read MQ sensors
   state.mq2_adc   = readMQ(MQ2_PIN);
   state.mq9_adc   = readMQ(MQ9_PIN);
   state.mq135_adc = readMQ(MQ135_PIN);
 
   // Read DHT22
   state.dht_ok = readDHT22(state.temperature, state.humidity);
-  if (!state.dht_ok) {
-    // Retain last known values, flag as not ok
-    // (temperature and humidity keep their previous values)
-  }
 
   // Read PMS (MPM10-CS)
   state.pms_ok = readPMS(state.pm1_0, state.pm2_5, state.pm10);
-  if (!state.pms_ok) {
-    // Retain last known values, flag as not ok
-  }
 
   transmitJSON();
 }

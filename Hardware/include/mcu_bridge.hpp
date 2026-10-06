@@ -21,6 +21,7 @@
 #include <vector>
 #include <cstring>
 #include <chrono>
+#include <thread>
 #include <algorithm>
 #include <cerrno>
 #include <nlohmann/json.hpp>
@@ -140,9 +141,9 @@ private:
             return false;
         }
 
-        // Set 1-second receive and send timeouts so recv() never blocks main loop
+        // Set 3-second receive and send timeouts so Zephyr MCU has ample time to process
         struct timeval tv;
-        tv.tv_sec = 1;
+        tv.tv_sec = 3;
         tv.tv_usec = 0;
         setsockopt(fd_, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof(tv));
         setsockopt(fd_, SOL_SOCKET, SO_SNDTIMEO, (const char*)&tv, sizeof(tv));
@@ -163,9 +164,13 @@ private:
 
     bool send_state_rpc_all(const NavosEdgeState& s) {
         bool env_ok = send_rpc_environment(s);
+        std::this_thread::sleep_for(std::chrono::milliseconds(30));
         bool adv_ok = send_rpc_advice(s);
+        std::this_thread::sleep_for(std::chrono::milliseconds(30));
         bool act_ok = send_rpc_actions(s);
+        std::this_thread::sleep_for(std::chrono::milliseconds(30));
         bool pred_ok = send_rpc_predictions(s);
+        std::this_thread::sleep_for(std::chrono::milliseconds(30));
         bool raw_ok = send_rpc_raw_sensors(s);
         return env_ok && adv_ok && act_ok && pred_ok && raw_ok;
     }
@@ -269,6 +274,10 @@ private:
 
     bool send_rpc_call(const std::string& method_name, const nlohmann::json& params) {
         if (fd_ < 0) return false;
+
+        // Drain any stale unread response packets from earlier timed-out RPCs
+        uint8_t drain_buf[512];
+        while (recv(fd_, drain_buf, sizeof(drain_buf), MSG_DONTWAIT) > 0) {}
 
         uint32_t req_id = msg_id_++;
 

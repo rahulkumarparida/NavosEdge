@@ -163,23 +163,37 @@ public:
                 std::cerr << "[SERIAL] [WARN] MPM10-CS sensor report: FAULT / UNHEALTHY\n";
             }
 
-            // Extract MQ values
-            out.mq2_raw_adc   = j.value("mq2", 0);
-            out.mq9_raw_adc   = j.value("mq9", 0);
-            out.mq135_raw_adc = j.value("mq135", 0);
+            // Extract MQ values (support both compact and verbose keys)
+            out.mq2_raw_adc   = j.value("mq2", j.value("mq2_adc", 0));
+            out.mq9_raw_adc   = j.value("mq9", j.value("mq9_adc", 0));
+            out.mq135_raw_adc = j.value("mq135", j.value("mq135_adc", 0));
 
-            // Convert ADC to voltage (Arduino 10-bit, 5V reference)
-            out.mq2_voltage_v   = adc_to_voltage(out.mq2_raw_adc);
-            out.mq9_voltage_v   = adc_to_voltage(out.mq9_raw_adc);
-            out.mq135_voltage_v = adc_to_voltage(out.mq135_raw_adc);
+            // Convert ADC to voltage (or use direct voltage if provided in diagnostic frames)
+            if (j.contains("mq2_voltage") && j["mq2_voltage"].is_number()) {
+                out.mq2_voltage_v = j["mq2_voltage"].get<double>();
+            } else {
+                out.mq2_voltage_v = adc_to_voltage(out.mq2_raw_adc);
+            }
 
-            // DHT22
-            out.temperature_c = j.value("t", 0.0);
-            out.humidity_pct  = j.value("h", 0.0);
+            if (j.contains("mq9_voltage") && j["mq9_voltage"].is_number()) {
+                out.mq9_voltage_v = j["mq9_voltage"].get<double>();
+            } else {
+                out.mq9_voltage_v = adc_to_voltage(out.mq9_raw_adc);
+            }
 
-            // PMS (MPM10-CS)
-            out.pm1_0 = j.value("pm1", 0.0);
-            out.pm2_5 = j.value("pm25", 0.0);
+            if (j.contains("mq135_voltage") && j["mq135_voltage"].is_number()) {
+                out.mq135_voltage_v = j["mq135_voltage"].get<double>();
+            } else {
+                out.mq135_voltage_v = adc_to_voltage(out.mq135_raw_adc);
+            }
+
+            // DHT22 (support both compact 't'/'h' and verbose 'temperature'/'humidity')
+            out.temperature_c = j.value("t", j.value("temperature", 0.0));
+            out.humidity_pct  = j.value("h", j.value("humidity", 0.0));
+
+            // PMS / MPM10-CS (support both compact 'pm1'/'pm25' and verbose 'pm1_0'/'pm2_5')
+            out.pm1_0 = j.value("pm1", j.value("pm1_0", 0.0));
+            out.pm2_5 = j.value("pm25", j.value("pm2_5", 0.0));
             out.pm10  = j.value("pm10", 0.0);
 
             // Metadata
@@ -503,6 +517,11 @@ private:
                 }
                 // Skip empty lines or malformed lines
                 if (candidate.empty() || candidate[0] != '{') {
+                    if (candidate.find("NAVOSEDGE_MCU_TEST") != std::string::npos) {
+                        std::cout << "[SERIAL] Diagnostic beacon received: " << candidate << "\n";
+                    } else if (candidate.find("[MCU]") != std::string::npos) {
+                        std::cout << "[SERIAL] MCU log received: " << candidate << "\n";
+                    }
                     continue; // Try next line
                 }
                 // If this is an Arduino hardware status/boot message, log it immediately
