@@ -25,7 +25,11 @@ int main(int argc, char* argv[]) {
     std::string config_path = "config/hardware_config.json";
     std::string override_node_id;
     std::string override_scenario;
+    std::string override_port;
     int override_interval = 0;
+    int override_baud = 0;
+    bool override_mock_set = false;
+    bool override_mock = false;
 
     bool test_rpc = false;
 
@@ -39,6 +43,16 @@ int main(int argc, char* argv[]) {
             override_scenario = argv[++i];
         } else if ((arg == "--interval" || arg == "-i") && i + 1 < argc) {
             override_interval = std::stoi(argv[++i]);
+        } else if ((arg == "--port" || arg == "-p") && i + 1 < argc) {
+            override_port = argv[++i];
+        } else if ((arg == "--baud" || arg == "-b") && i + 1 < argc) {
+            override_baud = std::stoi(argv[++i]);
+        } else if (arg == "--mock") {
+            override_mock = true;
+            override_mock_set = true;
+        } else if (arg == "--physical") {
+            override_mock = false;
+            override_mock_set = true;
         } else if (arg == "--test-rpc" || arg == "--test-mcu-rpc") {
             test_rpc = true;
         } else if (arg == "--help" || arg == "-h") {
@@ -47,6 +61,10 @@ int main(int argc, char* argv[]) {
                       << "  --node-id, -n <id>      Override node ID\n"
                       << "  --scenario, -s <mode>   Simulation scenario: normal, high_pm, traffic, dust\n"
                       << "  --interval, -i <sec>    Override sampling interval seconds\n"
+                      << "  --port, -p <endpoint>   Override serial port / monitor proxy endpoint (e.g. 127.0.0.1:7500)\n"
+                      << "  --baud, -b <rate>       Override serial baud rate (default: 115200)\n"
+                      << "  --mock                  Force mock sensor simulation mode\n"
+                      << "  --physical              Force physical hardware sensor mode\n"
                       << "  --test-mcu-rpc          Send test state over Router RPC and exit\n"
                       << "  --help, -h              Show this help\n";
             return 0;
@@ -110,6 +128,15 @@ int main(int argc, char* argv[]) {
     if (override_interval > 0) {
         cfg.sampling_interval_seconds = override_interval;
     }
+    if (override_mock_set) {
+        cfg.mock_mode = override_mock;
+    }
+    if (!override_port.empty()) {
+        cfg.serial_port = override_port;
+    }
+    if (override_baud > 0) {
+        cfg.serial_baud = override_baud;
+    }
 
     auto scenario_enum = navos::parse_scenario(cfg.scenario);
 
@@ -134,9 +161,10 @@ int main(int argc, char* argv[]) {
     navos::HardwareBridge bridge(cfg, std::move(sensor), http);
     navos::HardwareBridge::register_instance(&bridge);
 
-    // Register signal handlers for graceful shutdown
+    // Register signal handlers for graceful shutdown and socket resilience
     std::signal(SIGINT,  navos::HardwareBridge::signal_handler);
     std::signal(SIGTERM, navos::HardwareBridge::signal_handler);
+    std::signal(SIGPIPE, SIG_IGN);
 
     // Run the main loop
     bridge.run();

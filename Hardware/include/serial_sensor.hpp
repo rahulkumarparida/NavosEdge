@@ -22,25 +22,37 @@
 #include <cerrno>
 #include <algorithm>
 
-// Linux serial headers
+// Linux serial and socket headers
 #include <fcntl.h>
 #include <unistd.h>
 #include <termios.h>
 #include <sys/select.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
 
 #include <nlohmann/json.hpp>
 
+#include "constants.hpp"
 #include "sensor.hpp"
 #include "sensor_validator.hpp"
 
 namespace navos {
 
+enum class SensorTransportType {
+    TCP,
+    UNIX_SOCKET,
+    SERIAL_TTY
+};
+
 class SerialSensorSource : public SensorSource {
 public:
     SerialSensorSource(const std::string& node_id,
-                       const std::string& serial_port = "/dev/ttyACM0",
-                       int baud_rate = 115200,
-                       int timeout_ms = 5000)
+                       const std::string& serial_port = constants::DEFAULT_SERIAL_PORT,
+                       int baud_rate = constants::DEFAULT_SERIAL_BAUD,
+                       int timeout_ms = constants::DEFAULT_SERIAL_TIMEOUT_MS)
         : node_id_(node_id)
         , serial_port_(serial_port)
         , baud_rate_(baud_rate)
@@ -73,13 +85,21 @@ public:
         // Read a complete JSON line from the Arduino
         std::string line;
         if (!read_line(line)) {
+            // If the port was closed due to peer disconnect during read_line,
+            // attempt an immediate reconnect
+            if (fd_ < 0 && open_port()) {
+                read_line(line);
+            }
+        }
+
+        if (line.empty()) {
             ++consecutive_errors_;
             if (consecutive_errors_ >= 5) {
                 std::cerr << "[SERIAL] Too many consecutive errors, reconnecting...\n";
                 close_port();
                 consecutive_errors_ = 0;
             }
-            return make_error_reading("Serial read timeout/error");
+            return make_error_reading("Sensor read timeout/error");
         }
 
         // Parse the JSON frame
@@ -203,18 +223,144 @@ public:
         }
     }
 
+    static SensorTransportType detect_transport(const std::string& endpoint) {
+        if (endpoint.rfind("tcp://", 0) == 0) return SensorTransportType::TCP;
+        if (endpoint.rfind("unix://", 0) == 0) return SensorTransportType::UNIX_SOCKET;
+        if (endpoint.rfind("/dev/", 0) == 0) return SensorTransportType::SERIAL_TTY;
+        if (endpoint.find(".sock") != std::string::npos ||
+           (!endpoint.empty() && endpoint.front() == '/' && endpoint.find(':') == std::string::npos)) {
+            return SensorTransportType::UNIX_SOCKET;
+        }
+        if (endpoint.find(':') != std::string::npos || endpoint == "localhost" || endpoint == "127.0.0.1") {
+            return SensorTransportType::TCP;
+        }
+        return SensorTransportType::SERIAL_TTY;
+    }
+
 private:
     std::string node_id_;
     std::string serial_port_;
     int baud_rate_;
     int timeout_ms_;
     int fd_;
+    SensorTransportType transport_type_;
     int consecutive_errors_;
     int total_reads_;
     int valid_reads_;
     std::string read_buffer_;
 
     bool open_port() {
+        transport_type_ = detect_transport(serial_port_);
+        switch (transport_type_) {
+            case SensorTransportType::TCP:
+                return open_tcp();
+            case SensorTransportType::UNIX_SOCKET:
+                return open_unix_socket();
+            case SensorTransportType::SERIAL_TTY:
+            default:
+                return open_serial_tty();
+        }
+    }
+
+    bool open_tcp() {
+        std::string ep = serial_port_;
+        if (ep.rfind("tcp://", 0) == 0) {
+            ep = ep.substr(6);
+        }
+        std::string host = constants::DEFAULT_ROUTER_MONITOR_HOST;
+        int port = constants::DEFAULT_ROUTER_MONITOR_PORT;
+        auto colon = ep.find(':');
+        if (colon != std::string::npos) {
+            host = ep.substr(0, colon);
+            try {
+                port = std::stoi(ep.substr(colon + 1));
+            } catch (...) {
+                port = constants::DEFAULT_ROUTER_MONITOR_PORT;
+            }
+        } else if (!ep.empty()) {
+            host = ep;
+        }
+
+        if (host.empty() || host == "localhost") {
+            host = constants::DEFAULT_ROUTER_MONITOR_HOST;
+        }
+
+        fd_ = ::socket(AF_INET, SOCK_STREAM, 0);
+        if (fd_ < 0) {
+            std::cerr << "[SERIAL] Cannot create TCP socket: " << std::strerror(errno) << "\n";
+            return false;
+        }
+
+        struct timeval tv;
+        tv.tv_sec = timeout_ms_ / 1000;
+        tv.tv_usec = (timeout_ms_ % 1000) * 1000;
+        setsockopt(fd_, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof(tv));
+        setsockopt(fd_, SOL_SOCKET, SO_SNDTIMEO, (const char*)&tv, sizeof(tv));
+
+        struct sockaddr_in addr;
+        std::memset(&addr, 0, sizeof(addr));
+        addr.sin_family = AF_INET;
+        addr.sin_port = htons(port);
+
+        if (inet_pton(AF_INET, host.c_str(), &addr.sin_addr) <= 0) {
+            struct hostent* he = gethostbyname(host.c_str());
+            if (!he || !he->h_addr_list[0]) {
+                std::cerr << "[SERIAL] Cannot resolve host " << host << "\n";
+                close_port();
+                return false;
+            }
+            std::memcpy(&addr.sin_addr, he->h_addr_list[0], sizeof(addr.sin_addr));
+        }
+
+        if (::connect(fd_, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
+            std::cerr << "[SERIAL] Cannot connect to router monitor proxy at "
+                      << host << ":" << port << " (" << std::strerror(errno) << ")\n";
+            close_port();
+            return false;
+        }
+
+        std::cout << "[SERIAL] Connected to router monitor proxy at "
+                  << host << ":" << port << "\n";
+        std::cout << "[SERIAL] Ready to receive sensor data via UNO Q monitor bridge\n";
+        return true;
+    }
+
+    bool open_unix_socket() {
+        std::string ep = serial_port_;
+        if (ep.rfind("unix://", 0) == 0) {
+            ep = ep.substr(7);
+        }
+
+        fd_ = ::socket(AF_UNIX, SOCK_STREAM, 0);
+        if (fd_ < 0) {
+            std::cerr << "[SERIAL] Cannot create Unix domain socket: " << std::strerror(errno) << "\n";
+            return false;
+        }
+
+        struct timeval tv;
+        tv.tv_sec = timeout_ms_ / 1000;
+        tv.tv_usec = (timeout_ms_ % 1000) * 1000;
+        setsockopt(fd_, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof(tv));
+        setsockopt(fd_, SOL_SOCKET, SO_SNDTIMEO, (const char*)&tv, sizeof(tv));
+
+        struct sockaddr_un addr;
+        std::memset(&addr, 0, sizeof(addr));
+        addr.sun_family = AF_UNIX;
+        std::strncpy(addr.sun_path, ep.c_str(), sizeof(addr.sun_path) - 1);
+
+        if (::connect(fd_, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
+            std::cerr << "[SERIAL] Cannot connect to Unix socket at " << ep
+                      << ": " << std::strerror(errno) << "\n";
+            close_port();
+            return false;
+        }
+
+        std::cout << "[SERIAL] Connected to Unix socket at " << ep << "\n";
+        std::cout << "[SERIAL] Ready to receive sensor data\n";
+        return true;
+    }
+
+    bool open_serial_tty() {
         fd_ = ::open(serial_port_.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
         if (fd_ < 0) {
             std::cerr << "[SERIAL] Cannot open " << serial_port_
@@ -320,7 +466,12 @@ private:
 
             char buf[512];
             ssize_t n = ::read(fd_, buf, sizeof(buf));
-            if (n <= 0) break;
+            if (n <= 0) {
+                if (n == 0) {
+                    close_port();
+                }
+                break;
+            }
             read_buffer_.append(buf, n);
             if (read_buffer_.size() > 8192) {
                 read_buffer_ = read_buffer_.substr(read_buffer_.size() - 4096);
@@ -334,7 +485,9 @@ private:
      * Consumes pending bytes and advances to the freshest valid sensor frame.
      */
     bool read_line(std::string& line) {
+        if (fd_ < 0) return false;
         drain_pending();
+        if (fd_ < 0) return false;
 
         auto start = std::chrono::steady_clock::now();
 
@@ -367,6 +520,8 @@ private:
                 line = std::move(candidate);
                 return true;
             }
+
+            if (fd_ < 0) return false;
 
             // Read more bytes from serial
             auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -401,6 +556,9 @@ private:
                 if (n == 0) {
                     std::cerr << "[SERIAL] Port closed\n";
                     close_port();
+                } else if (errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR) {
+                    std::cerr << "[SERIAL] Read error: " << std::strerror(errno) << "\n";
+                    close_port();
                 }
                 return false;
             }
@@ -414,12 +572,13 @@ private:
         SensorData d;
         d.node_id = node_id_;
         d.timestamp = now_iso8601();
-        // All values remain at 0.0 / 0 defaults
+        // Invalidate reading so SensorValidator rejects transmission of partial/zero error data
+        d.pm1_0 = -1.0;
         return d;
     }
 
     static double adc_to_voltage(int raw_adc) {
-        return static_cast<double>(raw_adc) * (5.0 / 1023.0);
+        return static_cast<double>(raw_adc) * (constants::ADC_VREF / static_cast<double>(constants::ADC_MAX));
     }
 
     static std::string now_iso8601() {

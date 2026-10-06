@@ -281,6 +281,159 @@ TEST(serial_sensor_status_message) {
 }
 
 // ──────────────────────────────────────────────────────────────────
+// Test 12: SerialSensorSource transport detection
+// ──────────────────────────────────────────────────────────────────
+TEST(serial_sensor_transport_detection) {
+    ASSERT_TRUE(navos::SerialSensorSource::detect_transport("127.0.0.1:7500") == navos::SensorTransportType::TCP);
+    ASSERT_TRUE(navos::SerialSensorSource::detect_transport("tcp://127.0.0.1:7500") == navos::SensorTransportType::TCP);
+    ASSERT_TRUE(navos::SerialSensorSource::detect_transport("localhost:7500") == navos::SensorTransportType::TCP);
+    ASSERT_TRUE(navos::SerialSensorSource::detect_transport("localhost") == navos::SensorTransportType::TCP);
+    ASSERT_TRUE(navos::SerialSensorSource::detect_transport("127.0.0.1") == navos::SensorTransportType::TCP);
+    ASSERT_TRUE(navos::SerialSensorSource::detect_transport("/var/run/arduino-router.sock") == navos::SensorTransportType::UNIX_SOCKET);
+    ASSERT_TRUE(navos::SerialSensorSource::detect_transport("unix:///tmp/test.sock") == navos::SensorTransportType::UNIX_SOCKET);
+    ASSERT_TRUE(navos::SerialSensorSource::detect_transport("/dev/ttyACM0") == navos::SensorTransportType::SERIAL_TTY);
+    ASSERT_TRUE(navos::SerialSensorSource::detect_transport("/dev/ttyUSB0") == navos::SensorTransportType::SERIAL_TTY);
+}
+
+// ──────────────────────────────────────────────────────────────────
+// Test 13: SerialSensorSource live TCP stream ingestion (UNO Q router monitor proxy)
+// ──────────────────────────────────────────────────────────────────
+TEST(serial_sensor_tcp_mock_stream) {
+    int server_fd = ::socket(AF_INET, SOCK_STREAM, 0);
+    ASSERT_TRUE(server_fd >= 0);
+
+    int opt = 1;
+    setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+
+    struct sockaddr_in serv_addr{};
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    serv_addr.sin_port = 0;
+
+    ASSERT_TRUE(::bind(server_fd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) == 0);
+    ASSERT_TRUE(::listen(server_fd, 1) == 0);
+
+    socklen_t len = sizeof(serv_addr);
+    ASSERT_TRUE(::getsockname(server_fd, (struct sockaddr*)&serv_addr, &len) == 0);
+    int port = ntohs(serv_addr.sin_port);
+
+    std::thread server_thread([server_fd]() {
+        struct sockaddr_in client_addr{};
+        socklen_t clen = sizeof(client_addr);
+        int client_fd = ::accept(server_fd, (struct sockaddr*)&client_addr, &clen);
+        if (client_fd >= 0) {
+            std::string boot_msg = "{\"status\":\"booting\",\"firmware\":\"navos_sensors\",\"version\":\"1.0.0\"}\n";
+            ::write(client_fd, boot_msg.data(), boot_msg.size());
+
+            std::string sensor_msg = "{\"mq2\":345,\"mq9\":275,\"mq135\":415,\"t\":26.50,\"h\":60.00,\"pm1\":10.5,\"pm25\":15.8,\"pm10\":22.4,\"dht_ok\":true,\"pms_ok\":true,\"ok\":true}\n";
+            ::write(client_fd, sensor_msg.data(), sensor_msg.size());
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(200));
+            ::close(client_fd);
+        }
+        ::close(server_fd);
+    });
+
+    std::string endpoint = "127.0.0.1:" + std::to_string(port);
+    navos::SerialSensorSource source("uno-q-test", endpoint, 115200, 2000);
+
+    navos::SensorData data = source.read();
+    server_thread.join();
+
+    ASSERT_TRUE(data.node_id == "uno-q-test");
+    ASSERT_EQ(data.mq2_raw_adc, 345);
+    ASSERT_EQ(data.mq9_raw_adc, 275);
+    ASSERT_EQ(data.mq135_raw_adc, 415);
+    ASSERT_TRUE(std::abs(data.temperature_c - 26.50) < 0.01);
+    ASSERT_TRUE(std::abs(data.humidity_pct - 60.00) < 0.01);
+    ASSERT_TRUE(std::abs(data.pm1_0 - 10.5) < 0.01);
+    ASSERT_TRUE(std::abs(data.pm2_5 - 15.8) < 0.01);
+    ASSERT_TRUE(std::abs(data.pm10 - 22.4) < 0.01);
+
+    auto val = navos::SensorValidator::validate(data);
+    ASSERT_TRUE(val.valid);
+}
+
+// ──────────────────────────────────────────────────────────────────
+// Test 14: SerialSensorSource TCP reconnect on socket drop
+// ──────────────────────────────────────────────────────────────────
+TEST(serial_sensor_tcp_reconnect) {
+    int server_fd1 = ::socket(AF_INET, SOCK_STREAM, 0);
+    ASSERT_TRUE(server_fd1 >= 0);
+    int opt = 1;
+    setsockopt(server_fd1, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+
+    struct sockaddr_in serv_addr{};
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    serv_addr.sin_port = 0;
+
+    ASSERT_TRUE(::bind(server_fd1, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) == 0);
+    ASSERT_TRUE(::listen(server_fd1, 1) == 0);
+
+    socklen_t len = sizeof(serv_addr);
+    ASSERT_TRUE(::getsockname(server_fd1, (struct sockaddr*)&serv_addr, &len) == 0);
+    int port = ntohs(serv_addr.sin_port);
+
+    std::thread t1([server_fd1]() {
+        struct sockaddr_in ca{};
+        socklen_t cl = sizeof(ca);
+        int cfd = ::accept(server_fd1, (struct sockaddr*)&ca, &cl);
+        if (cfd >= 0) {
+            std::string msg = "{\"mq2\":300,\"mq9\":200,\"mq135\":400,\"t\":25.0,\"h\":50.0,\"pm1\":5.0,\"pm25\":10.0,\"pm10\":15.0,\"dht_ok\":true,\"pms_ok\":true,\"ok\":true}\n";
+            ::write(cfd, msg.data(), msg.size());
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            ::close(cfd);
+        }
+        ::close(server_fd1);
+    });
+
+    std::string endpoint = "127.0.0.1:" + std::to_string(port);
+    navos::SerialSensorSource source("uno-q-rec", endpoint, 115200, 1000);
+
+    auto d1 = source.read();
+    t1.join();
+    ASSERT_EQ(d1.mq2_raw_adc, 300);
+
+    // Phase 2: Reopen on same port and stream new reading
+    int server_fd2 = ::socket(AF_INET, SOCK_STREAM, 0);
+    ASSERT_TRUE(server_fd2 >= 0);
+    setsockopt(server_fd2, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+
+    serv_addr.sin_port = htons(port);
+    ASSERT_TRUE(::bind(server_fd2, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) == 0);
+    ASSERT_TRUE(::listen(server_fd2, 1) == 0);
+
+    std::thread t2([server_fd2]() {
+        struct sockaddr_in ca{};
+        socklen_t cl = sizeof(ca);
+        int cfd = ::accept(server_fd2, (struct sockaddr*)&ca, &cl);
+        if (cfd >= 0) {
+            std::string msg = "{\"mq2\":320,\"mq9\":220,\"mq135\":420,\"t\":26.0,\"h\":52.0,\"pm1\":6.0,\"pm25\":11.0,\"pm10\":16.0,\"dht_ok\":true,\"pms_ok\":true,\"ok\":true}\n";
+            ::write(cfd, msg.data(), msg.size());
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            ::close(cfd);
+        }
+        ::close(server_fd2);
+    });
+
+    auto d2 = source.read();
+    t2.join();
+    ASSERT_EQ(d2.mq2_raw_adc, 320);
+}
+
+// ──────────────────────────────────────────────────────────────────
+// Test 15: Error reading validation rejection
+// ──────────────────────────────────────────────────────────────────
+TEST(serial_sensor_error_invalidation) {
+    // Port 1 is reserved and not listening -> read() will trigger make_error_reading()
+    navos::SerialSensorSource source("err-node", "127.0.0.1:1", 115200, 100);
+    auto d = source.read();
+    auto val = navos::SensorValidator::validate(d);
+    ASSERT_TRUE(!val.valid);
+}
+
+// ──────────────────────────────────────────────────────────────────
 // Main
 // ──────────────────────────────────────────────────────────────────
 int main() {

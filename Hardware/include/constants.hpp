@@ -22,8 +22,10 @@ constexpr bool DEFAULT_MOCK_MODE                          = true;
 inline const std::string DEFAULT_SCENARIO                 = "normal";
 
 
-// Serial Communication Defaults (USB UART / Arduino UNO Q)
-inline const std::string DEFAULT_SERIAL_PORT              = "/dev/ttyACM0";
+// Sensor Transport Defaults (Arduino UNO Q Router Monitor Proxy / Serial Fallback)
+inline const std::string DEFAULT_SERIAL_PORT              = "127.0.0.1:7500";
+inline const std::string DEFAULT_ROUTER_MONITOR_HOST      = "127.0.0.1";
+constexpr int DEFAULT_ROUTER_MONITOR_PORT                 = 7500;
 constexpr int DEFAULT_SERIAL_BAUD                         = 115200;
 constexpr int DEFAULT_SERIAL_TIMEOUT_MS                   = 5000;
 constexpr int SERIAL_BUFFER_SIZE                          = 512;

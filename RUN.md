@@ -104,15 +104,69 @@ For development and testing without physical sensors:
 
 For deployment when physical sensors and the MPI3501 display are connected to the Arduino UNO Q:
 
+### Understanding UNO Q Hardware Transport
+
+The Arduino UNO Q features a dual-core architecture:
+- **Linux MPU (Qualcomm):** Runs Debian Linux, the Python Intelligence Server, and the C++ Hardware Bridge.
+- **Microcontroller MCU (STM32U5):** Directly hosts the physical GPIO and analog pins where sensors are wired.
+
+```
+       Physical Sensors (MQ2, MQ9, MQ135, DHT22, MPM10-CS)
+                             │
+                             ▼
+┌───────────────────────────────────────────────────────────────┐
+│  Arduino UNO Q — MCU Core (STM32U5 / Zephyr)                  │
+│  Firmware: Hardware/firmware/navos_sensors.ino               │
+│  Serial.println(json) ──► mon/write MessagePack RPC           │
+└────────────────────────────┬──────────────────────────────────┘
+                             │ Internal High-Speed UART (/dev/ttyHS1)
+                             ▼
+┌───────────────────────────────────────────────────────────────┐
+│  Arduino UNO Q — Linux MPU (Qualcomm / Debian)                │
+│                                                               │
+│  arduino-router.service (Exclusive owner of /dev/ttyHS1)      │
+│     ├─── Monitor Proxy (TCP 127.0.0.1:7500)                   │
+│     │          │                                              │
+│     │          ▼                                              │
+│     │     C++ Hardware Bridge (SerialSensorSource)            │
+│     │          │                                              │
+│     │          ▼ HTTP POST                                    │
+│     │     Python Intelligence Server (:8420)                  │
+│     │          │ SSE Stream                                   │
+│     │          ▼                                              │
+│     │     C++ Hardware Bridge (McuBridge)                     │
+│     │          │                                              │
+│     └─── MessagePack RPC Socket (/var/run/arduino-router.sock)│
+│                │                                              │
+│                ▼                                              │
+│  MPI3501 LCD Display (Dashboard rendered on MCU)              │
+└───────────────────────────────────────────────────────────────┘
+```
+
+> [!IMPORTANT]
+> **Why NOT `/dev/ttyACM0` or `/dev/ttyHS1`?**
+> - On the native UNO Q Linux system, there is no USB CDC serial device `/dev/ttyACM0` because the MCU is wired internally directly to the processor board.
+> - `/dev/ttyHS1` is the raw hardware UART connected to the STM32U5 core, but it is **exclusively managed** by `arduino-router.service`. Attempting to open `/dev/ttyHS1` directly causes bus collisions and breaks display RPC calls.
+> - `/dev/ttyMSM0` is reserved as the Linux kernel serial console.
+> - Instead, `arduino-router` mirrors all MCU `Serial.println()` streams to its **Monitor Proxy** on **`127.0.0.1:7500`**. The C++ bridge connects to `127.0.0.1:7500` to stream real sensor frames, while using `/var/run/arduino-router.sock` to send display state RPCs.
+> - If you ever connect a secondary external Arduino via standard USB cable on a PC, `/dev/ttyACM0` or `/dev/ttyUSB0` remains fully supported.
+
 ### Step 1: Connect Physical Sensors & Board
 
-1. Connect the MQ gas sensors (MQ2, MQ9, MQ135), particulate matter sensor (SDS011 / Plantower), and DHT22 to the Arduino UNO Q board pins.
-2. Connect the UNO Q via USB to your system or boot directly on the UNO Q Debian OS.
-3. Ensure your Linux user has serial port permissions:
+1. Connect the MQ gas sensors (MQ2, MQ9, MQ135), particulate matter sensor (MPM10-CS), and DHT22 to the Arduino UNO Q board headers:
+   - MQ-2 → Pin **A0**
+   - MQ-9 → Pin **A1**
+   - MQ-135 → Pin **A2**
+   - DHT22 → Pin **D8** (with 10kΩ pull-up resistor to 5V)
+   - MPM10-CS → **Serial1** (MPM10 TX → Pin D0/RX; MPM10 RX → Pin D1/TX; 9600 baud)
+2. Verify `arduino-router` is active on the UNO Q:
+   ```bash
+   systemctl status arduino-router.service
+   ```
+3. (Optional) If running on an external USB Arduino on a desktop PC, ensure `dialout` permissions:
    ```bash
    sudo usermod -a -G dialout $USER
    ```
-   *(Note: Log out and log back in for group changes to take effect).*
 
 ### Step 2: Run Hardware Deployment Script
 
@@ -120,10 +174,14 @@ For deployment when physical sensors and the MPI3501 display are connected to th
 ./run_hardware.sh
 ```
 
-If your sensor board is attached to a non-default serial port (e.g. `/dev/ttyACM1` or `/dev/ttyUSB0`), pass the `--port` flag:
+By default on UNO Q, `run_hardware.sh` connects to `127.0.0.1:7500`. To specify a different endpoint or USB port (e.g. for external USB Arduino):
 
 ```bash
-./run_hardware.sh --port /dev/ttyACM1 --interval 30
+# UNO Q monitor proxy (default)
+./run_hardware.sh --port 127.0.0.1:7500 --interval 30
+
+# External USB Arduino
+./run_hardware.sh --port /dev/ttyACM0 --interval 30
 ```
 
 ### Options
@@ -132,21 +190,22 @@ If your sensor board is attached to a non-default serial port (e.g. `/dev/ttyACM
 |------|---------|-------------|
 | `--interval, -i` | `60` | Sampling interval (seconds) |
 | `--node-id, -n` | `uno-q-001` | Node identifier |
-| `--port, -p` | `/dev/ttyACM0` | Serial port for physical sensors |
+| `--port, -p` | `127.0.0.1:7500` | Sensor endpoint (`127.0.0.1:7500` for UNO Q monitor proxy, or `/dev/ttyACMx`) |
 | `--skip-flash` | — | Skip MCU display flashing |
+| `--no-build` | — | Skip compilation & flashing (for background services) |
 | `--help, -h` | — | Show usage |
 
 ### Startup Sequence
 
 ```
 [1/8] Checking environment...         — system dependencies
-[2/8] Checking physical hardware...   — verify serial port & hardware configuration
+[2/8] Checking physical hardware...   — verify monitor endpoint / serial device & hardware configuration
 [3/8] Preparing Python environment... — venv + deps
 [4/8] Building C++ Hardware...        — cmake + make
 [5/8] Display build/flash...          — compile & flash MPI3501 firmware via arduino-cli
 [6/8] Verifying model artifacts...    — ML model files
 [7/8] Starting Intelligence Server... — uvicorn + health check
-[8/8] Starting Physical Hardware...   — C++ with real serial sensors + 30s warm-up
+[8/8] Starting Physical Hardware...   — C++ with real physical sensors + 30s warm-up
 ```
 
 > **Note:** MQ-series gas sensors require a 30-second warm-up period on power-up to stabilize heating elements. The script will display a 30s countdown before sending the `READY` handshake to the Intelligence Server.

@@ -8,3 +8,4 @@ dist/
 Hardware/build/
 Hardware/third_party/
 Hardware/display/build/
+build/

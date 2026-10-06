@@ -18,3 +18,8 @@ set(SOURCES
 
 add_executable(navos_hardware_bridge ${SOURCES})
 target_link_libraries(navos_hardware_bridge CURL::libcurl)
+
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_bridge.cpp")
+    add_executable(test_bridge tests/test_bridge.cpp)
+    target_link_libraries(test_bridge CURL::libcurl)
+endif()

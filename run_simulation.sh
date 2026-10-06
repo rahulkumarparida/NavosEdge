@@ -369,6 +369,7 @@ echo "  Scenario: $SCENARIO"
 echo "  Interval: ${INTERVAL}s"
 echo "  Node ID:  $NODE_ID"
 
+NAVOS_SENSOR_MODE=mock \
 "$HW_BINARY" \
     --config "$REPO_ROOT/Hardware/config/hardware_config.json" \
     --node-id "$NODE_ID" \

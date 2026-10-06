@@ -40,9 +40,8 @@ fi
 INTEL_HOST="${NAVOS_HOST:-127.0.0.1}"
 INTEL_PORT="${NAVOS_PORT:-8420}"
 NODE_ID="${NAVOS_NODE_ID:-uno-q-001}"
-INTERVAL="${NAVOS_SENSOR_INTERVAL:-12}"
-SERIAL_PORT="${ARDUINO_PORT:-/dev/ttyACM0}"
-DISPLAY_REFRESH="${NAVOS_DISPLAY_REFRESH:-40}"
+INTERVAL="${NAVOS_SENSOR_INTERVAL:-60}"
+SERIAL_PORT="${ARDUINO_PORT:-${NAVOS_SERIAL_PORT:-127.0.0.1:7500}}"
 SKIP_FLASH=false
 NO_BUILD=false
 HW_LOG_FILE="/tmp/navos_hardware.log"
@@ -63,7 +62,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --interval, -i <sec>    Sampling interval in seconds (default: $INTERVAL)"
             echo "  --display-refresh <sec>  Display/screen refresh interval (default: $DISPLAY_REFRESH)"
             echo "  --node-id,  -n <id>     Node identifier (default: $NODE_ID)"
-            echo "  --port,     -p <dev>    Serial port for sensors (default: $SERIAL_PORT)"
+            echo "  --port,     -p <endpoint> Endpoint for sensors (default: $SERIAL_PORT)"
             echo "  --skip-flash            Skip MCU display flashing step"
             echo "  --no-build              Skip venv creation, pip install, C++ compile & display flash (for boot service)"
             echo "  --help, -h              Show this help"
@@ -190,13 +189,22 @@ fi
 # ══════════════════════════════════════════════════════════════════════════════
 step "Checking physical hardware..."
 
-# Check serial port
-if [ -e "$SERIAL_PORT" ]; then
+# Check serial / monitor endpoint
+if [[ "$SERIAL_PORT" =~ :[0-9]+$ ]] || [[ "$SERIAL_PORT" =~ ^tcp:// ]]; then
+    # TCP endpoint (e.g. 127.0.0.1:7500 on UNO Q monitor proxy)
+    echo "  [ OK ] Router monitor proxy endpoint configured: $SERIAL_PORT"
+elif [ -S "$SERIAL_PORT" ] || [[ "$SERIAL_PORT" =~ \.sock$ ]] || [[ "$SERIAL_PORT" =~ ^unix:// ]]; then
+    if [ -S "$SERIAL_PORT" ] || [ -e "$SERIAL_PORT" ]; then
+        echo "  [ OK ] Router monitor socket found: $SERIAL_PORT"
+    else
+        echo "  [WARN] Router monitor socket not found yet: $SERIAL_PORT"
+    fi
+elif [ -e "$SERIAL_PORT" ]; then
     echo "  [ OK ] Serial device found: $SERIAL_PORT"
 else
-    echo "  [WARN] Serial device not found: $SERIAL_PORT"
-    echo "         Ensure sensors are connected and the correct port is specified."
-    echo "         Use: $0 --port /dev/ttyACMx"
+    echo "  [WARN] Sensor endpoint / device not found: $SERIAL_PORT"
+    echo "         For UNO Q on-board sensors, verify arduino-router is running (127.0.0.1:7500)."
+    echo "         For external USB Arduino, specify: $0 --port /dev/ttyACMx"
 fi
 
 # Check that hardware_config.json has mock_mode=false or can be overridden
@@ -422,8 +430,8 @@ echo "  Sensor warm-up period: 30 seconds..."
 echo "[HARDWARE] Warming sensors"
 echo "  (MQ-series gas sensors need time to stabilize)"
 
-# Stream C++ hardware output to BOTH terminal and log file via tee
-> "$HW_LOG_FILE"  # truncate old log
+NAVOS_SENSOR_MODE=physical \
+NAVOS_SERIAL_PORT="$SERIAL_PORT" \
 "$HW_BINARY" \
     --config "$HW_RUNTIME_CONFIG" \
     --node-id "$NODE_ID" \
