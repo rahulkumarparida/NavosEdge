@@ -17,7 +17,14 @@ export function OverviewCards({ data }) {
   const inactiveCount = data?.inactive_nodes ?? 0;
   const totalCount = data?.total_nodes ?? 0;
 
-  const aqiBadge = getAqiBadge(overall.aqi);
+  const aqiValue = overall.aqi ?? overall.AQI ?? null;
+  const aqiBadge = getAqiBadge(aqiValue);
+  const displayAqi = typeof aqiValue === 'number' ? Math.round(aqiValue * 10) / 10 : (aqiValue ?? 'N/A');
+
+  const pm25Value = overall.PM2_5 ?? overall.pm2_5 ?? overall['PM2.5'] ?? overall.pm25 ?? 0.0;
+  const pm10Value = overall.PM10 ?? overall.pm10 ?? 0.0;
+  const tempValue = overall.temperature_C ?? overall.temperature ?? 0.0;
+  const humValue = overall.humidity_pct ?? overall.humidity ?? 0.0;
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
@@ -28,7 +35,7 @@ export function OverviewCards({ data }) {
           <Server className="w-4 h-4 text-cyan-400" />
         </div>
         <div className="flex items-baseline gap-2">
-          <span className="text-3xl font-bold text-slate-5">{activeCount}</span>
+          <span className="text-3xl font-bold text-slate-100">{activeCount}</span>
           <span className="text-xs text-slate-400">/ {totalCount} total</span>
         </div>
         <div className="mt-2 text-xs text-slate-400 flex gap-2">
@@ -45,7 +52,7 @@ export function OverviewCards({ data }) {
           <Activity className="w-4 h-4 text-amber-400" />
         </div>
         <div className="flex items-baseline justify-between">
-          <span className="text-3xl font-bold text-slate-5">{overall.aqi ?? 'N/A'}</span>
+          <span className="text-3xl font-bold text-slate-100">{displayAqi}</span>
           <span className={`text-xs px-2 py-0.5 rounded border ${aqiBadge.color}`}>
             {aqiBadge.label}
           </span>
@@ -59,8 +66,8 @@ export function OverviewCards({ data }) {
           <span>Overall PM2.5</span>
           <Wind className="w-4 h-4 text-sky-400" />
         </div>
-        <div className="text-3xl font-bold text-slate-5">
-          {overall.PM2_5 ?? 0.0} <span className="text-xs font-normal text-slate-400">µg/m³</span>
+        <div className="text-3xl font-bold text-slate-100">
+          {pm25Value} <span className="text-xs font-normal text-slate-400">µg/m³</span>
         </div>
         <p className="mt-2 text-[11px] text-slate-400">Active average</p>
       </div>
@@ -71,8 +78,8 @@ export function OverviewCards({ data }) {
           <span>Overall PM10</span>
           <Cloud className="w-4 h-4 text-indigo-400" />
         </div>
-        <div className="text-3xl font-bold text-slate-5">
-          {overall.PM10 ?? 0.0} <span className="text-xs font-normal text-slate-400">µg/m³</span>
+        <div className="text-3xl font-bold text-slate-100">
+          {pm10Value} <span className="text-xs font-normal text-slate-400">µg/m³</span>
         </div>
         <p className="mt-2 text-[11px] text-slate-400">Active average</p>
       </div>
@@ -83,8 +90,8 @@ export function OverviewCards({ data }) {
           <span>Avg Temperature</span>
           <Thermometer className="w-4 h-4 text-rose-400" />
         </div>
-        <div className="text-3xl font-bold text-slate-5">
-          {overall.temperature_C ?? 0.0}<span className="text-xl font-normal text-slate-400">°C</span>
+        <div className="text-3xl font-bold text-slate-100">
+          {tempValue}<span className="text-xl font-normal text-slate-400">°C</span>
         </div>
         <p className="mt-2 text-[11px] text-slate-400">Active average</p>
       </div>
@@ -95,8 +102,8 @@ export function OverviewCards({ data }) {
           <span>Avg Humidity</span>
           <Droplets className="w-4 h-4 text-teal-400" />
         </div>
-        <div className="text-3xl font-bold text-slate-5">
-          {overall.humidity_pct ?? 0.0}<span className="text-xl font-normal text-slate-400">%</span>
+        <div className="text-3xl font-bold text-slate-100">
+          {humValue}<span className="text-xl font-normal text-slate-400">%</span>
         </div>
         <p className="mt-2 text-[11px] text-slate-400">Active average</p>
       </div>

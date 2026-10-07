@@ -54,6 +54,21 @@ struct NavosEdgeState {
     unsigned long last_update_ms;     // millis() timestamp of last update
 };
 
+// --- Diagnostic Tracking Structure for DHT22 ---
+struct DHT22Diagnostic {
+    bool gpio_configured;
+    bool gpio_direction_switch;
+    bool start_pulse;
+    bool response_detected;
+    unsigned long response_timing_us;
+    bool frame_received;
+    uint8_t bits_received;
+    bool checksum_pass;
+    float temperature;
+    float humidity;
+    const char* failure_reason;
+};
+
 /**
  * Initialize a NavosEdgeState to safe defaults.
  */

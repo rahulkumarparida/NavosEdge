@@ -17,7 +17,7 @@ ENV_PORT_KEY: str = "NAVOS_MANAGER_PORT"
 # Inactive Node Timeout & Monitoring
 # ------------------------------------------------------------------
 # Time in seconds after which a node is considered inactive if no new reading arrives
-INACTIVE_TIMEOUT_SECONDS_DEFAULT: int = 15
+INACTIVE_TIMEOUT_SECONDS_DEFAULT: int = 60
 ENV_INACTIVE_TIMEOUT_KEY: str = "NAVOS_INACTIVE_TIMEOUT_S"
 
 # ------------------------------------------------------------------

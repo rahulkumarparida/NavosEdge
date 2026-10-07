@@ -3,80 +3,81 @@
     "uno-q-prod-01": {
       "node_id": "uno-q-prod-01",
       "location": "Location-uno-q-prod-01",
-      "status": "active",
-      "last_seen": "2026-10-04T16:57:18.409187+00:00",
-      "aqi": 63.03,
+      "status": "inactive",
+      "last_seen": "2026-10-07T10:21:18.875094+00:00",
+      "aqi": 154.87,
       "pm": {
-        "PM1_0": 11.88,
-        "PM2_5": 17.82,
-        "PM10": 24.77
+        "PM1_0": 41.0,
+        "PM2_5": 63.0,
+        "PM10": 76.0
       },
-      "temperature_C": 28.73,
-      "humidity_pct": 64.71,
-      "source_prediction": "TRAFFIC",
-      "source_confidence": 0.3095,
+      "temperature_C": 34.3,
+      "humidity_pct": 67.0,
+      "source_prediction": "BIOMASS_OR_WASTE_BURNING",
+      "source_confidence": 0.8333,
       "predictions": {
         "source": {
-          "value": "TRAFFIC",
-          "confidence": 0.3095
+          "value": "BIOMASS_OR_WASTE_BURNING",
+          "confidence": 0.8333
         },
         "forecast": {
           "value": {
             "status": "ok",
             "PM1_0": [
-              11.69,
-              11.51,
-              11.34,
-              11.18,
-              11.03,
-              10.89,
-              10.77,
-              10.66,
-              10.58,
-              10.51,
-              10.45,
-              10.42
+              40.32,
+              39.82,
+              39.2,
+              38.78,
+              38.5,
+              38.2,
+              37.9,
+              37.57,
+              37.22,
+              36.9,
+              36.6,
+              36.31
             ],
             "PM2_5": [
-              17.54,
-              17.27,
-              17.01,
-              16.76,
-              16.54,
-              16.34,
-              16.15,
-              16.0,
-              15.87,
-              15.76,
-              15.68,
-              15.63
+              61.15,
+              59.58,
+              58.35,
+              57.46,
+              56.81,
+              56.2,
+              55.51,
+              54.79,
+              54.09,
+              53.45,
+              52.87,
+              52.32
             ],
             "PM10": [
-              24.4,
-              24.04,
-              23.69,
-              23.37,
-              23.07,
-              22.8,
-              22.56,
-              22.35,
-              22.17,
-              22.03,
-              21.93,
-              21.86
+              73.29,
+              71.07,
+              69.44,
+              68.3,
+              67.42,
+              66.57,
+              65.64,
+              64.71,
+              63.84,
+              63.06,
+              62.34,
+              61.68
             ]
           },
           "confidence": 1.0
         }
       },
       "advisory": {
-        "severity": "MODERATE",
-        "advice": "Pollution is noticeable but mild. Normal activities should be okay. The source is still unclear. General air-quality precautions are recommended. The air is starting to clear. That's a good sign.",
+        "severity": "SEVERE",
+        "advice": "The air is heavy. Avoid spending too much time outside. Try to stay indoors and keep smoky air outside. Conditions are moving in a better direction.",
         "actions": [
-          "Prefer well-ventilated, lower-pollution areas.",
-          "Use general pollution precautions."
+          "Limit outdoor activity.",
+          "Keep windows closed where practical.",
+          "Avoid smoke and keep indoor air protected."
         ],
-        "weather_advice": "The weather is at a comfortable level. Have a good day outside."
+        "weather_advice": "The weather is warm and easygoing. Light clothing should work well."
       }
     }
   }

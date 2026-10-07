@@ -13,8 +13,16 @@ function getAqiBadge(aqi) {
 
 export function NodeCard({ node }) {
   const isActive = node.status === 'active';
-  const aqiBadge = getAqiBadge(node.aqi);
+  const aqiValue = node.aqi ?? node.AQI ?? null;
+  const aqiBadge = getAqiBadge(aqiValue);
+  const displayAqi = typeof aqiValue === 'number' ? Math.round(aqiValue * 10) / 10 : (aqiValue ?? 'N/A');
   const confidencePct = node.source_confidence != null ? Math.round(node.source_confidence * 100) : null;
+
+  const pm25 = node.pm?.PM2_5 ?? node.pm?.pm2_5 ?? node.pm?.['PM2.5'] ?? node.pm?.pm25 ?? node.PM2_5 ?? 0;
+  const pm10 = node.pm?.PM10 ?? node.pm?.pm10 ?? node.PM10 ?? 0;
+  const pm1_0 = node.pm?.PM1_0 ?? node.pm?.pm1_0 ?? node.pm?.['PM1.0'] ?? node.pm?.pm1 ?? node.PM1_0 ?? 0;
+  const temp = node.temperature_C ?? node.temperature ?? 0;
+  const hum = node.humidity_pct ?? node.humidity ?? 0;
 
   const advisory = node.advisory || {};
   const advisorySeverity = advisory.severity || 'NORMAL';
@@ -63,7 +71,7 @@ export function NodeCard({ node }) {
           <div>
             <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">AQI Index</div>
             <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold text-slate-100">{node.aqi ?? 'N/A'}</span>
+              <span className="text-3xl font-extrabold text-slate-100">{displayAqi}</span>
               <span className={`text-[10px] px-2 py-0.5 rounded border font-medium ${aqiBadge.color}`}>
                 {aqiBadge.label}
               </span>
@@ -73,15 +81,15 @@ export function NodeCard({ node }) {
           <div className="space-y-1 text-xs justify-center flex flex-col">
             <div className="flex justify-between text-slate-300">
               <span className="text-slate-400">PM2.5:</span>
-              <span className="font-semibold text-slate-200">{node.pm?.PM2_5 ?? 0} µg/m³</span>
+              <span className="font-semibold text-slate-200">{pm25} µg/m³</span>
             </div>
             <div className="flex justify-between text-slate-300">
               <span className="text-slate-400">PM10:</span>
-              <span className="font-semibold text-slate-200">{node.pm?.PM10 ?? 0} µg/m³</span>
+              <span className="font-semibold text-slate-200">{pm10} µg/m³</span>
             </div>
             <div className="flex justify-between text-slate-300">
               <span className="text-slate-400">PM1.0:</span>
-              <span className="font-semibold text-slate-200">{node.pm?.PM1_0 ?? 0} µg/m³</span>
+              <span className="font-semibold text-slate-200">{pm1_0} µg/m³</span>
             </div>
           </div>
         </div>
@@ -90,11 +98,11 @@ export function NodeCard({ node }) {
         <div className="grid grid-cols-2 gap-3 text-xs">
           <div className="bg-slate-950/40 p-2.5 rounded-lg border border-slate-800/40 flex justify-between items-center">
             <span className="text-slate-400">Temperature</span>
-            <span className="font-bold text-slate-200">{node.temperature_C}°C</span>
+            <span className="font-bold text-slate-200">{temp}°C</span>
           </div>
           <div className="bg-slate-950/40 p-2.5 rounded-lg border border-slate-800/40 flex justify-between items-center">
             <span className="text-slate-400">Humidity</span>
-            <span className="font-bold text-slate-200">{node.humidity_pct}%</span>
+            <span className="font-bold text-slate-200">{hum}%</span>
           </div>
         </div>
 

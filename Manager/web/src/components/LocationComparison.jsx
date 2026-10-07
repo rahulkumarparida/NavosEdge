@@ -34,9 +34,13 @@ export function LocationComparison({ nodes }) {
 
       <div className="space-y-4">
         {sorted.map((node, idx) => {
-          const aqi = node.aqi ?? 0;
+          const aqiVal = node.aqi ?? node.AQI ?? null;
+          const aqi = typeof aqiVal === 'number' ? aqiVal : 0;
+          const displayAqi = typeof aqiVal === 'number' ? Math.round(aqiVal * 10) / 10 : (aqiVal ?? 'N/A');
+          const pm25 = node.pm?.PM2_5 ?? node.pm?.pm2_5 ?? node.pm?.['PM2.5'] ?? node.pm?.pm25 ?? node.PM2_5 ?? 0;
+          const pm10 = node.pm?.PM10 ?? node.pm?.pm10 ?? node.PM10 ?? 0;
           const pct = Math.min(100, Math.max(5, (aqi / maxAqi) * 100));
-          const colorClass = getAqiColor(node.aqi);
+          const colorClass = getAqiColor(aqiVal);
 
           return (
             <div key={node.node_id} className="bg-slate-950/50 p-4 rounded-lg border border-slate-800/60">
@@ -51,14 +55,14 @@ export function LocationComparison({ nodes }) {
 
                 <div className="flex items-center gap-4 text-xs">
                   <span className="text-slate-400">
-                    PM2.5: <strong className="text-slate-200">{node.pm?.PM2_5 ?? 0} µg/m³</strong>
+                    PM2.5: <strong className="text-slate-200">{pm25} µg/m³</strong>
                   </span>
                   <span className="text-slate-400">
-                    PM10: <strong className="text-slate-200">{node.pm?.PM10 ?? 0} µg/m³</strong>
+                    PM10: <strong className="text-slate-200">{pm10} µg/m³</strong>
                   </span>
                   <div className="flex items-baseline gap-1.5 ml-2">
                     <span className="text-xs text-slate-400">AQI</span>
-                    <span className="text-base font-extrabold text-slate-100">{node.aqi ?? 'N/A'}</span>
+                    <span className="text-base font-extrabold text-slate-100">{displayAqi}</span>
                   </div>
                 </div>
               </div>

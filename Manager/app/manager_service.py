@@ -37,6 +37,44 @@ def safe_float(val: Any, default: Optional[float] = 0.0) -> Optional[float]:
         return default
 
 
+BREAKPOINTS_EPA_PM25 = [
+    (0.0, 12.0, 0.0, 50.0),
+    (12.1, 35.4, 51.0, 100.0),
+    (35.5, 55.4, 101.0, 150.0),
+    (55.5, 150.4, 151.0, 200.0),
+    (150.5, 250.4, 201.0, 300.0),
+    (250.5, 350.4, 301.0, 400.0),
+    (350.5, 500.4, 401.0, 500.0),
+]
+BREAKPOINTS_EPA_PM10 = [
+    (0.0, 54.0, 0.0, 50.0),
+    (55.0, 154.0, 51.0, 100.0),
+    (155.0, 254.0, 101.0, 150.0),
+    (255.0, 354.0, 151.0, 200.0),
+    (355.0, 424.0, 201.0, 300.0),
+    (425.0, 504.0, 301.0, 400.0),
+    (505.0, 604.0, 401.0, 500.0),
+]
+
+
+def calculate_epa_aqi(pm2_5: float, pm10: float) -> Optional[float]:
+    """Calculates overall regulatory EPA AQI based on PM2.5 and PM10 sub-indices."""
+    def _sub_index(conc: float, table) -> float:
+        if conc <= 0.0:
+            return 0.0
+        for c_low, c_high, i_low, i_high in table:
+            if c_low <= conc <= c_high:
+                slope = (i_high - i_low) / (c_high - c_low)
+                return round(slope * (conc - c_low) + i_low, 2)
+        c_low, c_high, i_low, i_high = table[-1]
+        slope = (i_high - i_low) / (c_high - c_low)
+        return round(slope * (conc - c_low) + i_low, 2)
+
+    si_pm25 = _sub_index(pm2_5, BREAKPOINTS_EPA_PM25)
+    si_pm10 = _sub_index(pm10, BREAKPOINTS_EPA_PM10)
+    return max(si_pm25, si_pm10)
+
+
 def normalize_telemetry(
     payload: Union[NodeTelemetryPayload, Dict[str, Any], Any],
     node_id: Optional[str] = None,
@@ -49,7 +87,7 @@ def normalize_telemetry(
     Guarantees consistent Manager node state:
     - Missing or null temperature_C / humidity_pct safely normalize to 0.0.
     - Legitimate 0, 0.0, and valid negative values are preserved.
-    - aqi is preserved if present (including 0.0), or None if missing/null.
+    - aqi is preserved if present (including 0.0), or calculated from PM if missing.
     - Missing or malformed pm fields safely default to 0.0.
     - Predictions and advisory default safely to empty dicts.
     """
@@ -86,21 +124,48 @@ def normalize_telemetry(
         except (ValueError, TypeError):
             ts = datetime.now(timezone.utc).isoformat()
 
-    # Environmental: temperature_C and humidity_pct
-    temp_c = safe_float(raw.get("temperature_C"), default=0.0)
-    hum_pct = safe_float(raw.get("humidity_pct"), default=0.0)
+    # Environmental: temperature_C and humidity_pct (supporting aliases)
+    temp_c = safe_float(raw.get("temperature_C") if "temperature_C" in raw else raw.get("temperature"), default=0.0)
+    hum_pct = safe_float(raw.get("humidity_pct") if "humidity_pct" in raw else raw.get("humidity"), default=0.0)
 
-    # AQI: optional, preserve None if absent or null
-    aqi_val = safe_float(raw.get("aqi"), default=None)
+    # AQI: optional, support number, str, or dict objects {"aqi": ..., "value": ...}
+    aqi_raw = raw.get("aqi")
+    if isinstance(aqi_raw, dict):
+        aqi_val = safe_float(aqi_raw.get("aqi") or aqi_raw.get("value") or aqi_raw.get("index"), default=None)
+    else:
+        aqi_val = safe_float(aqi_raw, default=None)
 
-    # PM readings
+    if aqi_val is None:
+        alt_aqi = raw.get("AQI") or raw.get("air_quality_index")
+        if isinstance(alt_aqi, dict):
+            aqi_val = safe_float(alt_aqi.get("aqi") or alt_aqi.get("value"), default=None)
+        else:
+            aqi_val = safe_float(alt_aqi, default=None)
+
+    # PM readings: support 'pm', 'particulate_matter', or flat keys
     pm_raw = raw.get("pm")
     if not isinstance(pm_raw, dict):
+        pm_raw = raw.get("particulate_matter")
+    if not isinstance(pm_raw, dict):
         pm_raw = {}
-    pm1_0 = safe_float(pm_raw.get("PM1_0") if "PM1_0" in pm_raw else pm_raw.get("pm1_0"), default=0.0)
-    pm2_5 = safe_float(pm_raw.get("PM2_5") if "PM2_5" in pm_raw else pm_raw.get("pm2_5"), default=0.0)
-    pm10 = safe_float(pm_raw.get("PM10") if "PM10" in pm_raw else pm_raw.get("pm10"), default=0.0)
+
+    def _find_pm_val(keys):
+        for k in keys:
+            if k in pm_raw and pm_raw[k] is not None:
+                return pm_raw[k]
+        for k in keys:
+            if k in raw and raw[k] is not None:
+                return raw[k]
+        return None
+
+    pm1_0 = safe_float(_find_pm_val(["PM1_0", "pm1_0", "PM1.0", "pm1.0", "PM1", "pm1"]), default=0.0)
+    pm2_5 = safe_float(_find_pm_val(["PM2_5", "pm2_5", "PM2.5", "pm2.5", "PM25", "pm25"]), default=0.0)
+    pm10 = safe_float(_find_pm_val(["PM10", "pm10", "PM_10", "pm_10", "PM.10"]), default=0.0)
     pm = {"PM1_0": pm1_0, "PM2_5": pm2_5, "PM10": pm10}
+
+    # If AQI was omitted/None but valid PM readings exist, auto-calculate EPA AQI
+    if aqi_val is None and (pm2_5 > 0.0 or pm10 > 0.0):
+        aqi_val = calculate_epa_aqi(pm2_5, pm10)
 
     # Predictions
     predictions_raw = raw.get("predictions")
@@ -263,7 +328,9 @@ class ManagerService:
         active_nodes = [n for n in nodes_list if n.status == "active"]
         inactive_nodes = [n for n in nodes_list if n.status == "inactive"]
 
-        if not active_nodes:
+        stat_nodes = active_nodes if active_nodes else nodes_list
+
+        if not stat_nodes:
             overall = OverallData(
                 aqi=None,
                 PM1_0=0.0,
@@ -273,18 +340,18 @@ class ManagerService:
                 humidity_pct=0.0,
             )
         else:
-            # Overall AQI: Max AQI among active nodes (as per EPA/CPCB multi-station regional AQI standard)
-            valid_aqis = [n.aqi for n in active_nodes if n.aqi is not None]
+            # Overall AQI: Max AQI among valid reporting nodes
+            valid_aqis = [n.aqi for n in stat_nodes if n.aqi is not None]
             overall_aqi = round(max(valid_aqis), 1) if valid_aqis else None
 
-            # Average PM levels across active nodes
-            avg_pm1_0 = round(sum(safe_float(n.pm.get("PM1_0"), 0.0) for n in active_nodes) / len(active_nodes), 1)
-            avg_pm2_5 = round(sum(safe_float(n.pm.get("PM2_5"), 0.0) for n in active_nodes) / len(active_nodes), 1)
-            avg_pm10 = round(sum(safe_float(n.pm.get("PM10"), 0.0) for n in active_nodes) / len(active_nodes), 1)
+            # Average PM levels across reporting nodes
+            avg_pm1_0 = round(sum(safe_float(n.pm.get("PM1_0"), 0.0) for n in stat_nodes) / len(stat_nodes), 1)
+            avg_pm2_5 = round(sum(safe_float(n.pm.get("PM2_5"), 0.0) for n in stat_nodes) / len(stat_nodes), 1)
+            avg_pm10 = round(sum(safe_float(n.pm.get("PM10"), 0.0) for n in stat_nodes) / len(stat_nodes), 1)
 
-            # Average Temperature and Humidity across active nodes
-            avg_temp = round(sum(safe_float(n.temperature_C, 0.0) for n in active_nodes) / len(active_nodes), 1)
-            avg_hum = round(sum(safe_float(n.humidity_pct, 0.0) for n in active_nodes) / len(active_nodes), 1)
+            # Average Temperature and Humidity across reporting nodes
+            avg_temp = round(sum(safe_float(n.temperature_C, 0.0) for n in stat_nodes) / len(stat_nodes), 1)
+            avg_hum = round(sum(safe_float(n.humidity_pct, 0.0) for n in stat_nodes) / len(stat_nodes), 1)
 
             overall = OverallData(
                 aqi=overall_aqi,

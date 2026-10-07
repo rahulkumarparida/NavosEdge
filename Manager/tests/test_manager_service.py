@@ -183,3 +183,61 @@ async def test_manager_sse_broadcasting():
 
     await service.unsubscribe(queue)
     assert len(service.subscribers) == 0
+
+
+def test_normalize_telemetry_flexible_pm_and_calculated_aqi():
+    """Validates that various PM naming formats and missing AQI calculate EPA AQI correctly."""
+    # Compact format with pm25 and pm10
+    data = {
+        "node_id": "compact-pm-node",
+        "pm25": 55.4,
+        "pm10": 100.0,
+    }
+    norm = normalize_telemetry(data)
+    assert norm["pm"]["PM2_5"] == 55.4
+    assert norm["pm"]["PM10"] == 100.0
+    # AQI calculated via EPA formula (55.4 PM2.5 maps to AQI ~150)
+    assert norm["aqi"] is not None
+    assert 140.0 <= norm["aqi"] <= 160.0
+
+    # particulate_matter dict with dotted keys
+    data2 = {
+        "node_id": "alt-pm-node",
+        "particulate_matter": {
+            "PM1.0": 12.0,
+            "PM2.5": 25.0,
+            "PM10": 45.0,
+        },
+    }
+    norm2 = normalize_telemetry(data2)
+    assert norm2["pm"]["PM1_0"] == 12.0
+    assert norm2["pm"]["PM2_5"] == 25.0
+    assert norm2["pm"]["PM10"] == 45.0
+    assert norm2["aqi"] is not None
+
+
+def test_overview_preserves_metrics_when_nodes_become_inactive(tmp_path):
+    """Validates that when all nodes are marked inactive, overview maintains the last known statistics."""
+    state_file = tmp_path / "inactive_test.json"
+    service = ManagerService(storage=ManagerStorage(file_path=state_file))
+
+    # Ingest node data
+    asyncio.run(service.ingest_telemetry({
+        "node_id": "temp-node",
+        "aqi": 88.0,
+        "pm": {"PM1_0": 10.0, "PM2_5": 20.0, "PM10": 30.0},
+        "temperature_C": 22.0,
+        "humidity_pct": 55.0,
+    }))
+
+    # Manually mark as inactive
+    service.nodes["temp-node"]["status"] = "inactive"
+    overview = service.get_overview()
+
+    assert overview.active_nodes == 0
+    assert overview.inactive_nodes == 1
+    # Should fall back to the known nodes instead of zeroing out
+    assert overview.overall.aqi == 88.0
+    assert overview.overall.PM2_5 == 20.0
+    assert overview.overall.PM10 == 30.0
+

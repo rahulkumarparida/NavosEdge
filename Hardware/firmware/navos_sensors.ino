@@ -74,59 +74,221 @@ static SensorState state;
 static unsigned long last_sample_ms = 0;
 static unsigned long boot_ms = 0;
 
-// ─── DHT22 Bit-Bang Reader ─────────────────────────────────────
-bool readDHT22(float &temp, float &hum) {
+// ─── Peripheral Interaction Isolation Switches ────────────────────
+#ifndef ENABLE_MQ_SENSORS
+#define ENABLE_MQ_SENSORS 1
+#endif
+
+#ifndef ENABLE_MPM10_SENSOR
+#define ENABLE_MPM10_SENSOR 1
+#endif
+
+// ─── RAII Interrupt Lock for Zephyr RTOS ──────────────────────────
+struct InterruptLock {
+  InterruptLock() { noInterrupts(); }
+  ~InterruptLock() { interrupts(); }
+};
+
+// ─── DHT22 Diagnostic Tracking Structure ──────────────────────────
+struct DHT22Diagnostic {
+  bool gpio_configured;
+  bool gpio_direction_switch;
+  bool start_pulse;
+  bool response_detected;
+  unsigned long response_timing_us;
+  bool frame_received;
+  uint8_t bits_received;
+  bool checksum_pass;
+  float temperature;
+  float humidity;
+  const char* failure_reason;
+};
+
+static DHT22Diagnostic dht_diag;
+static unsigned long last_dht_sample_ms = 0;
+
+// ─── Diagnostic Reporting Helper ──────────────────────────────────
+static void report_dht22_diagnostics(const DHT22Diagnostic &diag) {
+  Serial.println(F("[DHT22] ----- DHT22 DIAGNOSTIC AUDIT -----"));
+  Serial.print(F("[DHT22] GPIO configured: "));
+  Serial.println(diag.gpio_configured ? F("PASS") : F("FAIL"));
+  Serial.print(F("[DHT22] GPIO direction switch: "));
+  Serial.println(diag.gpio_direction_switch ? F("PASS") : F("FAIL"));
+  Serial.print(F("[DHT22] Start pulse: "));
+  Serial.println(diag.start_pulse ? F("PASS") : F("FAIL"));
+  Serial.print(F("[DHT22] Sensor response detected: "));
+  Serial.println(diag.response_detected ? F("YES") : F("NO"));
+  Serial.print(F("[DHT22] Response timing: "));
+  Serial.print(diag.response_timing_us);
+  Serial.println(F(" us"));
+  Serial.print(F("[DHT22] 40-bit frame received: "));
+  Serial.println(diag.frame_received ? F("YES") : F("NO"));
+  Serial.print(F("[DHT22] Bits received: "));
+  Serial.print(diag.bits_received);
+  Serial.println(F(" / 40"));
+  Serial.print(F("[DHT22] Checksum: "));
+  Serial.println(diag.checksum_pass ? F("PASS") : F("FAIL"));
+  Serial.print(F("[DHT22] raw temperature="));
+  Serial.print(diag.temperature, 2);
+  Serial.println(F(" °C"));
+  Serial.print(F("[DHT22] raw humidity="));
+  Serial.print(diag.humidity, 2);
+  Serial.println(F(" %"));
+  Serial.print(F("[DHT22] status="));
+  Serial.println(diag.failure_reason);
+  Serial.println(F("[DHT22] ----------------------------------"));
+}
+
+// ─── DHT22 Bit-Bang Reader (UNO Q STM32U585 / Zephyr-Optimized) ───
+bool readDHT22(float &temp, float &hum, DHT22Diagnostic *diag = nullptr) {
   uint8_t data[5] = {0};
 
-  // Send start signal: pull LOW for 1ms, then HIGH for 30µs
+  if (diag) {
+    diag->gpio_configured = false;
+    diag->gpio_direction_switch = false;
+    diag->start_pulse = false;
+    diag->response_detected = false;
+    diag->response_timing_us = 0;
+    diag->frame_received = false;
+    diag->bits_received = 0;
+    diag->checksum_pass = false;
+    diag->temperature = 0.0f;
+    diag->humidity = 0.0f;
+    diag->failure_reason = "INITIALIZING";
+  }
+
+#if defined(portInputRegister) && defined(digitalPinToPinIndex)
+  volatile uint32_t *idr = (volatile uint32_t *)&portInputRegister(DHT22_PIN);
+  uint32_t pin_mask = (1U << digitalPinToPinIndex(DHT22_PIN));
+  auto readPin = [idr, pin_mask]() -> bool {
+    return (*idr & pin_mask) != 0;
+  };
+#elif defined(digitalPinToPort) && defined(digitalPinToPinIndex)
+  GPIO_TypeDef* port = digitalPinToPort(DHT22_PIN);
+  uint32_t pin_index = digitalPinToPinIndex(DHT22_PIN);
+  uint32_t pin_mask = (1U << pin_index);
+  auto readPin = [port, pin_mask]() -> bool {
+    if (port) {
+      return (port->IDR & pin_mask) != 0;
+    }
+    return digitalRead(DHT22_PIN) == HIGH;
+  };
+#else
+  auto readPin = []() -> bool {
+    return digitalRead(DHT22_PIN) == HIGH;
+  };
+#endif
+
+  // 1. Initial line state: ensure internal pull-up is active (prevents floating line)
+  pinMode(DHT22_PIN, INPUT_PULLUP);
+  delayMicroseconds(50);
+  if (diag) diag->gpio_configured = true;
+
+  // 2. Start signal: drive LOW for 2000µs (guaranteed >= 1ms on Zephyr RTOS without sleep jitter)
   pinMode(DHT22_PIN, OUTPUT);
   digitalWrite(DHT22_PIN, LOW);
-  delay(1);
+  if (diag) diag->gpio_direction_switch = true;
+  delayMicroseconds(2000); // 2ms low pulse (AM2302 requires 1ms-10ms)
+  if (diag) diag->start_pulse = true;
+
+  // 3. Release line: brief high (15µs) then switch to INPUT_PULLUP for open-drain response
   digitalWrite(DHT22_PIN, HIGH);
-  delayMicroseconds(30);
-  pinMode(DHT22_PIN, INPUT);
+  delayMicroseconds(15);
+  pinMode(DHT22_PIN, INPUT_PULLUP);
 
-  // Wait for sensor response: LOW 80µs then HIGH 80µs
-  unsigned long timeout = micros() + 200;
-  while (digitalRead(DHT22_PIN) == HIGH) {
-    if (micros() > timeout) return false;
-  }
-  timeout = micros() + 100;
-  while (digitalRead(DHT22_PIN) == LOW) {
-    if (micros() > timeout) return false;
-  }
-  timeout = micros() + 100;
-  while (digitalRead(DHT22_PIN) == HIGH) {
-    if (micros() > timeout) return false;
-  }
+  // 4. Critical Section: lock interrupts during response & 40-bit frame (blocks UART1/MPM10 preemption)
+  {
+    InterruptLock lock;
 
-  // Read 40 bits (5 bytes)
-  for (uint8_t i = 0; i < 40; i++) {
-    timeout = micros() + 100;
-    while (digitalRead(DHT22_PIN) == LOW) {
-      if (micros() > timeout) return false;
+    // 5. Wait for sensor response: line pulled LOW (typically within 20-40µs)
+    unsigned long timeout = micros() + 200;
+    unsigned long t_start = micros();
+    while (readPin()) {
+      if (micros() > timeout) {
+        if (diag) diag->failure_reason = "TIMEOUT_RESPONSE_LOW";
+        return false;
+      }
     }
-    unsigned long t0 = micros();
-    timeout = t0 + 100;
-    while (digitalRead(DHT22_PIN) == HIGH) {
-      if (micros() > timeout) return false;
+    if (diag) {
+      diag->response_detected = true;
+      diag->response_timing_us = micros() - t_start;
     }
-    unsigned long dur = micros() - t0;
-    data[i / 8] <<= 1;
-    if (dur > 40) {
-      data[i / 8] |= 1;
+
+    // 6. Sensor holds LOW for ~80µs
+    timeout = micros() + 200;
+    while (!readPin()) {
+      if (micros() > timeout) {
+        if (diag) diag->failure_reason = "TIMEOUT_RESPONSE_LOW_HOLD";
+        return false;
+      }
     }
+
+    // 7. Sensor holds HIGH for ~80µs
+    timeout = micros() + 200;
+    while (readPin()) {
+      if (micros() > timeout) {
+        if (diag) diag->failure_reason = "TIMEOUT_RESPONSE_HIGH_HOLD";
+        return false;
+      }
+    }
+
+    // 8. Read 40 data bits (5 bytes)
+    for (uint8_t i = 0; i < 40; i++) {
+      // Wait for 50µs LOW leading pulse before bit
+      timeout = micros() + 150;
+      while (!readPin()) {
+        if (micros() > timeout) {
+          if (diag) {
+            diag->bits_received = i;
+            diag->failure_reason = "TIMEOUT_BIT_LOW";
+          }
+          return false;
+        }
+      }
+
+      // Measure HIGH pulse width: '0' is 26-28µs, '1' is 70µs
+      unsigned long t0 = micros();
+      timeout = t0 + 150;
+      while (readPin()) {
+        if (micros() > timeout) {
+          if (diag) {
+            diag->bits_received = i;
+            diag->failure_reason = "TIMEOUT_BIT_HIGH";
+          }
+          return false;
+        }
+      }
+      unsigned long dur = micros() - t0;
+
+      data[i / 8] <<= 1;
+      // 45µs is optimal midpoint between 27µs and 70µs
+      if (dur > 45) {
+        data[i / 8] |= 1;
+      }
+    }
+  } // InterruptLock destructor automatically re-enables interrupts here
+
+  if (diag) {
+    diag->frame_received = true;
+    diag->bits_received = 40;
   }
 
-  // Verify checksum
-  uint8_t checksum = data[0] + data[1] + data[2] + data[3];
-  if (checksum != data[4]) return false;
+  // 9. Verify checksum (sum of first 4 bytes == 5th byte)
+  uint8_t checksum = (data[0] + data[1] + data[2] + data[3]) & 0xFF;
+  if (checksum != data[4]) {
+    if (diag) {
+      diag->checksum_pass = false;
+      diag->failure_reason = "CHECKSUM_ERROR";
+    }
+    return false;
+  }
+  if (diag) diag->checksum_pass = true;
 
-  // Parse humidity (unsigned 16-bit, ×0.1)
+  // 10. Parse humidity (unsigned 16-bit, 0.1% resolution)
   uint16_t raw_hum = ((uint16_t)data[0] << 8) | data[1];
   hum = raw_hum * 0.1f;
 
-  // Parse temperature (signed 16-bit, ×0.1; bit 15 = sign)
+  // 11. Parse temperature (signed 16-bit, 0.1°C resolution, bit 15 indicates negative)
   uint16_t raw_temp = ((uint16_t)data[2] << 8) | data[3];
   if (raw_temp & 0x8000) {
     temp = -((raw_temp & 0x7FFF) * 0.1f);
@@ -134,8 +296,17 @@ bool readDHT22(float &temp, float &hum) {
     temp = raw_temp * 0.1f;
   }
 
-  if (temp < -40.0f || temp > 85.0f) return false;
-  if (hum < 0.0f || hum > 100.0f) return false;
+  // Physical sensor validity limits
+  if (temp < -40.0f || temp > 85.0f || hum < 0.0f || hum > 100.0f) {
+    if (diag) diag->failure_reason = "VALUE_OUT_OF_RANGE";
+    return false;
+  }
+
+  if (diag) {
+    diag->temperature = temp;
+    diag->humidity = hum;
+    diag->failure_reason = "HEALTHY";
+  }
 
   return true;
 }
@@ -246,7 +417,9 @@ void setup() {
   Bridge.begin();
 #endif
   Serial.begin(SERIAL_BAUD);
+#if ENABLE_MPM10_SENSOR
   pmsSerial.begin(PMS_BAUD);
+#endif
 
   pinMode(MQ2_PIN, INPUT);
   pinMode(MQ9_PIN, INPUT);
@@ -269,16 +442,42 @@ void loop() {
   // Check MQ warm-up status
   state.mq_warmed = (now - boot_ms) >= MQ_WARMUP_MS;
 
+#if ENABLE_MQ_SENSORS
   // Read MQ sensors
   state.mq2_adc   = readMQ(MQ2_PIN);
   state.mq9_adc   = readMQ(MQ9_PIN);
   state.mq135_adc = readMQ(MQ135_PIN);
+#else
+  state.mq2_adc   = 0;
+  state.mq9_adc   = 0;
+  state.mq135_adc = 0;
+#endif
 
-  // Read DHT22
-  state.dht_ok = readDHT22(state.temperature, state.humidity);
+  // Read DHT22: respect 2-second rate limit
+  if ((now - last_dht_sample_ms) >= DHT_MIN_INTERVAL) {
+    last_dht_sample_ms = now;
+    float t_val = 0.0f, h_val = 0.0f;
+    if (readDHT22(t_val, h_val, &dht_diag)) {
+      state.temperature = t_val;
+      state.humidity = h_val;
+      state.dht_ok = true;
+    } else {
+      state.temperature = 0.0f;
+      state.humidity = 0.0f;
+      state.dht_ok = false;
+      report_dht22_diagnostics(dht_diag);
+    }
+  }
 
+#if ENABLE_MPM10_SENSOR
   // Read PMS (MPM10-CS)
   state.pms_ok = readPMS(state.pm1_0, state.pm2_5, state.pm10);
+#else
+  state.pm1_0 = 0.0f;
+  state.pm2_5 = 0.0f;
+  state.pm10  = 0.0f;
+  state.pms_ok = false;
+#endif
 
   transmitJSON();
 }
