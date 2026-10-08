@@ -553,7 +553,8 @@ def test_17_ip_configuration_dashboard_api(tmp_path):
     service = ManagerService(storage=ManagerStorage(file_path=tmp_path / "test_ip_cfg.json"))
     app.state.manager_service = service
     with TestClient(app) as client:
-        with patch.object(service, "poll_uno_q", new_callable=AsyncMock) as mock_poll:
+        with patch.object(service, "poll_uno_q", new_callable=AsyncMock) as mock_poll, \
+             patch("scripts.update_env_ip.update_env_file"):
             mock_poll.return_value = OverviewResponse(active_nodes=1, total_nodes=1)
 
             # 1. GET IP configuration

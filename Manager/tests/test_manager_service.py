@@ -268,7 +268,8 @@ def test_update_ip_config_cluster_and_node(tmp_path):
 
     # Update IP targeting this node
     from unittest.mock import AsyncMock, patch
-    with patch.object(service, "poll_uno_q", new_callable=AsyncMock) as mock_poll:
+    with patch.object(service, "poll_uno_q", new_callable=AsyncMock) as mock_poll, \
+         patch("scripts.update_env_ip.update_env_file") as mock_env_update:
         mock_poll.return_value = OverviewResponse(active_nodes=1, total_nodes=1)
         res = asyncio.run(service.update_ip_config(
             ip="192.168.1.188",
@@ -283,5 +284,6 @@ def test_update_ip_config_cluster_and_node(tmp_path):
         assert service.uno_q_ip == "192.168.1.188"
         assert service.nodes["uno-q-test"]["ip"] == "192.168.1.188"
         assert service.nodes["uno-q-test"]["port"] == 8420
+        mock_env_update.assert_called_once()
 
 

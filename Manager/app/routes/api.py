@@ -157,6 +157,34 @@ async def ingest_telemetry(node_id: str, payload: NodeTelemetryPayload, request:
         )
 
 
+@router.delete("/api/v1/nodes/{node_id}")
+async def delete_node(node_id: str, request: Request):
+    """Deletes a specific node from the Manager."""
+    manager_service = request.app.state.manager_service
+    removed = await manager_service.remove_node(node_id)
+    if not removed:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Node {node_id} not found",
+        )
+    return {"success": True, "message": f"Node {node_id} removed successfully"}
+
+
+@router.post("/api/v1/nodes/prune")
+@router.delete("/api/v1/nodes")
+async def prune_inactive_nodes(request: Request):
+    """Prunes inactive or duplicate nodes, keeping only actively reporting nodes."""
+    manager_service = request.app.state.manager_service
+    removed = await manager_service.prune_inactive_nodes(keep_active_only=True)
+    overview = manager_service.get_overview()
+    return {
+        "success": True,
+        "removed_nodes": removed,
+        "remaining_nodes": [n.node_id for n in overview.nodes],
+        "active_nodes": overview.active_nodes,
+    }
+
+
 
 @router.get("/stream")
 @router.get("/api/v1/stream")

@@ -232,13 +232,33 @@ class ManagerService:
         self._load_initial_state()
 
     def _load_initial_state(self):
-        """Restores state from storage on startup."""
+        """Restores state from storage on startup. Drops stale duplicate nodes not seen recently."""
         stored = self.storage.load_state()
+        now_dt = datetime.now(timezone.utc)
         for node_id, state in stored.items():
-            # Mark all restored nodes as inactive until a new reading arrives or timeout check runs
-            state["status"] = "inactive"
-            self.nodes[node_id] = state
-        logger.info("Manager Service initialized with %d nodes from storage.", len(self.nodes))
+            last_seen_raw = state.get("last_seen")
+            is_stale = False
+            if last_seen_raw:
+                try:
+                    dt = datetime.fromisoformat(last_seen_raw)
+                    if dt.tzinfo is None:
+                        dt = dt.replace(tzinfo=timezone.utc)
+                    if (now_dt - dt).total_seconds() > 900:
+                        is_stale = True
+                except Exception:
+                    is_stale = True
+            else:
+                is_stale = True
+
+            if not is_stale:
+                state["status"] = "inactive"
+                self.nodes[node_id] = state
+            else:
+                logger.info("Discarding stale duplicate node %s on startup (inactive > 15m)", node_id)
+
+        if len(self.nodes) != len(stored):
+            self.storage.save_state(self.nodes)
+        logger.info("Manager Service initialized with %d active/recent nodes from storage.", len(self.nodes))
 
     def get_ip_config(self) -> Dict[str, Any]:
         """Returns the current edge node IP configuration details."""
@@ -446,7 +466,45 @@ class ManagerService:
             return None
         return self._get_node_state_model(node_id)
 
-    def list_nodes(self) -> List[NodeState]:
+    async def remove_node(self, node_id: str) -> bool:
+        """Removes a specific node from memory and storage."""
+        async with self._lock:
+            if node_id in self.nodes:
+                del self.nodes[node_id]
+                self.storage.save_state(self.nodes)
+                removed = True
+            else:
+                removed = False
+
+        if removed:
+            await self.broadcast_event("node_status_change", self.get_overview().model_dump())
+        return removed
+
+    async def prune_inactive_nodes(self, keep_active_only: bool = True) -> List[str]:
+        """
+        Removes inactive or duplicate nodes that are not currently sending data.
+        Keeps only the node(s) actively reporting.
+        """
+        removed = []
+        async with self._lock:
+            active_ids = {nid for nid, d in self.nodes.items() if d.get("status") == "active"}
+            for nid, d in list(self.nodes.items()):
+                # If there is at least one active node, remove all other inactive nodes
+                # Or if the node is inactive, remove it
+                if d.get("status") == "inactive" or (active_ids and nid not in active_ids):
+                    del self.nodes[nid]
+                    removed.append(nid)
+
+            if removed:
+                self.storage.save_state(self.nodes)
+
+        if removed:
+            await self.broadcast_event("node_status_change", self.get_overview().model_dump())
+        return removed
+
+    def list_nodes(self, active_only: bool = False) -> List[NodeState]:
+        if active_only:
+            return [self._get_node_state_model(nid) for nid, d in self.nodes.items() if d.get("status") == "active"]
         return [self._get_node_state_model(nid) for nid in self.nodes.keys()]
 
     def get_overview(self) -> OverviewResponse:
@@ -591,6 +649,38 @@ class ManagerService:
                 if not isinstance(nodes_list, list) or not nodes_list:
                     logger.info("No active nodes reported by UNO Q at %s", base_url)
                     return self.get_overview()
+
+                # Automatically prune stale duplicate nodes not reported by the connected UNO Q
+                active_reported_ids = {
+                    n_info.get("node_id") for n_info in nodes_list
+                    if isinstance(n_info, dict) and n_info.get("node_id")
+                }
+                async with self._lock:
+                    now_dt = datetime.now(timezone.utc)
+                    stale_ids = []
+                    for nid, node_data in list(self.nodes.items()):
+                        if nid in active_reported_ids:
+                            continue
+                        # Prune any node not reported by UNO Q that is inactive or hasn't sent data in > 60s
+                        last_seen_raw = node_data.get("last_seen")
+                        is_fresh = False
+                        if last_seen_raw and node_data.get("status") == "active":
+                            try:
+                                dt = datetime.fromisoformat(last_seen_raw)
+                                if dt.tzinfo is None:
+                                    dt = dt.replace(tzinfo=timezone.utc)
+                                if (now_dt - dt).total_seconds() < 60:
+                                    is_fresh = True
+                            except Exception:
+                                pass
+                        if not is_fresh:
+                            stale_ids.append(nid)
+
+                    for s_id in stale_ids:
+                        logger.info("Pruning stale duplicate/inactive node %s not in active UNO Q list", s_id)
+                        del self.nodes[s_id]
+                    if stale_ids:
+                        self.storage.save_state(self.nodes)
 
                 for n_info in nodes_list:
                     if not isinstance(n_info, dict):

@@ -3,7 +3,7 @@ import { OverviewCards } from './components/OverviewCard';
 import { NodeCard } from './components/NodeCard';
 import { LocationComparison } from './components/LocationComparison';
 import { IpConfigCard } from './components/IpConfigCard';
-import { Activity, Radio, RefreshCw, Layers, Globe } from 'lucide-react';
+import { Activity, Radio, RefreshCw, Layers, Globe, Trash2, Filter } from 'lucide-react';
 
 export default function App() {
   const [data, setData] = useState({
@@ -26,6 +26,7 @@ export default function App() {
   });
 
   const [editTargetNode, setEditTargetNode] = useState(null);
+  const [showActiveOnly, setShowActiveOnly] = useState(true);
   const [sseConnected, setSseConnected] = useState(false);
   const [lastFetchTime, setLastFetchTime] = useState(new Date().toLocaleTimeString());
 
@@ -53,6 +54,31 @@ export default function App() {
       }
     } catch (err) {
       console.error('Failed to fetch IP config:', err);
+    }
+  };
+
+  const handleDeleteNode = async (nodeId) => {
+    if (!window.confirm(`Remove node "${nodeId}" from Manager?`)) return;
+    try {
+      const res = await fetch(`/api/v1/nodes/${encodeURIComponent(nodeId)}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        fetchOverview();
+      }
+    } catch (e) {
+      console.error('Failed to delete node:', e);
+    }
+  };
+
+  const handlePruneInactive = async () => {
+    try {
+      const res = await fetch('/api/v1/nodes/prune', { method: 'POST' });
+      if (res.ok) {
+        fetchOverview();
+      }
+    } catch (e) {
+      console.error('Failed to prune inactive nodes:', e);
     }
   };
 
@@ -203,38 +229,85 @@ export default function App() {
 
         {/* Multi-Node Grid Cards */}
         <section className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2">
-              <Activity className="w-5 h-5 text-cyan-400" />
-              Monitored Nodes ({data.nodes?.length || 0})
-            </h2>
-            <span className="text-xs text-slate-400">Updated: {lastFetchTime}</span>
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div className="flex items-center gap-3">
+              <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2">
+                <Activity className="w-5 h-5 text-cyan-400" />
+                Monitored Nodes ({data.nodes?.length || 0})
+              </h2>
+
+              {data.nodes?.some(n => n.status === 'active') && data.nodes?.some(n => n.status === 'inactive') && (
+                <div className="flex items-center gap-1.5 bg-slate-900 border border-slate-800 rounded-lg p-0.5 text-[11px]">
+                  <button
+                    type="button"
+                    onClick={() => setShowActiveOnly(true)}
+                    className={`px-2 py-0.5 rounded font-medium transition ${showActiveOnly ? 'bg-cyan-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-slate-200'}`}
+                  >
+                    Active ({data.active_nodes})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowActiveOnly(false)}
+                    className={`px-2 py-0.5 rounded font-medium transition ${!showActiveOnly ? 'bg-cyan-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-slate-200'}`}
+                  >
+                    All ({data.total_nodes})
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center gap-3">
+              {data.nodes?.some(n => n.status === 'inactive') && (
+                <button
+                  type="button"
+                  onClick={handlePruneInactive}
+                  className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded bg-rose-950/50 hover:bg-rose-900/70 border border-rose-800/60 text-rose-300 transition"
+                  title="Remove inactive and duplicate nodes from Manager"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Remove Inactive Nodes</span>
+                </button>
+              )}
+              <span className="text-xs text-slate-400">Updated: {lastFetchTime}</span>
+            </div>
           </div>
 
-          {(!data.nodes || data.nodes.length === 0) ? (
-            <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-12 text-center">
-              <h3 className="text-base font-semibold text-slate-300">No Nodes Connected</h3>
-              <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-                Configure the Edge Node IP above or start nodes using sensor simulator/hardware bridge to begin stream aggregation.
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {data.nodes.map((node) => (
-                <NodeCard
-                  key={node.node_id}
-                  node={node}
-                  onEditIp={handleEditNodeIp}
-                  onConfigUpdated={(newCfg) => {
-                    setIpConfig(newCfg);
-                    fetchOverview();
-                  }}
-                  currentConfigIp={ipConfig?.current_ip}
-                  currentConfigPort={ipConfig?.port}
-                />
-              ))}
-            </div>
-          )}
+          {(() => {
+            const hasActive = data.nodes?.some(n => n.status === 'active');
+            const displayNodes = (showActiveOnly && hasActive)
+              ? data.nodes.filter(n => n.status === 'active')
+              : (data.nodes || []);
+
+            if (displayNodes.length === 0) {
+              return (
+                <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-12 text-center">
+                  <h3 className="text-base font-semibold text-slate-300">No Nodes Connected</h3>
+                  <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+                    Configure the Edge Node IP above or start nodes using sensor simulator/hardware bridge to begin stream aggregation.
+                  </p>
+                </div>
+              );
+            }
+
+            return (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {displayNodes.map((node) => (
+                  <NodeCard
+                    key={node.node_id}
+                    node={node}
+                    onEditIp={handleEditNodeIp}
+                    onDeleteNode={handleDeleteNode}
+                    onConfigUpdated={(newCfg) => {
+                      setIpConfig(newCfg);
+                      fetchOverview();
+                    }}
+                    currentConfigIp={ipConfig?.current_ip}
+                    currentConfigPort={ipConfig?.port}
+                  />
+                ))}
+              </div>
+            );
+          })()}
         </section>
       </main>
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MapPin, Cpu, ShieldAlert, CheckCircle2, Clock, AlertTriangle, Globe, Edit3, Save, X, RefreshCw, Check } from 'lucide-react';
+import { MapPin, Cpu, ShieldAlert, CheckCircle2, Clock, AlertTriangle, Globe, Edit3, Save, X, RefreshCw, Check, Trash2 } from 'lucide-react';
 
 function getAqiBadge(aqi) {
   if (aqi === null || aqi === undefined) return { label: 'N/A', color: 'bg-slate-700 text-slate-300 border-slate-600' };
@@ -11,7 +11,7 @@ function getAqiBadge(aqi) {
   return { label: 'Hazardous', color: 'bg-purple-500/20 text-purple-400 border-purple-500/40' };
 }
 
-export function NodeCard({ node, onEditIp, onConfigUpdated, currentConfigIp, currentConfigPort }) {
+export function NodeCard({ node, onEditIp, onConfigUpdated, onDeleteNode, currentConfigIp, currentConfigPort }) {
   const nodeIp = node.ip || currentConfigIp || '127.0.0.1';
   const nodePort = node.port || currentConfigPort || 8420;
   const displayIp = `${nodeIp}:${nodePort}`;
@@ -171,16 +171,28 @@ export function NodeCard({ node, onEditIp, onConfigUpdated, currentConfigIp, cur
           )}
         </div>
 
-        {/* Status Badge */}
+        {/* Status Badge & Actions */}
         <div className="flex flex-col items-end gap-1.5">
-          <span className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-semibold border ${
-            isActive
-              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-              : 'bg-rose-500/10 text-rose-400 border-rose-500/30'
-          }`}>
-            <span className={`w-2 h-2 rounded-full ${isActive ? 'bg-emerald-400 animate-pulse' : 'bg-rose-400'}`}></span>
-            {isActive ? 'ACTIVE' : 'INACTIVE'}
-          </span>
+          <div className="flex items-center gap-1.5">
+            <span className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-semibold border ${
+              isActive
+                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                : 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+            }`}>
+              <span className={`w-2 h-2 rounded-full ${isActive ? 'bg-emerald-400 animate-pulse' : 'bg-rose-400'}`}></span>
+              {isActive ? 'ACTIVE' : 'INACTIVE'}
+            </span>
+            {onDeleteNode && (
+              <button
+                type="button"
+                onClick={() => onDeleteNode(node.node_id)}
+                className="p-1 rounded text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition"
+                title="Remove this node from Manager"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
           <div className="text-[11px] text-slate-400 flex items-center gap-1">
             <Clock className="w-3 h-3 text-slate-400" />
             <span>{node.last_updated_seconds_ago ?? 0}s ago</span>
