@@ -241,3 +241,47 @@ def test_overview_preserves_metrics_when_nodes_become_inactive(tmp_path):
     assert overview.overall.PM2_5 == 20.0
     assert overview.overall.PM10 == 30.0
 
+
+def test_get_ip_config(tmp_path):
+    """Validates get_ip_config returns complete structure."""
+    state_file = tmp_path / "ip_test.json"
+    service = ManagerService(storage=ManagerStorage(file_path=state_file))
+    cfg = service.get_ip_config()
+    assert "current_ip" in cfg
+    assert "port" in cfg
+    assert "base_url" in cfg
+    assert "reachable" in cfg
+    assert "active_nodes" in cfg
+
+
+def test_update_ip_config_cluster_and_node(tmp_path):
+    """Validates update_ip_config changes runtime target and updates node record."""
+    state_file = tmp_path / "ip_update_test.json"
+    service = ManagerService(storage=ManagerStorage(file_path=state_file))
+
+    # Ingest a node first
+    asyncio.run(service.ingest_telemetry({
+        "node_id": "uno-q-test",
+        "aqi": 45.0,
+        "pm": {"PM1_0": 5.0, "PM2_5": 10.0, "PM10": 15.0},
+    }))
+
+    # Update IP targeting this node
+    from unittest.mock import AsyncMock, patch
+    with patch.object(service, "poll_uno_q", new_callable=AsyncMock) as mock_poll:
+        mock_poll.return_value = OverviewResponse(active_nodes=1, total_nodes=1)
+        res = asyncio.run(service.update_ip_config(
+            ip="192.168.1.188",
+            port=8420,
+            node_id="uno-q-test",
+        ))
+
+        assert res["success"] is True
+        assert res["current_ip"] == "192.168.1.188"
+        assert res["port"] == 8420
+        assert res["base_url"] == "http://192.168.1.188:8420"
+        assert service.uno_q_ip == "192.168.1.188"
+        assert service.nodes["uno-q-test"]["ip"] == "192.168.1.188"
+        assert service.nodes["uno-q-test"]["port"] == 8420
+
+

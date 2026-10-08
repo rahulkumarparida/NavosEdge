@@ -79,6 +79,8 @@ def normalize_telemetry(
     payload: Union[NodeTelemetryPayload, Dict[str, Any], Any],
     node_id: Optional[str] = None,
     default_location: Optional[str] = None,
+    ip: Optional[str] = None,
+    port: Optional[int] = None,
 ) -> Dict[str, Any]:
     """
     Unified normalization for telemetry from both Push (HTTP POST)
@@ -188,9 +190,19 @@ def normalize_telemetry(
     if not isinstance(advisory_raw, dict):
         advisory_raw = {}
 
+    target_ip = ip or raw.get("ip")
+    target_port = port or raw.get("port")
+    try:
+        if target_port is not None:
+            target_port = int(target_port)
+    except (ValueError, TypeError):
+        target_port = None
+
     return {
         "node_id": target_node_id,
         "location": str(loc),
+        "ip": str(target_ip) if target_ip else None,
+        "port": target_port,
         "status": "active",
         "last_seen": ts,
         "aqi": aqi_val,
@@ -210,6 +222,13 @@ class ManagerService:
         self.nodes: Dict[str, dict] = {}
         self.subscribers: Set[asyncio.Queue] = set()
         self._lock = asyncio.Lock()
+        self.uno_q_ip = os.getenv("NAVOS_UNO_Q_IP", os.getenv("UNO_Q_HOST_DEFAULT", "127.0.0.1")).strip()
+        try:
+            self.uno_q_port = int(os.getenv("NAVOS_UNO_Q_PORT", "8420"))
+        except (ValueError, TypeError):
+            self.uno_q_port = 8420
+        self.uno_q_base_url = os.getenv("NAVOS_UNO_Q_URL", f"http://{self.uno_q_ip}:{self.uno_q_port}").rstrip("/")
+        self.last_poll_successful = False
         self._load_initial_state()
 
     def _load_initial_state(self):
@@ -221,7 +240,106 @@ class ManagerService:
             self.nodes[node_id] = state
         logger.info("Manager Service initialized with %d nodes from storage.", len(self.nodes))
 
-    async def register_node(self, node_id: str, location: Optional[str] = None) -> NodeState:
+    def get_ip_config(self) -> Dict[str, Any]:
+        """Returns the current edge node IP configuration details."""
+        detected = None
+        try:
+            from scripts.update_env_ip import detect_network_ip
+            detected = detect_network_ip()
+        except Exception:
+            pass
+
+        from app.config import UNO_Q_POLL_INTERVAL_S
+        curr_url = os.getenv("NAVOS_UNO_Q_URL", self.uno_q_base_url).rstrip("/")
+        curr_ip = os.getenv("NAVOS_UNO_Q_IP", self.uno_q_ip)
+        try:
+            curr_port = int(os.getenv("NAVOS_UNO_Q_PORT", str(self.uno_q_port)))
+        except (ValueError, TypeError):
+            curr_port = 8420
+
+        poll_enabled = os.getenv("NAVOS_POLL_ENABLED", "true").lower() in ("true", "1", "yes")
+        active_cnt = sum(1 for n in self.nodes.values() if n.get("status") == "active")
+
+        return {
+            "current_ip": curr_ip,
+            "port": curr_port,
+            "base_url": curr_url,
+            "detected_local_ip": detected,
+            "poll_enabled": poll_enabled,
+            "poll_interval_s": UNO_Q_POLL_INTERVAL_S,
+            "reachable": self.last_poll_successful,
+            "active_nodes": active_cnt,
+        }
+
+    async def update_ip_config(
+        self,
+        ip: str,
+        port: Optional[int] = None,
+        poll_enabled: Optional[bool] = None,
+        node_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Updates UNO Q IP address & port dynamically, persists to .env,
+        triggers an immediate poll, and broadcasts SSE updates.
+        """
+        clean_ip = ip.strip()
+        # Parse http:// prefix or host:port if user pasted a URL
+        if clean_ip.startswith("http://") or clean_ip.startswith("https://"):
+            from urllib.parse import urlparse
+            parsed = urlparse(clean_ip)
+            clean_ip = parsed.hostname or clean_ip
+            if parsed.port and port is None:
+                port = parsed.port
+        elif ":" in clean_ip and not clean_ip.endswith(":"):
+            parts = clean_ip.split(":", 1)
+            clean_ip = parts[0].strip()
+            if port is None:
+                try:
+                    port = int(parts[1].strip())
+                except ValueError:
+                    pass
+
+        target_port = port if port is not None else self.uno_q_port
+        from app.config import set_uno_q_config
+        new_url = set_uno_q_config(clean_ip, target_port, poll_enabled=poll_enabled, persist_env=True)
+        self.uno_q_ip = clean_ip
+        self.uno_q_port = target_port
+        self.uno_q_base_url = new_url
+
+        # Update node state in memory and storage if node_id matches
+        async with self._lock:
+            if node_id and node_id in self.nodes:
+                self.nodes[node_id]["ip"] = clean_ip
+                self.nodes[node_id]["port"] = target_port
+                self.storage.save_state(self.nodes)
+            elif len(self.nodes) == 1:
+                first_node = next(iter(self.nodes.values()))
+                first_node["ip"] = clean_ip
+                first_node["port"] = target_port
+                self.storage.save_state(self.nodes)
+
+        # Trigger immediate poll to test connectivity
+        overview = await self.poll_uno_q()
+
+        config_data = self.get_ip_config()
+        await self.broadcast_event("config_update", config_data)
+        if node_id and node_id in self.nodes:
+            await self.broadcast_event("node_status_change", self.get_node(node_id).model_dump())
+
+        return {
+            "success": True,
+            "message": f"IP configuration updated to {clean_ip}:{target_port}",
+            "current_ip": clean_ip,
+            "port": target_port,
+            "base_url": new_url,
+            "detected_local_ip": config_data.get("detected_local_ip"),
+            "poll_enabled": config_data.get("poll_enabled", True),
+            "poll_interval_s": config_data.get("poll_interval_s", 36.0),
+            "reachable": self.last_poll_successful,
+            "active_nodes": overview.active_nodes,
+        }
+
+    async def register_node(self, node_id: str, location: Optional[str] = None, ip: Optional[str] = None) -> NodeState:
         async with self._lock:
             if node_id not in self.nodes:
                 loc = location or DEFAULT_LOCATIONS.get(node_id, f"Location-{node_id}")
@@ -252,8 +370,10 @@ class ManagerService:
         self,
         payload: Union[NodeTelemetryPayload, Dict[str, Any]],
         node_id: Optional[str] = None,
+        ip: Optional[str] = None,
+        port: Optional[int] = None,
     ) -> NodeState:
-        normalized = normalize_telemetry(payload, node_id=node_id)
+        normalized = normalize_telemetry(payload, node_id=node_id, ip=ip, port=port)
         target_node_id = normalized["node_id"]
 
         async with self._lock:
@@ -267,6 +387,10 @@ class ManagerService:
                     has_explicit_loc = True
                 if not has_explicit_loc and existing.get("location"):
                     normalized["location"] = existing["location"]
+                if not normalized.get("ip") and existing.get("ip"):
+                    normalized["ip"] = existing["ip"]
+                if not normalized.get("port") and existing.get("port"):
+                    normalized["port"] = existing["port"]
 
             self.nodes[target_node_id] = normalized
             self.storage.save_state(self.nodes)
@@ -298,6 +422,8 @@ class ManagerService:
         return NodeState(
             node_id=data.get("node_id", node_id),
             location=data.get("location", f"Location-{node_id}"),
+            ip=data.get("ip"),
+            port=data.get("port"),
             status=data.get("status", "active"),
             last_seen=last_seen_dt.isoformat(),
             last_updated_seconds_ago=round(elapsed, 1),
@@ -420,7 +546,7 @@ class ManagerService:
         """
         from app.config import UNO_Q_BASE_URL, UNO_Q_POLL_ENABLED
 
-        base_url = os.getenv("NAVOS_UNO_Q_URL", UNO_Q_BASE_URL).rstrip("/")
+        base_url = os.getenv("NAVOS_UNO_Q_URL", getattr(self, "uno_q_base_url", UNO_Q_BASE_URL)).rstrip("/")
         poll_enabled_env = os.getenv("NAVOS_POLL_ENABLED")
         if poll_enabled_env is not None:
             poll_enabled = poll_enabled_env.lower() in ("true", "1", "yes")
@@ -438,11 +564,13 @@ class ManagerService:
                     resp = await client.get(f"{base_url}/api/v1/nodes")
                 except Exception as e:
                     logger.warning("Connection failure polling UNO Q at %s: %s", base_url, e)
+                    self.last_poll_successful = False
                     await self.mark_uno_q_nodes_inactive()
                     return self.get_overview()
 
                 if resp.status_code != 200:
                     logger.warning("UNO Q at %s returned HTTP status %d for /api/v1/nodes", base_url, resp.status_code)
+                    self.last_poll_successful = False
                     await self.mark_uno_q_nodes_inactive()
                     return self.get_overview()
 
@@ -450,6 +578,7 @@ class ManagerService:
                     nodes_data = resp.json()
                 except Exception as e:
                     logger.warning("Malformed JSON from UNO Q /api/v1/nodes at %s: %s", base_url, e)
+                    self.last_poll_successful = False
                     await self.mark_uno_q_nodes_inactive()
                     return self.get_overview()
 
@@ -457,6 +586,7 @@ class ManagerService:
                     logger.warning("Unexpected response structure from UNO Q /api/v1/nodes: expected dict, got %s", type(nodes_data))
                     return self.get_overview()
 
+                self.last_poll_successful = True
                 nodes_list = nodes_data.get("nodes", [])
                 if not isinstance(nodes_list, list) or not nodes_list:
                     logger.info("No active nodes reported by UNO Q at %s", base_url)
@@ -484,7 +614,12 @@ class ManagerService:
                                 logger.error("Invalid /latest response format for node %s: expected dict, got %s", node_id, type(intel_data))
                                 continue
 
-                            await self.ingest_telemetry(intel_data, node_id=node_id)
+                            await self.ingest_telemetry(
+                                intel_data,
+                                node_id=node_id,
+                                ip=getattr(self, "uno_q_ip", None),
+                                port=getattr(self, "uno_q_port", None),
+                            )
                             logger.info("Successfully ingested latest data for node %s from UNO Q (%s)", node_id, base_url)
                         elif latest_resp.status_code == 404:
                             logger.info("UNO Q node %s is registered but has no readings available yet.", node_id)

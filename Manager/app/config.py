@@ -73,3 +73,46 @@ else:
 # Re-export DEFAULT_LOCATIONS for backward compatibility
 DEFAULT_LOCATIONS = DEFAULT_LOCATIONS
 
+
+def get_uno_q_base_url() -> str:
+    """Returns the currently active UNO Q base URL (env var takes precedence)."""
+    global UNO_Q_BASE_URL
+    return os.getenv("NAVOS_UNO_Q_URL", UNO_Q_BASE_URL).rstrip("/")
+
+
+def set_uno_q_config(
+    ip: str,
+    port: int = 8420,
+    poll_enabled: Optional[bool] = None,
+    persist_env: bool = True,
+) -> str:
+    """
+    Dynamically updates runtime UNO Q IP configuration and optionally persists to .env.
+    """
+    global UNO_Q_BASE_URL, UNO_Q_POLL_ENABLED
+    url = f"http://{ip}:{port}"
+    UNO_Q_BASE_URL = url
+    os.environ["NAVOS_UNO_Q_IP"] = ip
+    os.environ["NAVOS_UNO_Q_PORT"] = str(port)
+    os.environ["NAVOS_UNO_Q_URL"] = url
+    os.environ["UNO_Q_HOST_DEFAULT"] = ip
+
+    if poll_enabled is not None:
+        UNO_Q_POLL_ENABLED = bool(poll_enabled)
+        os.environ["NAVOS_POLL_ENABLED"] = "true" if poll_enabled else "false"
+
+    if persist_env:
+        try:
+            import sys
+            _root = Path(__file__).resolve().parent.parent.parent
+            if str(_root) not in sys.path:
+                sys.path.insert(0, str(_root))
+            from scripts.update_env_ip import update_env_file
+            update_env_file(ip=ip, port=port, poll_enabled=poll_enabled)
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).warning("Failed to persist updated IP to .env: %s", e)
+
+    return url
+
+

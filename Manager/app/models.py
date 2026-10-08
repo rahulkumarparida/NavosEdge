@@ -25,6 +25,8 @@ class PredictionsInput(BaseModel):
 class NodeTelemetryPayload(BaseModel):
     node_id: Optional[str] = None
     location: Optional[str] = None
+    ip: Optional[str] = None
+    port: Optional[int] = None
     aqi: Optional[Union[float, str]] = None
     pm: Optional[Union[Dict[str, Any], Any]] = Field(default_factory=dict)
     temperature_C: Optional[Union[float, str]] = None
@@ -37,11 +39,14 @@ class NodeTelemetryPayload(BaseModel):
 class NodeRegistrationPayload(BaseModel):
     node_id: str
     location: Optional[str] = None
+    ip: Optional[str] = None
 
 
 class NodeState(BaseModel):
     node_id: str
     location: str
+    ip: Optional[str] = None
+    port: Optional[int] = None
     status: str = "active"  # "active" or "inactive"
     last_seen: str
     last_updated_seconds_ago: float = 0.0
@@ -79,3 +84,23 @@ class SystemHealthResponse(BaseModel):
     active_nodes: int
     inactive_nodes: int
     total_nodes: int
+
+
+class IPConfigRequest(BaseModel):
+    ip: str
+    port: Optional[int] = None
+    poll_enabled: Optional[bool] = None
+
+
+class IPConfigResponse(BaseModel):
+    success: bool = True
+    message: str = "IP configuration updated successfully"
+    current_ip: str
+    port: int = 8420
+    base_url: str
+    detected_local_ip: Optional[str] = None
+    poll_enabled: bool = True
+    poll_interval_s: float = 36.0
+    reachable: bool = False
+    active_nodes: int = 0
+

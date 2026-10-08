@@ -11,6 +11,8 @@ from fastapi import APIRouter, HTTPException, Request, status
 from starlette.responses import StreamingResponse
 
 from app.models import (
+    IPConfigRequest,
+    IPConfigResponse,
     NodeRegistrationPayload,
     NodeState,
     NodeTelemetryPayload,
@@ -76,6 +78,58 @@ async def register_node(payload: NodeRegistrationPayload, request: Request):
 async def poll_uno_q_nodes(request: Request):
     manager_service = request.app.state.manager_service
     return await manager_service.poll_uno_q()
+
+
+@router.get("/api/v1/config/ip", response_model=IPConfigResponse)
+@router.get("/config/ip", response_model=IPConfigResponse)
+async def get_ip_config(request: Request):
+    manager_service = request.app.state.manager_service
+    config_dict = manager_service.get_ip_config()
+    return IPConfigResponse(**config_dict)
+
+
+@router.post("/api/v1/config/ip", response_model=IPConfigResponse)
+@router.post("/config/ip", response_model=IPConfigResponse)
+@router.put("/api/v1/config/ip", response_model=IPConfigResponse)
+async def update_ip_config(payload: IPConfigRequest, request: Request):
+    if not payload.ip or not payload.ip.strip():
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="IP address or hostname cannot be empty",
+        )
+    manager_service = request.app.state.manager_service
+    try:
+        res = await manager_service.update_ip_config(
+            ip=payload.ip,
+            port=payload.port,
+            poll_enabled=payload.poll_enabled,
+        )
+        return IPConfigResponse(**res)
+    except Exception as e:
+        logger.error("Error updating IP configuration: %s", e, exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update IP configuration: {e}",
+        )
+
+
+@router.post("/api/v1/nodes/{node_id}/ip", response_model=IPConfigResponse)
+async def update_node_ip(node_id: str, payload: IPConfigRequest, request: Request):
+    manager_service = request.app.state.manager_service
+    try:
+        res = await manager_service.update_ip_config(
+            ip=payload.ip,
+            port=payload.port,
+            poll_enabled=payload.poll_enabled,
+            node_id=node_id,
+        )
+        return IPConfigResponse(**res)
+    except Exception as e:
+        logger.error("Error updating IP for node %s: %s", node_id, e, exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update IP configuration for {node_id}: {e}",
+        )
 
 
 @router.post("/api/v1/nodes/{node_id}/telemetry", response_model=NodeState)

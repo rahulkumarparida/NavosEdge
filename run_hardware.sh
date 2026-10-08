@@ -28,28 +28,22 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$REPO_ROOT"
 
-# ── Load .env if present ──────────────────────────────────────────────────────
-if [ -f "$REPO_ROOT/.env" ]; then
-    set -a
-    # shellcheck source=/dev/null
-    source "$REPO_ROOT/.env"
-    set +a
-fi
-
-# ── Defaults (from .env or fallback) ─────────────────────────────────────────
-INTEL_HOST="${NAVOS_HOST:-127.0.0.1}"
-INTEL_PORT="${NAVOS_PORT:-8420}"
-NODE_ID="${NAVOS_NODE_ID:-uno-q-001}"
-INTERVAL="${NAVOS_SENSOR_INTERVAL:-60}"
-DISPLAY_REFRESH="${NAVOS_DISPLAY_REFRESH:-10}"
-SERIAL_PORT="${ARDUINO_PORT:-${NAVOS_SERIAL_PORT:-127.0.0.1:7500}}"
+CUSTOM_IP=""
+AUTO_IP=true
+INTERVAL="60"
+DISPLAY_REFRESH="10"
+NODE_ID="uno-q-001"
+SERIAL_PORT=""
 SKIP_FLASH=false
 NO_BUILD=false
 HW_LOG_FILE="/tmp/navos_hardware.log"
 
-# ── Parse CLI arguments ──────────────────────────────────────────────────────
+# ── Parse CLI arguments first ────────────────────────────────────────────────
+CLI_ARGS=("$@")
 while [[ $# -gt 0 ]]; do
     case "$1" in
+        --ip)             CUSTOM_IP="$2";     shift 2 ;;
+        --no-ip-detect)   AUTO_IP=false;      shift ;;
         --interval|-i)    INTERVAL="$2";      shift 2 ;;
         --display-refresh) DISPLAY_REFRESH="$2"; shift 2 ;;
         --node-id|-n)     NODE_ID="$2";       shift 2 ;;
@@ -60,18 +54,47 @@ while [[ $# -gt 0 ]]; do
             echo "Usage: $0 [OPTIONS]"
             echo ""
             echo "Options:"
-            echo "  --interval, -i <sec>    Sampling interval in seconds (default: $INTERVAL)"
-            echo "  --display-refresh <sec>  Display/screen refresh interval (default: $DISPLAY_REFRESH)"
-            echo "  --node-id,  -n <id>     Node identifier (default: $NODE_ID)"
-            echo "  --port,     -p <endpoint> Endpoint for sensors (default: $SERIAL_PORT)"
+            echo "  --ip <address>          Explicit network IP to configure (skips auto-detection)"
+            echo "  --no-ip-detect          Disable automatic network IP detection"
+            echo "  --interval, -i <sec>    Sampling interval in seconds"
+            echo "  --display-refresh <sec>  Display/screen refresh interval"
+            echo "  --node-id,  -n <id>     Node identifier"
+            echo "  --port,     -p <endpoint> Endpoint for sensors"
             echo "  --skip-flash            Skip MCU display flashing step"
             echo "  --no-build              Skip venv creation, pip install, C++ compile & display flash (for boot service)"
             echo "  --help, -h              Show this help"
             exit 0
             ;;
-        *) echo "[WARN] Unknown option: $1"; shift ;;
+        *) shift ;;
     esac
 done
+
+# ── Auto-detect network IP and update .env ───────────────────────────────────
+if [ "$AUTO_IP" = true ] || [ -n "$CUSTOM_IP" ]; then
+    if [ -f "$REPO_ROOT/scripts/update_env_ip.sh" ]; then
+        if [ -n "$CUSTOM_IP" ]; then
+            bash "$REPO_ROOT/scripts/update_env_ip.sh" --ip "$CUSTOM_IP"
+        else
+            bash "$REPO_ROOT/scripts/update_env_ip.sh" --retry 5
+        fi
+    fi
+fi
+
+# ── Load .env if present ──────────────────────────────────────────────────────
+if [ -f "$REPO_ROOT/.env" ]; then
+    set -a
+    # shellcheck source=/dev/null
+    source "$REPO_ROOT/.env"
+    set +a
+fi
+
+# ── Defaults (from .env or fallback if not set by CLI) ────────────────────────
+INTEL_HOST="${NAVOS_HOST:-0.0.0.0}"
+INTEL_PORT="${NAVOS_PORT:-8420}"
+[ -z "$NODE_ID" ] || [ "$NODE_ID" = "uno-q-001" ] && NODE_ID="${NAVOS_NODE_ID:-uno-q-001}"
+[ "$INTERVAL" = "60" ] && INTERVAL="${NAVOS_SENSOR_INTERVAL:-60}"
+[ "$DISPLAY_REFRESH" = "10" ] && DISPLAY_REFRESH="${NAVOS_DISPLAY_REFRESH:-10}"
+[ -z "$SERIAL_PORT" ] && SERIAL_PORT="${ARDUINO_PORT:-${NAVOS_SERIAL_PORT:-127.0.0.1:7500}}"
 
 # ── Process management ────────────────────────────────────────────────────────
 PIDS=()

@@ -23,7 +23,10 @@ import sys
 from pathlib import Path
 
 # Ensure Manager directory is in sys.path BEFORE app imports
-project_root = Path(__file__).resolve().parent.parent
+_cur = Path(__file__).resolve()
+project_root = _cur.parent
+while project_root != project_root.parent and not (project_root / "Manager").is_dir():
+    project_root = project_root.parent
 manager_dir = project_root / "Manager"
 intel_dir = project_root / "Intelligence" / "Server"
 
@@ -542,3 +545,48 @@ async def test_16_push_pull_consistency(tmp_path):
     assert push_state.source_prediction == pull_state.source_prediction == "Traffic"
     assert push_state.source_confidence == pull_state.source_confidence == 0.82
     assert push_state.status == pull_state.status == "active"
+
+
+def test_17_ip_configuration_dashboard_api(tmp_path):
+    """17. Dynamic IP configuration change from Manager dashboard API."""
+    app = create_app()
+    service = ManagerService(storage=ManagerStorage(file_path=tmp_path / "test_ip_cfg.json"))
+    app.state.manager_service = service
+    with TestClient(app) as client:
+        with patch.object(service, "poll_uno_q", new_callable=AsyncMock) as mock_poll:
+            mock_poll.return_value = OverviewResponse(active_nodes=1, total_nodes=1)
+
+            # 1. GET IP configuration
+            get_resp = client.get("/api/v1/config/ip")
+            assert get_resp.status_code == 200
+            get_data = get_resp.json()
+            assert "current_ip" in get_data
+            assert "base_url" in get_data
+
+            # 2. POST IP configuration
+            post_resp = client.post("/api/v1/config/ip", json={"ip": "192.168.1.120", "port": 8420})
+            assert post_resp.status_code == 200
+            post_data = post_resp.json()
+            assert post_data["current_ip"] == "192.168.1.120"
+            assert post_data["port"] == 8420
+            assert post_data["base_url"] == "http://192.168.1.120:8420"
+            assert service.uno_q_ip == "192.168.1.120"
+            mock_poll.assert_awaited()
+
+            # 3. Node-specific IP configuration
+            node_resp = client.post("/api/v1/nodes/uno-q-001/ip", json={"ip": "10.103.68.200", "port": 8420})
+            assert node_resp.status_code == 200
+            assert node_resp.json()["current_ip"] == "10.103.68.200"
+
+            # 4. URL string input parsing
+            url_resp = client.post("/api/v1/config/ip", json={"ip": "http://10.103.68.99:8435"})
+            assert url_resp.status_code == 200
+            assert url_resp.json()["current_ip"] == "10.103.68.99"
+            assert url_resp.json()["port"] == 8435
+            assert url_resp.json()["base_url"] == "http://10.103.68.99:8435"
+
+            # 5. Empty IP rejection
+            empty_resp = client.post("/api/v1/config/ip", json={"ip": "   "})
+            assert empty_resp.status_code == 422
+
+

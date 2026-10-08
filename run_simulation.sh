@@ -23,41 +23,36 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$REPO_ROOT"
 
-# ── Load .env if present ──────────────────────────────────────────────────────
-if [ -f "$REPO_ROOT/.env" ]; then
-    set -a
-    # shellcheck source=/dev/null
-    source "$REPO_ROOT/.env"
-    set +a
-fi
-
-# ── Defaults (from .env or fallback) ─────────────────────────────────────────
-INTEL_HOST="${NAVOS_HOST:-127.0.0.1}"
-INTEL_PORT="${NAVOS_PORT:-8420}"
-NODE_ID="${NAVOS_NODE_ID:-uno-q-001}"
-SCENARIO="${NAVOS_SCENARIO:-normal}"
-INTERVAL="${NAVOS_SENSOR_INTERVAL:-60}"
+CUSTOM_IP=""
+AUTO_IP=true
+NODE_ID="uno-q-001"
+SCENARIO="normal"
+INTERVAL="60"
 SKIP_FLASH=false
 SKIP_DISPLAY_SIM=false
 
-# ── Parse CLI arguments ──────────────────────────────────────────────────────
+# ── Parse CLI arguments first ────────────────────────────────────────────────
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --scenario|-s)    SCENARIO="$2";  shift 2 ;;
-        --interval|-i)    INTERVAL="$2";  shift 2 ;;
-        --node-id|-n)     NODE_ID="$2";   shift 2 ;;
-        --skip-flash)     SKIP_FLASH=true; shift ;;
+        --ip)             CUSTOM_IP="$2";     shift 2 ;;
+        --no-ip-detect)   AUTO_IP=false;      shift ;;
+        --scenario|-s)    SCENARIO="$2";      shift 2 ;;
+        --interval|-i)    INTERVAL="$2";      shift 2 ;;
+        --node-id|-n)     NODE_ID="$2";       shift 2 ;;
+        --skip-flash)     SKIP_FLASH=true;    shift ;;
         --skip-display-sim) SKIP_DISPLAY_SIM=true; shift ;;
         --help|-h)
             echo "Usage: $0 [OPTIONS]"
             echo ""
             echo "Options:"
+            echo "  --ip <address>          Explicit network IP to configure (skips auto-detection)"
+            echo "  --no-ip-detect          Disable automatic network IP detection"
             echo "  --scenario, -s <name>   Simulation scenario (default: $SCENARIO)"
             echo "                          Available: clean_indoor, traffic, dust_construction,"
             echo "                          combustion_smoke, high_humidity, pm_spike, gas_spike,"
             echo "                          mixed_pollution, stable, sensor_fault"
-            echo "  --interval, -i <sec>    Sampling interval in seconds (default: $INTERVAL)"
-            echo "  --node-id,  -n <id>     Node identifier (default: $NODE_ID)"
+            echo "  --interval, -i <sec>    Sampling interval in seconds"
+            echo "  --node-id,  -n <id>     Node identifier"
             echo "  --skip-flash            Skip MCU display flashing step"
             echo "  --skip-display-sim      Skip desktop display simulation build"
             echo "  --help, -h              Show this help"
@@ -66,6 +61,32 @@ while [[ $# -gt 0 ]]; do
         *) echo "[WARN] Unknown option: $1"; shift ;;
     esac
 done
+
+# ── Auto-detect network IP and update .env ───────────────────────────────────
+if [ "$AUTO_IP" = true ] || [ -n "$CUSTOM_IP" ]; then
+    if [ -f "$REPO_ROOT/scripts/update_env_ip.sh" ]; then
+        if [ -n "$CUSTOM_IP" ]; then
+            bash "$REPO_ROOT/scripts/update_env_ip.sh" --ip "$CUSTOM_IP"
+        else
+            bash "$REPO_ROOT/scripts/update_env_ip.sh"
+        fi
+    fi
+fi
+
+# ── Load .env if present ──────────────────────────────────────────────────────
+if [ -f "$REPO_ROOT/.env" ]; then
+    set -a
+    # shellcheck source=/dev/null
+    source "$REPO_ROOT/.env"
+    set +a
+fi
+
+# ── Defaults (from .env or fallback if not overridden) ───────────────────────
+INTEL_HOST="${NAVOS_HOST:-0.0.0.0}"
+INTEL_PORT="${NAVOS_PORT:-8420}"
+[ "$NODE_ID" = "uno-q-001" ] && NODE_ID="${NAVOS_NODE_ID:-uno-q-001}"
+[ "$SCENARIO" = "normal" ] && SCENARIO="${NAVOS_SCENARIO:-normal}"
+[ "$INTERVAL" = "60" ] && INTERVAL="${NAVOS_SENSOR_INTERVAL:-60}"
 
 # ── Process management ────────────────────────────────────────────────────────
 PIDS=()

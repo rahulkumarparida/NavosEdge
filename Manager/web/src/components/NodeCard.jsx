@@ -1,5 +1,5 @@
-import React from 'react';
-import { MapPin, Cpu, ShieldAlert, CheckCircle2, Clock, AlertTriangle } from 'lucide-react';
+import React, { useState } from 'react';
+import { MapPin, Cpu, ShieldAlert, CheckCircle2, Clock, AlertTriangle, Globe, Edit3, Save, X, RefreshCw, Check } from 'lucide-react';
 
 function getAqiBadge(aqi) {
   if (aqi === null || aqi === undefined) return { label: 'N/A', color: 'bg-slate-700 text-slate-300 border-slate-600' };
@@ -11,12 +11,60 @@ function getAqiBadge(aqi) {
   return { label: 'Hazardous', color: 'bg-purple-500/20 text-purple-400 border-purple-500/40' };
 }
 
-export function NodeCard({ node }) {
+export function NodeCard({ node, onEditIp, onConfigUpdated, currentConfigIp, currentConfigPort }) {
+  const nodeIp = node.ip || currentConfigIp || '127.0.0.1';
+  const nodePort = node.port || currentConfigPort || 8420;
+  const displayIp = `${nodeIp}:${nodePort}`;
+
+  const [isInlineEditing, setIsInlineEditing] = useState(false);
+  const [ipInput, setIpInput] = useState(nodeIp);
+  const [portInput, setPortInput] = useState(nodePort);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saveError, setSaveError] = useState(null);
+
   const isActive = node.status === 'active';
   const aqiValue = node.aqi ?? node.AQI ?? null;
   const aqiBadge = getAqiBadge(aqiValue);
   const displayAqi = typeof aqiValue === 'number' ? Math.round(aqiValue * 10) / 10 : (aqiValue ?? 'N/A');
   const confidencePct = node.source_confidence != null ? Math.round(node.source_confidence * 100) : null;
+
+  const handleInlineSave = async (e) => {
+    if (e) e.preventDefault();
+    if (!ipInput.trim()) {
+      setSaveError('IP address cannot be empty');
+      return;
+    }
+    setIsSaving(true);
+    setSaveError(null);
+    try {
+      const res = await fetch(`/api/v1/nodes/${encodeURIComponent(node.node_id)}/ip`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ip: ipInput.trim(),
+          port: parseInt(portInput, 10) || 8420,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.detail || 'Failed to update node IP');
+      }
+      const data = await res.json();
+      setSaveSuccess(true);
+      if (onConfigUpdated) {
+        onConfigUpdated(data);
+      }
+      setTimeout(() => {
+        setSaveSuccess(false);
+        setIsInlineEditing(false);
+      }, 1500);
+    } catch (err) {
+      setSaveError(err.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const pm25 = node.pm?.PM2_5 ?? node.pm?.pm2_5 ?? node.pm?.['PM2.5'] ?? node.pm?.pm25 ?? node.PM2_5 ?? 0;
   const pm10 = node.pm?.PM10 ?? node.pm?.pm10 ?? node.PM10 ?? 0;
@@ -35,16 +83,92 @@ export function NodeCard({ node }) {
         : 'bg-slate-950/60 border-slate-900/80 opacity-75 grayscale-[20%]'
     }`}>
       {/* Header */}
-      <div className="p-5 border-b border-slate-800/80 flex items-center justify-between">
-        <div>
+      <div className="p-5 border-b border-slate-800/80 flex items-start justify-between gap-3">
+        <div className="flex-1">
           <div className="flex items-center gap-2">
             <Cpu className="w-5 h-5 text-cyan-400" />
             <h3 className="font-bold text-lg text-slate-100 tracking-wide">{node.node_id}</h3>
           </div>
-          <div className="flex items-center gap-1.5 text-xs text-slate-400 mt-1">
-            <MapPin className="w-3.5 h-3.5 text-slate-400" />
-            <span>{node.location}</span>
+          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400 mt-1">
+            <span className="flex items-center gap-1">
+              <MapPin className="w-3.5 h-3.5 text-slate-400" />
+              <span>{node.location}</span>
+            </span>
+            <span className="text-slate-600">•</span>
+            <span className="flex items-center gap-1 font-mono text-[11px] text-cyan-300">
+              <Globe className="w-3.5 h-3.5 text-cyan-400" />
+              <span>{displayIp}</span>
+            </span>
+            {!isInlineEditing && (
+              <button
+                type="button"
+                onClick={() => {
+                  setIpInput(nodeIp);
+                  setPortInput(nodePort);
+                  setIsInlineEditing(true);
+                }}
+                className="text-[10px] text-cyan-400 hover:text-cyan-200 uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-cyan-950/70 border border-cyan-800/60 hover:border-cyan-400 transition"
+                title="Change Node IP directly from this card"
+              >
+                Change IP
+              </button>
+            )}
           </div>
+
+          {/* Inline IP Editing Form */}
+          {isInlineEditing && (
+            <form onSubmit={handleInlineSave} className="mt-3 p-2.5 bg-slate-950/90 border border-cyan-800/60 rounded-lg space-y-2">
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={ipInput}
+                  onChange={(e) => setIpInput(e.target.value)}
+                  placeholder="Node IP address"
+                  className="flex-1 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs font-mono text-slate-100 focus:outline-none focus:border-cyan-400"
+                  disabled={isSaving}
+                  autoFocus
+                />
+                <input
+                  type="number"
+                  value={portInput}
+                  onChange={(e) => setPortInput(e.target.value)}
+                  placeholder="8420"
+                  className="w-16 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs font-mono text-slate-100 focus:outline-none focus:border-cyan-400"
+                  disabled={isSaving}
+                />
+                <button
+                  type="submit"
+                  disabled={isSaving}
+                  className="px-2.5 py-1 text-xs font-semibold rounded bg-cyan-500 hover:bg-cyan-400 text-slate-950 transition flex items-center gap-1 disabled:opacity-50"
+                  title="Save new IP"
+                >
+                  {isSaving ? (
+                    <RefreshCw className="w-3 h-3 animate-spin" />
+                  ) : saveSuccess ? (
+                    <Check className="w-3 h-3 text-slate-950" />
+                  ) : (
+                    <Save className="w-3 h-3" />
+                  )}
+                  <span>{saveSuccess ? 'Saved' : 'Save'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsInlineEditing(false);
+                    setSaveError(null);
+                  }}
+                  disabled={isSaving}
+                  className="p-1 text-slate-400 hover:text-slate-200 transition"
+                  title="Cancel"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              {saveError && (
+                <div className="text-[11px] text-rose-400">{saveError}</div>
+              )}
+            </form>
+          )}
         </div>
 
         {/* Status Badge */}

@@ -248,6 +248,22 @@ print(f'  Pipeline health: {result.health.status}')
 print(f'  Pipeline advisory: {result.advisory.level}')
 \""
 
+# --- IP Auto-Detection & Config Utility Tests ---
+run_test "Network IP Auto-Detection & .env Config" \
+    "cd '$PROJECT_DIR' && pytest tests/test_update_env_ip.py -q"
+
+# --- Manager Service Unit Tests ---
+run_test "Manager Service Unit Tests" \
+    "cd '$PROJECT_DIR' && PYTHONPATH=Manager pytest Manager/tests/test_manager_service.py -q"
+
+# --- Manager UNO Q Integration & Dashboard IP Tests ---
+run_test "Manager UNO Q Integration & IP Config API" \
+    "cd '$PROJECT_DIR' && PYTHONPATH=Manager pytest Manager/tests/test_uno_q_manager_integration.py -q"
+
+# --- Manager End-to-End Flow ---
+run_test "Manager End-to-End Flow" \
+    "cd '$PROJECT_DIR' && pytest tests/test_manager_e2e.py -q"
+
 # Summary
 echo ""
 echo "============================================================"

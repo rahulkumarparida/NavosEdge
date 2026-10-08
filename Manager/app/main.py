@@ -77,6 +77,8 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
+    app.state.manager_service = ManagerService()
+
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],

@@ -15,19 +15,8 @@
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
 
-# Load environment variables if .env exists
-if [ -f ".env" ]; then
-    echo "[NAVOS] Loading configuration from .env"
-    set -a
-    source .env
-    set +a
-fi
-
-INTEL_HOST="${NAVOS_HOST:-127.0.0.1}"
-INTEL_PORT="${NAVOS_PORT:-8420}"
-MANAGER_HOST="${NAVOS_MANAGER_HOST:-127.0.0.1}"
-MANAGER_PORT="${NAVOS_MANAGER_PORT:-8430}"
-
+CUSTOM_IP=""
+AUTO_IP=true
 NODE_ID="${NAVOS_NODE_ID:-navos-01}"
 SCENARIO="${NAVOS_SCENARIO:-traffic}"
 INTERVAL="${NAVOS_INTERVAL:-3}"
@@ -35,6 +24,14 @@ INTERVAL="${NAVOS_INTERVAL:-3}"
 # Parse command line flags/arguments
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --ip)
+      CUSTOM_IP="$2"
+      shift 2
+      ;;
+    --no-ip-detect)
+      AUTO_IP=false
+      shift
+      ;;
     --node-id|-n)
       NODE_ID="$2"
       shift 2
@@ -52,6 +49,30 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+# Auto-detect connected network IP and update .env
+if [ "$AUTO_IP" = true ] || [ -n "$CUSTOM_IP" ]; then
+    if [ -f "$SCRIPT_DIR/scripts/update_env_ip.sh" ]; then
+        if [ -n "$CUSTOM_IP" ]; then
+            bash "$SCRIPT_DIR/scripts/update_env_ip.sh" --ip "$CUSTOM_IP"
+        else
+            bash "$SCRIPT_DIR/scripts/update_env_ip.sh"
+        fi
+    fi
+fi
+
+# Load environment variables if .env exists
+if [ -f ".env" ]; then
+    echo "[NAVOS] Loading configuration from .env"
+    set -a
+    source .env
+    set +a
+fi
+
+INTEL_HOST="${NAVOS_HOST:-0.0.0.0}"
+INTEL_PORT="${NAVOS_PORT:-8420}"
+MANAGER_HOST="${NAVOS_MANAGER_HOST:-127.0.0.1}"
+MANAGER_PORT="${NAVOS_MANAGER_PORT:-8430}"
 
 PIDS=()
 

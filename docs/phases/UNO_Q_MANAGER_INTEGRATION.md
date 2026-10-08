@@ -73,7 +73,7 @@ NAVOS_POLL_ENABLED=true
 
 ## 3. Endpoints Used
 
-The integration reuses existing Intelligence Server endpoints without creating duplicate APIs or altering response contracts:
+The integration reuses existing Intelligence Server endpoints and provides runtime configuration management:
 
 1. **Node Discovery**:
    - `GET http://<UNO_Q_IP>:8420/api/v1/nodes`
@@ -87,9 +87,33 @@ The integration reuses existing Intelligence Server endpoints without creating d
    - `POST http://<MANAGER_IP>:8430/api/v1/nodes/poll`
    - Forces an immediate poll of the configured UNO Q device on demand.
 
+4. **Dynamic IP Configuration (Manager Dashboard API)**:
+   - `GET http://<MANAGER_IP>:8430/api/v1/config/ip`
+     - Returns current target IP, port, base URL, auto-detected network IP, and reachable status.
+   - `POST http://<MANAGER_IP>:8430/api/v1/config/ip`
+     - Changes target IP & port at runtime, updates `.env`, and triggers an immediate poll.
+   - `POST http://<MANAGER_IP>:8430/api/v1/nodes/{node_id}/ip`
+     - Allows updating node IP directly from individual node cards.
+
 ---
 
-## 4. Polling & Connection Failure Behavior
+## 4. Automatic Network IP Detection & Dashboard Configuration
+
+### A. Automatic UNO Q Startup IP Detection
+When UNO Q runs `./run_hardware.sh`, `./run_navosedge.sh`, or `./run_simulation.sh` (or boots via `navosedge.service`):
+- It automatically detects the active Wi-Fi / Ethernet interface IP address (with retry support on boot).
+- It writes the detected IP to `NAVOS_UNO_Q_IP`, `NAVOS_UNO_Q_URL`, and `UNO_Q_HOST_DEFAULT` in `.env`.
+- It displays the detected IP and loads it into the environment without manual editing.
+- Optional overrides: `--ip <custom_ip>` or `--no-ip-detect` to disable auto-detection.
+
+### B. Live IP Configuration via Manager Web Dashboard
+- **Global IP Configuration Card**: Positioned above the Monitored Nodes section, providing target endpoint inspection, reachability status badge ("Reachable" / "Offline"), detected local network IP helper, and full endpoint update form.
+- **Per-Node Inline IP Editing**: Each monitored node card in the multi-node grid displays its current IP/port with a globe icon and an inline **Change IP** button. Clicking this button toggles an inline form directly on the card, enabling instant IP reconfiguration without scrolling away from the node.
+- Changing the IP dynamically reconfigures the background poller, updates `.env` on disk, updates persisted state, and broadcasts live updates over SSE to all connected dashboard tabs.
+
+---
+
+## 5. Polling & Connection Failure Behavior
 
 - **Non-Blocking Background Poller**: Polling runs in an asynchronous background loop inside the FastAPI `lifespan` manager and does not block the Manager or React Web Dashboard.
 - **Dynamic Node Discovery**: Nodes are displayed on the Web Dashboard only when the configured UNO Q IP is reachable and responds with valid node telemetry.
