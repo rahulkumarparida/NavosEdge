@@ -227,6 +227,7 @@ static bool readDHT22(float &temp, float &hum, DHT22Diagnostic *diag = nullptr) 
     while (readPin()) {
         if ((micros() - t_start) > 200) {
             if (diag) diag->failure_reason = "TIMEOUT_RESPONSE_LOW";
+            last_dht_dur_us = micros() - dht_start_us;
             return false;
         }
     }
@@ -240,6 +241,7 @@ static bool readDHT22(float &temp, float &hum, DHT22Diagnostic *diag = nullptr) 
     while (!readPin()) {
         if ((micros() - t_start) > 200) {
             if (diag) diag->failure_reason = "TIMEOUT_RESPONSE_LOW_HOLD";
+            last_dht_dur_us = micros() - dht_start_us;
             return false;
         }
     }
@@ -249,11 +251,12 @@ static bool readDHT22(float &temp, float &hum, DHT22Diagnostic *diag = nullptr) 
     noInterrupts();
     while (readPin()) {
         ref_count++;
-        if (ref_count > 50000) break;
+        if (ref_count > 1000000) break;
     }
     interrupts();
-    if (ref_count > 50000) {
+    if (ref_count > 1000000) {
         if (diag) diag->failure_reason = "TIMEOUT_RESPONSE_HIGH_HOLD";
+        last_dht_dur_us = micros() - dht_start_us;
         return false;
     }
     
@@ -272,6 +275,7 @@ static bool readDHT22(float &temp, float &hum, DHT22Diagnostic *diag = nullptr) 
                     diag->bits_received = i;
                     diag->failure_reason = "TIMEOUT_BIT_LOW";
                 }
+                last_dht_dur_us = micros() - dht_start_us;
                 return false;
             }
         }
@@ -281,17 +285,18 @@ static bool readDHT22(float &temp, float &hum, DHT22Diagnostic *diag = nullptr) 
         noInterrupts();
         while (readPin()) {
             hold_count++;
-            if (hold_count > 50000) { // Arbitrary hardware safety limit
+            if (hold_count > 1000000) { // Arbitrary hardware safety limit
                 break;
             }
         }
         interrupts();
         
-        if (hold_count > 50000) {
+        if (hold_count > 1000000) {
             if (diag) {
                 diag->bits_received = i;
                 diag->failure_reason = "TIMEOUT_BIT_HIGH";
             }
+            last_dht_dur_us = micros() - dht_start_us;
             return false;
         }
 
