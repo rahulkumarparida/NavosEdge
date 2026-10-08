@@ -126,6 +126,7 @@ public:
             close(fd_);
             fd_ = -1;
         }
+        rx_stream_buffer_.clear();
         state_ = BridgeState::DISCONNECTED;
     }
 
@@ -135,15 +136,16 @@ private:
             close(fd_);
             fd_ = -1;
         }
+        rx_stream_buffer_.clear();
 
         fd_ = socket(AF_UNIX, SOCK_STREAM, 0);
         if (fd_ < 0) {
             return false;
         }
 
-        // Set 3-second receive and send timeouts so Zephyr MCU has ample time to process
+        // Set socket timeouts (2 seconds)
         struct timeval tv;
-        tv.tv_sec = 3;
+        tv.tv_sec = 2;
         tv.tv_usec = 0;
         setsockopt(fd_, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof(tv));
         setsockopt(fd_, SOL_SOCKET, SO_SNDTIMEO, (const char*)&tv, sizeof(tv));
@@ -163,16 +165,20 @@ private:
     }
 
     bool send_state_rpc_all(const NavosEdgeState& s) {
+        auto t0 = std::chrono::steady_clock::now();
         bool env_ok = send_rpc_environment(s);
-        std::this_thread::sleep_for(std::chrono::milliseconds(30));
+        std::this_thread::sleep_for(std::chrono::milliseconds(15));
         bool adv_ok = send_rpc_advice(s);
-        std::this_thread::sleep_for(std::chrono::milliseconds(30));
+        std::this_thread::sleep_for(std::chrono::milliseconds(15));
         bool act_ok = send_rpc_actions(s);
-        std::this_thread::sleep_for(std::chrono::milliseconds(30));
+        std::this_thread::sleep_for(std::chrono::milliseconds(15));
         bool pred_ok = send_rpc_predictions(s);
-        std::this_thread::sleep_for(std::chrono::milliseconds(30));
-        bool raw_ok = send_rpc_raw_sensors(s);
-        return env_ok && adv_ok && act_ok && pred_ok && raw_ok;
+
+        auto t1 = std::chrono::steady_clock::now();
+        double total_ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
+        log_periodic_timings(total_ms);
+
+        return env_ok && adv_ok && act_ok && pred_ok;
     }
 
     bool send_rpc_environment(const NavosEdgeState& s) {
@@ -185,7 +191,7 @@ private:
             s.humidity
         });
 
-        if (send_rpc_call("update_environment", params)) {
+        if (send_rpc_call("update_environment", params, 0)) {
             std::cout << "[MCU] Environment RPC sent\n";
             return true;
         }
@@ -193,8 +199,8 @@ private:
     }
 
     bool send_rpc_advice(const NavosEdgeState& s) {
-        std::string severity = truncate_string(s.severity, 30);
-        std::string advice = truncate_string(s.advice, 140);
+        std::string severity = truncate_string(s.severity, 20);
+        std::string advice = truncate_string(s.advice, 90);
         std::string weather_advice = "";
 
         nlohmann::json params = nlohmann::json::array({
@@ -203,7 +209,7 @@ private:
             weather_advice
         });
 
-        if (send_rpc_call("update_advice", params)) {
+        if (send_rpc_call("update_advice", params, 1)) {
             std::cout << "[MCU] Advice RPC sent\n";
             return true;
         }
@@ -215,14 +221,14 @@ private:
         uint8_t count = std::min(s.action_count, (uint8_t)4);
         for (uint8_t i = 0; i < count; i++) {
             if (i > 0) actions_csv += ";";
-            actions_csv += truncate_string(s.actions[i], 70);
+            actions_csv += truncate_string(s.actions[i], 35);
         }
 
         nlohmann::json params = nlohmann::json::array({
             actions_csv
         });
 
-        if (send_rpc_call("update_actions", params)) {
+        if (send_rpc_call("update_actions", params, 2)) {
             std::cout << "[MCU] Actions RPC sent\n";
             return true;
         }
@@ -230,13 +236,13 @@ private:
     }
 
     bool send_rpc_predictions(const NavosEdgeState& s) {
-        std::string source = truncate_string(s.source_value, 30);
+        std::string source = truncate_string(s.source_value, 25);
         float source_conf = s.source_confidence;
-        std::string trend = truncate_string(s.forecast_trend, 15);
+        std::string trend = truncate_string(s.forecast_trend, 12);
         float forecast_conf = s.forecast_confidence;
         float pm25_0 = s.forecast_pm2_5_count > 0 ? s.forecast_pm2_5_pred[0] : 0.0f;
         float pm25_1 = s.forecast_pm2_5_count > 1 ? s.forecast_pm2_5_pred[1] : 0.0f;
-        std::string anomaly = truncate_string(s.anomaly_status, 20);
+        std::string anomaly = truncate_string(s.anomaly_status, 15);
 
         nlohmann::json params = nlohmann::json::array({
             source,
@@ -248,37 +254,17 @@ private:
             anomaly
         });
 
-        if (send_rpc_call("update_predictions", params)) {
+        if (send_rpc_call("update_predictions", params, 3)) {
             std::cout << "[MCU] Predictions RPC sent\n";
             return true;
         }
         return false;
     }
 
-    bool send_rpc_raw_sensors(const NavosEdgeState& s) {
-        nlohmann::json params = nlohmann::json::array({
-            (int)s.mq2_adc,
-            s.mq2_voltage,
-            (int)s.mq9_adc,
-            s.mq9_voltage,
-            (int)s.mq135_adc,
-            s.mq135_voltage
-        });
-
-        if (send_rpc_call("update_raw_sensors", params)) {
-            std::cout << "[MCU] Raw sensors RPC sent\n";
-            return true;
-        }
-        return false;
-    }
-
-    bool send_rpc_call(const std::string& method_name, const nlohmann::json& params) {
+    bool send_rpc_call(const std::string& method_name, const nlohmann::json& params, int method_idx = -1) {
         if (fd_ < 0) return false;
 
-        // Drain any stale unread response packets from earlier timed-out RPCs
-        uint8_t drain_buf[512];
-        while (recv(fd_, drain_buf, sizeof(drain_buf), MSG_DONTWAIT) > 0) {}
-
+        auto t_start = std::chrono::steady_clock::now();
         uint32_t req_id = msg_id_++;
 
         // MessagePack-RPC Request format: [0, msg_id, method, params]
@@ -299,50 +285,139 @@ private:
             return false;
         }
 
-        // 2. Read Response from Arduino Router using recv()
-        uint8_t rx_buf[2048];
-        ssize_t bytes_read = recv(fd_, rx_buf, sizeof(rx_buf), 0);
+        // 2. Stream-framed Read: accumulate bytes and unpack MessagePack frames
+        constexpr int timeout_ms = 2000;
+        auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(timeout_ms);
 
-        if (bytes_read <= 0) {
-            if (bytes_read == 0) {
-                log_rpc_failure("connection closed by router");
-            } else if (errno == EAGAIN || errno == EWOULDBLOCK) {
-                log_rpc_failure("receive timeout");
-            } else {
-                log_rpc_failure("socket receive error (" + std::string(std::strerror(errno)) + ")");
+        while (true) {
+            // First, attempt to decode any complete MessagePack object already in rx_stream_buffer_
+            if (!rx_stream_buffer_.empty()) {
+                auto res_j = nlohmann::json::from_msgpack(rx_stream_buffer_.data(),
+                                                          rx_stream_buffer_.data() + rx_stream_buffer_.size(),
+                                                          false, false);
+                if (!res_j.is_discarded()) {
+                    // Frame parsed successfully — calculate and consume exact byte length
+                    size_t consumed = nlohmann::json::to_msgpack(res_j).size();
+                    if (consumed > 0 && consumed <= rx_stream_buffer_.size()) {
+                        rx_stream_buffer_.erase(rx_stream_buffer_.begin(), rx_stream_buffer_.begin() + consumed);
+                    } else {
+                        rx_stream_buffer_.clear();
+                    }
+
+                    if (res_j.is_array() && res_j.size() >= 4) {
+                        int type = res_j[0].is_number_integer() ? res_j[0].get<int>() : -1;
+                        uint32_t resp_id = res_j[1].is_number_unsigned() ? res_j[1].get<uint32_t>() :
+                                          (res_j[1].is_number_integer() ? (uint32_t)res_j[1].get<int>() : 0);
+
+                        if (type == 1) { // RPC response
+                            if (resp_id < req_id) {
+                                // Stale response from earlier timed-out RPC; drop and keep waiting
+                                continue;
+                            } else if (resp_id == req_id) {
+                                // Match!
+                                auto t_end = std::chrono::steady_clock::now();
+                                double dur_ms = std::chrono::duration<double, std::milli>(t_end - t_start).count();
+                                record_timing(method_idx, dur_ms, true);
+
+                                if (!res_j[2].is_null()) {
+                                    std::string rpc_err = res_j[2].is_string() ? res_j[2].get<std::string>() : res_j[2].dump();
+                                    log_rpc_failure(rpc_err);
+                                    return false;
+                                }
+                                return true;
+                            } else {
+                                // Future response ID
+                                auto t_end = std::chrono::steady_clock::now();
+                                double dur_ms = std::chrono::duration<double, std::milli>(t_end - t_start).count();
+                                record_timing(method_idx, dur_ms, true);
+                                return true;
+                            }
+                        }
+                    }
+                    continue; // Check if more frames can be parsed from buffer
+                }
             }
-            close_socket();
-            return false;
+
+            // Need more data from socket
+            auto now = std::chrono::steady_clock::now();
+            if (now >= deadline) {
+                log_rpc_failure("receive timeout (method: " + method_name + ")");
+                record_timing(method_idx, timeout_ms, false);
+                return false;
+            }
+
+            int remaining_ms = std::chrono::duration_cast<std::chrono::milliseconds>(deadline - now).count();
+            fd_set fds;
+            FD_ZERO(&fds);
+            FD_SET(fd_, &fds);
+            struct timeval tv;
+            tv.tv_sec = remaining_ms / 1000;
+            tv.tv_usec = (remaining_ms % 1000) * 1000;
+
+            int sel = select(fd_ + 1, &fds, nullptr, nullptr, &tv);
+            if (sel < 0) {
+                if (errno == EINTR) continue;
+                log_rpc_failure("select error: " + std::string(std::strerror(errno)));
+                close_socket();
+                return false;
+            }
+            if (sel == 0) {
+                log_rpc_failure("receive timeout (method: " + method_name + ")");
+                record_timing(method_idx, timeout_ms, false);
+                return false;
+            }
+
+            uint8_t rx_tmp[1024];
+            ssize_t bytes_read = recv(fd_, rx_tmp, sizeof(rx_tmp), 0);
+            if (bytes_read <= 0) {
+                if (bytes_read == 0) {
+                    log_rpc_failure("connection closed by router");
+                } else if (errno != EAGAIN && errno != EWOULDBLOCK) {
+                    log_rpc_failure("socket receive error (" + std::string(std::strerror(errno)) + ")");
+                }
+                close_socket();
+                record_timing(method_idx, 0, false);
+                return false;
+            }
+
+            rx_stream_buffer_.insert(rx_stream_buffer_.end(), rx_tmp, rx_tmp + bytes_read);
+            // Cap buffer size to prevent memory leaks
+            if (rx_stream_buffer_.size() > 8192) {
+                rx_stream_buffer_.erase(rx_stream_buffer_.begin(), rx_stream_buffer_.end() - 2048);
+            }
         }
+    }
 
-        // 3. Decode MessagePack Response: [1, msg_id, error, result]
-        nlohmann::json res_j = nlohmann::json::from_msgpack(rx_buf, rx_buf + bytes_read, true, false);
-        if (res_j.is_discarded() || !res_j.is_array() || res_j.size() < 4) {
-            log_rpc_failure("invalid MsgPack response frame");
-            close_socket();
-            return false;
+    void record_timing(int method_idx, double dur_ms, bool success) {
+        if (method_idx >= 0 && method_idx < 4) {
+            rpc_timing_[method_idx].call_count++;
+            if (success) {
+                rpc_timing_[method_idx].success_count++;
+                rpc_timing_[method_idx].total_duration_ms += dur_ms;
+                if (dur_ms > rpc_timing_[method_idx].max_duration_ms) {
+                    rpc_timing_[method_idx].max_duration_ms = dur_ms;
+                }
+            } else {
+                rpc_timing_[method_idx].failure_count++;
+            }
         }
+    }
 
-        int type = res_j[0].is_number_integer() ? res_j[0].get<int>() : -1;
-        uint32_t resp_id = res_j[1].is_number_unsigned() ? res_j[1].get<uint32_t>() : (res_j[1].is_number_integer() ? res_j[1].get<int>() : 0);
-
-        if (type != 1) {
-            log_rpc_failure("unexpected response type " + std::to_string(type));
-            return false;
+    void log_periodic_timings(double total_batch_ms) {
+        auto now = std::chrono::steady_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - last_timing_log_time_).count();
+        if (elapsed >= 30) {
+            last_timing_log_time_ = now;
+            std::cout << "[MCU] RPC Duration Metrics (last batch: " << std::fixed << std::setprecision(1) << total_batch_ms << "ms):\n";
+            const char* names[4] = {"env", "advice", "actions", "pred"};
+            for (int i = 0; i < 4; i++) {
+                double avg_ms = (rpc_timing_[i].success_count > 0) ?
+                    (rpc_timing_[i].total_duration_ms / rpc_timing_[i].success_count) : 0.0;
+                std::cout << "      • " << names[i] << ": avg=" << avg_ms << "ms, max="
+                          << rpc_timing_[i].max_duration_ms << "ms, success="
+                          << rpc_timing_[i].success_count << "/" << rpc_timing_[i].call_count << "\n";
+            }
         }
-
-        if (resp_id != req_id) {
-            log_rpc_failure("msg_id mismatch (got " + std::to_string(resp_id) + ", expected " + std::to_string(req_id) + ")");
-            return false;
-        }
-
-        if (!res_j[2].is_null()) {
-            std::string rpc_err = res_j[2].is_string() ? res_j[2].get<std::string>() : res_j[2].dump();
-            log_rpc_failure(rpc_err);
-            return false;
-        }
-
-        return true;
     }
 
     void log_rpc_failure(const std::string& reason) {
@@ -363,6 +438,14 @@ private:
         return s;
     }
 
+    struct RpcMethodStats {
+        uint32_t call_count = 0;
+        uint32_t success_count = 0;
+        uint32_t failure_count = 0;
+        double total_duration_ms = 0.0;
+        double max_duration_ms = 0.0;
+    };
+
     std::string socket_path_;
     int fd_;
     uint32_t msg_id_;
@@ -370,8 +453,11 @@ private:
     int retry_interval_sec_;
     std::chrono::steady_clock::time_point last_connect_attempt_time_;
     std::chrono::steady_clock::time_point last_unavailable_log_time_;
+    std::chrono::steady_clock::time_point last_timing_log_time_;
     NavosEdgeState latest_state_;
     bool has_latest_state_;
+    std::vector<uint8_t> rx_stream_buffer_;
+    RpcMethodStats rpc_timing_[4];
 };
 
 } // namespace navos

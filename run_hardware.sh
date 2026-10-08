@@ -598,11 +598,13 @@ try:
 
     # Source prediction
     preds = d.get('predictions', {})
-    if isinstance(preds, dict) and preds.get('source', {}).get('value'):
+    if isinstance(preds, dict) and isinstance(preds.get('source'), dict):
         src = preds['source']
-        conf = src.get('confidence', 0)
-        conf_pct = f'{conf*100:.0f}%' if isinstance(conf, (int, float)) else str(conf)
-        print(f'│  🔍 Source:    {src["value"]}  (confidence: {conf_pct})')
+        src_val = src.get('value', '')
+        if src_val:
+            conf = src.get('confidence', 0)
+            conf_pct = f'{conf*100:.0f}%' if isinstance(conf, (int, float)) else str(conf)
+            print(f'│  🔍 Source:    {src_val}  (confidence: {conf_pct})')
 
 except Exception as e:
     print(f'│  ⚠️  Parse error: {e}')

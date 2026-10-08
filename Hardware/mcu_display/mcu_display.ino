@@ -54,7 +54,7 @@
 // ─── Timing Constants ─────────────────────────────────────────────
 #define SERIAL_BAUD         115200
 #define PMS_BAUD            9600
-#define SENSOR_SAMPLE_MS    3000   // ms between sensor transmissions
+#define SENSOR_SAMPLE_MS    10000  // ms between sensor transmissions (matches Linux 10s interval)
 #define MQ_WARMUP_MS        30000  // 30s warm-up period for MQ sensors
 #define PMS_FRAME_TIMEOUT   50     // non-blocking frame check timeout (ms)
 #define PMS_FRAME_LEN       32
@@ -168,19 +168,15 @@ void update_raw_sensors(int mq2_adc, float mq2_v, int mq9_adc, float mq9_v, int 
 #define ENABLE_MPM10_SENSOR 1
 #endif
 
-// ─── RAII Interrupt Lock for Zephyr RTOS ──────────────────────────
-struct InterruptLock {
-    InterruptLock() { noInterrupts(); }
-    ~InterruptLock() { interrupts(); }
-};
-
 static DHT22Diagnostic dht_diag;
 static unsigned long last_dht_sample_ms = 0;
+static unsigned long last_dht_dur_us = 0;
 #define DHT_MIN_INTERVAL 2000
 
-// ─── DHT22 Bit-Bang Reader (UNO Q STM32U585 / Zephyr-Optimized) ───
+// ─── DHT22 Bit-Bang Reader (UNO Q STM32U585 / Non-blocking to Router/UART) ───
 static bool readDHT22(float &temp, float &hum, DHT22Diagnostic *diag = nullptr) {
     uint8_t data[5] = {0};
+    unsigned long dht_start_us = micros();
 
     if (diag) {
         diag->gpio_configured = false;
@@ -225,77 +221,73 @@ static bool readDHT22(float &temp, float &hum, DHT22Diagnostic *diag = nullptr) 
     delayMicroseconds(15);
     pinMode(DHT22_PIN, INPUT_PULLUP);
 
-    // 4. Critical Section: lock interrupts during response & 40-bit frame (blocks UART1/MPM10 preemption)
-    {
-        InterruptLock lock;
-
-        // 5. Wait for sensor response: line pulled LOW (typically within 20-40µs)
-        unsigned long timeout = micros() + 200;
-        unsigned long t_start = micros();
-        while (readPin()) {
-            if (micros() > timeout) {
-                if (diag) diag->failure_reason = "TIMEOUT_RESPONSE_LOW";
-                return false;
-            }
+    // 4. Sample response & 40-bit frame with interrupts ENABLED to preserve UART RX & Router RPCs.
+    // If an ISR preempts timing, the 8-bit checksum detects it and rejects the corrupted frame cleanly.
+    unsigned long t_start = micros();
+    while (readPin()) {
+        if ((micros() - t_start) > 200) {
+            if (diag) diag->failure_reason = "TIMEOUT_RESPONSE_LOW";
+            return false;
         }
-        if (diag) {
-            diag->response_detected = true;
-            diag->response_timing_us = micros() - t_start;
-        }
+    }
+    if (diag) {
+        diag->response_detected = true;
+        diag->response_timing_us = micros() - t_start;
+    }
 
-        // 6. Sensor holds LOW for ~80µs
-        timeout = micros() + 200;
+    // 5. Sensor holds LOW for ~80µs
+    t_start = micros();
+    while (!readPin()) {
+        if ((micros() - t_start) > 200) {
+            if (diag) diag->failure_reason = "TIMEOUT_RESPONSE_LOW_HOLD";
+            return false;
+        }
+    }
+
+    // 6. Sensor holds HIGH for ~80µs
+    t_start = micros();
+    while (readPin()) {
+        if ((micros() - t_start) > 200) {
+            if (diag) diag->failure_reason = "TIMEOUT_RESPONSE_HIGH_HOLD";
+            return false;
+        }
+    }
+
+    // 7. Read 40 data bits (5 bytes)
+    for (uint8_t i = 0; i < 40; i++) {
+        // Wait for 50µs LOW leading pulse before bit
+        t_start = micros();
         while (!readPin()) {
-            if (micros() > timeout) {
-                if (diag) diag->failure_reason = "TIMEOUT_RESPONSE_LOW_HOLD";
+            if ((micros() - t_start) > 150) {
+                if (diag) {
+                    diag->bits_received = i;
+                    diag->failure_reason = "TIMEOUT_BIT_LOW";
+                }
                 return false;
             }
         }
 
-        // 7. Sensor holds HIGH for ~80µs
-        timeout = micros() + 200;
+        // Measure HIGH pulse width: '0' is 26-28µs, '1' is 70µs
+        unsigned long t0 = micros();
         while (readPin()) {
-            if (micros() > timeout) {
-                if (diag) diag->failure_reason = "TIMEOUT_RESPONSE_HIGH_HOLD";
+            if ((micros() - t0) > 150) {
+                if (diag) {
+                    diag->bits_received = i;
+                    diag->failure_reason = "TIMEOUT_BIT_HIGH";
+                }
                 return false;
             }
         }
+        unsigned long dur = micros() - t0;
 
-        // 8. Read 40 data bits (5 bytes)
-        for (uint8_t i = 0; i < 40; i++) {
-            // Wait for 50µs LOW leading pulse before bit
-            timeout = micros() + 150;
-            while (!readPin()) {
-                if (micros() > timeout) {
-                    if (diag) {
-                        diag->bits_received = i;
-                        diag->failure_reason = "TIMEOUT_BIT_LOW";
-                    }
-                    return false;
-                }
-            }
-
-            // Measure HIGH pulse width: '0' is 26-28µs, '1' is 70µs
-            unsigned long t0 = micros();
-            timeout = t0 + 150;
-            while (readPin()) {
-                if (micros() > timeout) {
-                    if (diag) {
-                        diag->bits_received = i;
-                        diag->failure_reason = "TIMEOUT_BIT_HIGH";
-                    }
-                    return false;
-                }
-            }
-            unsigned long dur = micros() - t0;
-
-            data[i / 8] <<= 1;
-            // 45µs is optimal midpoint between 27µs and 70µs
-            if (dur > 45) {
-                data[i / 8] |= 1;
-            }
+        data[i / 8] <<= 1;
+        // 45µs is optimal midpoint between 27µs and 70µs
+        if (dur > 45) {
+            data[i / 8] |= 1;
         }
-    } // InterruptLock destructor automatically re-enables interrupts here
+    }
+
+    last_dht_dur_us = micros() - dht_start_us;
 
     if (diag) {
         diag->frame_received = true;
@@ -372,66 +364,80 @@ static void report_dht22_diagnostics(const DHT22Diagnostic &diag) {
     Serial.println(F("[DHT22] ----------------------------------"));
 }
 
-// ─── PMS (MPM10-CS) Frame Reader (Non-blocking) ───────────────────
-static bool readPMS(float &pm1, float &pm25, float &pm10_val) {
-    if (!pmsSerial.available()) return false;
+// ─── PMS (MPM10-CS) Non-Blocking Frame Stream Parser ──────────────
+static unsigned long last_pms_rx_ms = 0;
 
-    unsigned long start = millis();
-    uint8_t buf[PMS_FRAME_LEN];
-    int idx = 0;
-    bool header_found = false;
+static bool parsePMSByte(uint8_t b, float &pm1, float &pm25, float &pm10_val) {
+    static uint8_t buf[PMS_FRAME_LEN];
+    static uint8_t idx = 0;
+    static uint8_t state = 0; // 0=wait high, 1=wait low, 2=read payload
 
-    while ((millis() - start) < PMS_FRAME_TIMEOUT) {
-        if (!pmsSerial.available()) continue;
-        uint8_t b = pmsSerial.read();
-
-        if (!header_found) {
-            if (b == PMS_HEADER_HIGH) {
-                buf[0] = b;
-                idx = 1;
-                unsigned long h2_timeout = millis() + 20;
-                while (millis() < h2_timeout) {
-                    if (pmsSerial.available()) {
-                        uint8_t b2 = pmsSerial.read();
-                        if (b2 == PMS_HEADER_LOW) {
-                            buf[1] = b2;
-                            idx = 2;
-                            header_found = true;
-                        }
-                        break;
-                    }
-                }
-            }
-            continue;
+    if (state == 0) {
+        if (b == PMS_HEADER_HIGH) {
+            buf[0] = b;
+            idx = 1;
+            state = 1;
         }
-
+        return false;
+    } else if (state == 1) {
+        if (b == PMS_HEADER_LOW) {
+            buf[1] = b;
+            idx = 2;
+            state = 2;
+        } else {
+            state = (b == PMS_HEADER_HIGH) ? 1 : 0;
+            idx = (b == PMS_HEADER_HIGH) ? 1 : 0;
+            if (idx == 1) buf[0] = b;
+        }
+        return false;
+    } else { // state == 2
         buf[idx++] = b;
-        if (idx >= PMS_FRAME_LEN) break;
+        if (idx >= PMS_FRAME_LEN) {
+            state = 0;
+            idx = 0;
+
+            // Verify frame length field
+            uint16_t frame_len = ((uint16_t)buf[2] << 8) | buf[3];
+            if (frame_len != (PMS_FRAME_LEN - 4)) return false;
+
+            // Verify checksum
+            uint16_t calc_check = 0;
+            for (int i = 0; i < PMS_FRAME_LEN - 2; i++) {
+                calc_check += buf[i];
+            }
+            uint16_t recv_check = ((uint16_t)buf[PMS_FRAME_LEN - 2] << 8) | buf[PMS_FRAME_LEN - 1];
+            if (calc_check != recv_check) return false;
+
+            // Extract atmospheric environment PM values (bytes 10-15)
+            pm1      = (float)(((uint16_t)buf[10] << 8) | buf[11]);
+            pm25     = (float)(((uint16_t)buf[12] << 8) | buf[13]);
+            pm10_val = (float)(((uint16_t)buf[14] << 8) | buf[15]);
+
+            if (pm1 < 0.0f || pm25 < 0.0f || pm10_val < 0.0f) return false;
+            if (pm1 > 1000.0f || pm25 > 1000.0f || pm10_val > 1000.0f) return false;
+
+            return true;
+        }
+        return false;
     }
+}
 
-    if (idx < PMS_FRAME_LEN) return false;
-
-    // Verify frame length field
-    uint16_t frame_len = ((uint16_t)buf[2] << 8) | buf[3];
-    if (frame_len != (PMS_FRAME_LEN - 4)) return false;
-
-    // Verify checksum
-    uint16_t calc_check = 0;
-    for (int i = 0; i < PMS_FRAME_LEN - 2; i++) {
-        calc_check += buf[i];
+static void pollPMS() {
+    while (pmsSerial.available() > 0) {
+        uint8_t b = pmsSerial.read();
+        float p1, p25, p10;
+        if (parsePMSByte(b, p1, p25, p10)) {
+            hw_sensors.pm1_0 = p1;
+            hw_sensors.pm2_5 = p25;
+            hw_sensors.pm10 = p10;
+            hw_sensors.pms_ok = true;
+            last_pms_rx_ms = millis();
+        }
     }
-    uint16_t recv_check = ((uint16_t)buf[PMS_FRAME_LEN - 2] << 8) | buf[PMS_FRAME_LEN - 1];
-    if (calc_check != recv_check) return false;
-
-    // Extract atmospheric environment PM values (bytes 10-15)
-    pm1      = (float)(((uint16_t)buf[10] << 8) | buf[11]);
-    pm25     = (float)(((uint16_t)buf[12] << 8) | buf[13]);
-    pm10_val = (float)(((uint16_t)buf[14] << 8) | buf[15]);
-
-    if (pm1 < 0.0f || pm25 < 0.0f || pm10_val < 0.0f) return false;
-    if (pm1 > 1000.0f || pm25 > 1000.0f || pm10_val > 1000.0f) return false;
-
-    return true;
+    // Sensor validity timeout: mark false if no valid frame for 10 seconds
+    if (millis() - last_pms_rx_ms > 10000) {
+        hw_sensors.pms_ok = false;
+    }
 }
 
 // ─── MQ Analog Read with Oversampling ─────────────────────────────
@@ -486,23 +492,6 @@ static void sample_and_transmit_sensors(unsigned long now) {
             report_dht22_diagnostics(dht_diag);
         }
     }
-
-#if ENABLE_MPM10_SENSOR
-    float p1, p25, p10;
-    if (readPMS(p1, p25, p10)) {
-        hw_sensors.pm1_0 = p1;
-        hw_sensors.pm2_5 = p25;
-        hw_sensors.pm10 = p10;
-        hw_sensors.pms_ok = true;
-    } else {
-        hw_sensors.pms_ok = false;
-    }
-#else
-    hw_sensors.pm1_0 = 0.0f;
-    hw_sensors.pm2_5 = 0.0f;
-    hw_sensors.pm10 = 0.0f;
-    hw_sensors.pms_ok = false;
-#endif
 
     bool is_ready = hw_sensors.dht_ok && hw_sensors.pms_ok && hw_sensors.mq_warmed;
 
@@ -565,13 +554,38 @@ void setup() {
 
 // ─── Arduino Loop ─────────────────────────────────────────────────
 void loop() {
+    unsigned long loop_start_us = micros();
+
+    // 0. Non-blocking MPM10 (PMS) UART stream poll
+#if ENABLE_MPM10_SENSOR
+    pollPMS();
+#endif
+
     // 1. Update physical display GUI non-blockingly
+    unsigned long gui_start_us = micros();
     gui.update(state);
+    unsigned long gui_dur_us = micros() - gui_start_us;
 
     // 2. Periodically sample physical sensors and stream JSON
     unsigned long now = millis();
     if ((now - last_sensor_sample_ms) >= SENSOR_SAMPLE_MS) {
         last_sensor_sample_ms = now;
         sample_and_transmit_sensors(now);
+    }
+
+    // 3. Periodic timing telemetry (every 30s)
+    static unsigned long last_telemetry_ms = 0;
+    if (now - last_telemetry_ms >= 30000) {
+        last_telemetry_ms = now;
+        Serial.print(F("[MCU] Telemetry: loop_us="));
+        Serial.print(micros() - loop_start_us);
+        Serial.print(F(" gui_us="));
+        Serial.print(gui_dur_us);
+        Serial.print(F(" dht_us="));
+        Serial.print(last_dht_dur_us);
+        Serial.print(F(" dht_ok="));
+        Serial.print(hw_sensors.dht_ok ? F("1") : F("0"));
+        Serial.print(F(" pms_ok="));
+        Serial.println(hw_sensors.pms_ok ? F("1") : F("0"));
     }
 }

@@ -590,6 +590,58 @@ TEST(mcu_bridge_rpc_encoding) {
 }
 
 // ──────────────────────────────────────────────────────────────────
+// Test 20: McuBridge Concatenated MessagePack Stream Framing
+// ──────────────────────────────────────────────────────────────────
+TEST(mcu_bridge_concatenated_stream_framing) {
+    // Simulate two RPC responses concatenated in one TCP/stream recv
+    nlohmann::json r1 = nlohmann::json::array({1, 101, nullptr, nullptr});
+    nlohmann::json r2 = nlohmann::json::array({1, 102, nullptr, true});
+    std::vector<uint8_t> b1 = nlohmann::json::to_msgpack(r1);
+    std::vector<uint8_t> b2 = nlohmann::json::to_msgpack(r2);
+
+    std::vector<uint8_t> stream_buf = b1;
+    stream_buf.insert(stream_buf.end(), b2.begin(), b2.end());
+
+    // With non-strict parsing, first response should decode cleanly
+    auto parsed1 = nlohmann::json::from_msgpack(stream_buf.data(), stream_buf.data() + stream_buf.size(), false, false);
+    ASSERT_TRUE(!parsed1.is_discarded());
+    ASSERT_TRUE(parsed1.is_array());
+    ASSERT_EQ(parsed1[1].get<uint32_t>(), 101);
+
+    // Calculate consumed size and advance stream buffer
+    size_t consumed = nlohmann::json::to_msgpack(parsed1).size();
+    ASSERT_EQ(consumed, b1.size());
+    stream_buf.erase(stream_buf.begin(), stream_buf.begin() + consumed);
+
+    // Remaining buffer should decode second response cleanly
+    auto parsed2 = nlohmann::json::from_msgpack(stream_buf.data(), stream_buf.data() + stream_buf.size(), false, false);
+    ASSERT_TRUE(!parsed2.is_discarded());
+    ASSERT_TRUE(parsed2.is_array());
+    ASSERT_EQ(parsed2[1].get<uint32_t>(), 102);
+}
+
+// ──────────────────────────────────────────────────────────────────
+// Test 21: McuBridge Partial MessagePack Stream Framing
+// ──────────────────────────────────────────────────────────────────
+TEST(mcu_bridge_partial_stream_framing) {
+    nlohmann::json r = nlohmann::json::array({1, 201, nullptr, nullptr});
+    std::vector<uint8_t> full_bytes = nlohmann::json::to_msgpack(r);
+    ASSERT_TRUE(full_bytes.size() > 2);
+
+    // Split into partial chunk
+    std::vector<uint8_t> partial(full_bytes.begin(), full_bytes.begin() + 2);
+    auto partial_parsed = nlohmann::json::from_msgpack(partial.data(), partial.data() + partial.size(), false, false);
+    // Partial chunk must be detected as incomplete (discarded)
+    ASSERT_TRUE(partial_parsed.is_discarded());
+
+    // When remainder arrives
+    partial.insert(partial.end(), full_bytes.begin() + 2, full_bytes.end());
+    auto full_parsed = nlohmann::json::from_msgpack(partial.data(), partial.data() + partial.size(), false, false);
+    ASSERT_TRUE(!full_parsed.is_discarded());
+    ASSERT_EQ(full_parsed[1].get<uint32_t>(), 201);
+}
+
+// ──────────────────────────────────────────────────────────────────
 // Main
 // ──────────────────────────────────────────────────────────────────
 int main() {

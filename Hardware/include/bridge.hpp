@@ -233,16 +233,16 @@ private:
             } else {
                 std::cout << "[HW] Data request received during 30s warm-up — deferred until warm-up finishes.\n";
             }
-        } else if (event == "intelligence_update" || event == "new_reading") {
+        } else if (event == "intelligence_update") {
             try {
-                if (event == "intelligence_update") {
-                    std::cout << "[HW] SSE intelligence_update received\n";
-                }
+                std::cout << "[HW] SSE intelligence_update received\n";
                 auto j = nlohmann::json::parse(data_json);
                 update_display_state(j);
             } catch (const std::exception& e) {
                 std::cerr << "[HW] SSE: intelligence result parse error: " << e.what() << "\n";
             }
+        } else if (event == "new_reading") {
+            // new_reading is an auxiliary dashboard notification; MCU display updates exclusively from intelligence_update
         } else {
             std::cout << "[HW] SSE: event received [" << event << "]: " << data_json << "\n";
         }
