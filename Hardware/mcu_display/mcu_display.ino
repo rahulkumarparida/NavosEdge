@@ -530,7 +530,7 @@ void background_yield() {
 #if ENABLE_MPM10_SENSOR
     pollPMS();
 #endif
-    Bridge.tick();
+    Bridge.update();
 }
 
 void setup() {

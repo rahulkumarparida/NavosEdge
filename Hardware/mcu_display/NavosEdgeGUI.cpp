@@ -385,6 +385,7 @@ void NavosEdgeGUI::drawScreen2_Forecast(const NavosEdgeState& state) {
         snprintf(confBuf, sizeof(confBuf), "%.0f %%", state.forecast_confidence * 100.0f);
     } else {
         snprintf(confBuf, sizeof(confBuf), "-- %%");
+    }
     drawCard(324, 34, 150, 68, "MODEL CONFIDENCE", confBuf, GUI_YELLOW);
 
     if (_yieldCb) _yieldCb();
