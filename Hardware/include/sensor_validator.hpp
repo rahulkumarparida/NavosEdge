@@ -86,10 +86,10 @@ public:
 
         // --- Hardware Health Flags ---
         if (!d.dht_ok) {
-            r.error("DHT22 hardware fault: invalid temperature/humidity reading");
+            r.warn("DHT22 hardware fault: invalid temperature/humidity reading");
         }
         if (!d.pms_ok) {
-            r.error("MPM10-CS hardware fault: invalid particulate matter reading");
+            r.warn("MPM10-CS hardware fault: invalid particulate matter reading");
         }
 
         // --- MQ sensor ADC range ---

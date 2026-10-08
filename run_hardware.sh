@@ -445,7 +445,7 @@ cat > "$HW_RUNTIME_CONFIG" <<EOF
     "scenario": "normal",
     "serial_port": "${SERIAL_PORT}",
     "serial_baud": 115200,
-    "serial_timeout_ms": 5000
+    "serial_timeout_ms": 15000
 }
 EOF
 

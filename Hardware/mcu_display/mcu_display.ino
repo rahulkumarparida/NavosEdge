@@ -495,25 +495,6 @@ static void sample_and_transmit_sensors(unsigned long now) {
     hw_sensors.mq135_adc = 0;
 #endif
 
-    // DHT22 sampling: enforce DHT22 minimum interval (2000ms)
-    if ((now - last_dht_sample_ms) >= DHT_MIN_INTERVAL) {
-        last_dht_sample_ms = now;
-        float t_val = 0.0f, h_val = 0.0f;
-        if (readDHT22(t_val, h_val, &dht_diag)) {
-            hw_sensors.temperature = t_val;
-            hw_sensors.humidity = h_val;
-            hw_sensors.dht_ok = true;
-        } else {
-            hw_sensors.dht_ok = false;
-            // Report diagnostic failure audit for deep troubleshooting (rate-limited to 30s to prevent flooding monitor)
-            static unsigned long last_dht_diag_report_ms = 0;
-            if (now - last_dht_diag_report_ms >= 30000) {
-                last_dht_diag_report_ms = now;
-                report_dht22_diagnostics(dht_diag);
-            }
-        }
-    }
-
     bool is_ready = hw_sensors.dht_ok && hw_sensors.pms_ok && hw_sensors.mq_warmed;
 
     // Build atomic JSON string in a single stack buffer (avoids multi-packet RPC splitting)
@@ -548,6 +529,20 @@ void background_yield() {
     Bridge.update();
 
     unsigned long now = millis();
+
+    // Background DHT22 sampling (runs every 2.5s to ensure valid data before 10s JSON payload)
+    if ((now - last_dht_sample_ms) >= DHT_MIN_INTERVAL) {
+        last_dht_sample_ms = now;
+        float t_val = 0.0f, h_val = 0.0f;
+        if (readDHT22(t_val, h_val, &dht_diag)) {
+            hw_sensors.temperature = t_val;
+            hw_sensors.humidity = h_val;
+            hw_sensors.dht_ok = true;
+        } else {
+            hw_sensors.dht_ok = false;
+        }
+    }
+
     if ((now - last_sensor_sample_ms) >= SENSOR_SAMPLE_MS) {
         last_sensor_sample_ms = now;
         sample_and_transmit_sensors(now);
