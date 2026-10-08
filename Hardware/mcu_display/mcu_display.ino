@@ -488,8 +488,12 @@ static void sample_and_transmit_sensors(unsigned long now) {
             hw_sensors.temperature = 0.0f;
             hw_sensors.humidity = 0.0f;
             hw_sensors.dht_ok = false;
-            // Report diagnostic failure audit for deep troubleshooting
-            report_dht22_diagnostics(dht_diag);
+            // Report diagnostic failure audit for deep troubleshooting (rate-limited to 30s to prevent flooding monitor)
+            static unsigned long last_dht_diag_report_ms = 0;
+            if (now - last_dht_diag_report_ms >= 30000) {
+                last_dht_diag_report_ms = now;
+                report_dht22_diagnostics(dht_diag);
+            }
         }
     }
 

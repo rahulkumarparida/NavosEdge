@@ -374,7 +374,7 @@ void NavosEdgeGUI::drawScreen2_Forecast(const NavosEdgeState& state) {
     if (state.forecast_confidence >= 0.0f) {
         snprintf(confBuf, sizeof(confBuf), "%.0f %%", state.forecast_confidence * 100.0f);
     } else {
-        snprintf(confBuf, sizeof(confBuf), "85 %%");
+        snprintf(confBuf, sizeof(confBuf), "-- %%");
     }
     drawCard(324, 34, 150, 68, "MODEL CONFIDENCE", confBuf, GUI_YELLOW);
 
@@ -384,9 +384,9 @@ void NavosEdgeGUI::drawScreen2_Forecast(const NavosEdgeState& state) {
     tftDrawString(16, 114, "FORECAST READINGS (PM2.5 ug/m3)", GUI_CYAN, GUI_CARD_BG, 1);
 
     float val0 = state.pm2_5;
-    float val1 = (state.forecast_pm2_5_count > 0 && state.forecast_pm2_5_pred[0] > 0) ? state.forecast_pm2_5_pred[0] : val0 * 1.05f;
-    float val2 = (state.forecast_pm2_5_count > 1 && state.forecast_pm2_5_pred[1] > 0) ? state.forecast_pm2_5_pred[1] : val1 * 1.05f;
-    float val3 = (state.forecast_pm2_5_count > 2 && state.forecast_pm2_5_pred[2] > 0) ? state.forecast_pm2_5_pred[2] : val2 * 1.05f;
+    float val1 = (state.forecast_pm2_5_count > 0 && state.forecast_pm2_5_pred[0] >= 0.0f) ? state.forecast_pm2_5_pred[0] : -1.0f;
+    float val2 = (state.forecast_pm2_5_count > 1 && state.forecast_pm2_5_pred[1] >= 0.0f) ? state.forecast_pm2_5_pred[1] : -1.0f;
+    float val3 = (state.forecast_pm2_5_count > 2 && state.forecast_pm2_5_pred[2] >= 0.0f) ? state.forecast_pm2_5_pred[2] : -1.0f;
 
     struct Step { const char* label; float val; } steps[4] = {
         {"NOW", val0},
@@ -406,7 +406,11 @@ void NavosEdgeGUI::drawScreen2_Forecast(const NavosEdgeState& state) {
 
         tftDrawString(x + 6, 136, steps[i].label, GUI_YELLOW, GUI_HEADER_BG, 1);
         char pBuf[16];
-        snprintf(pBuf, sizeof(pBuf), "%.1f", steps[i].val);
+        if (steps[i].val >= 0.0f) {
+            snprintf(pBuf, sizeof(pBuf), "%.1f", steps[i].val);
+        } else {
+            snprintf(pBuf, sizeof(pBuf), "--");
+        }
         drawAdaptiveString(x + 6, 154, pBuf, GUI_WHITE, GUI_HEADER_BG, 2, boxW - 12, 16);
 
         if (i < 3) {
@@ -423,9 +427,9 @@ void NavosEdgeGUI::drawScreen2_Forecast(const NavosEdgeState& state) {
     char outlookBuf[160];
     if (state.forecast_outlook[0]) {
         snprintf(outlookBuf, sizeof(outlookBuf), "%s", state.forecast_outlook);
-    } else if (strcmp(state.forecast_trend, "RISING") == 0) {
+    } else if (val3 >= 0.0f && strcmp(state.forecast_trend, "RISING") == 0) {
         snprintf(outlookBuf, sizeof(outlookBuf), "PM2.5 forecasted to increase by +%.1f ug/m3 over next hour. Early precautions recommended.", val3 - val0);
-    } else if (strcmp(state.forecast_trend, "FALLING") == 0) {
+    } else if (val3 >= 0.0f && strcmp(state.forecast_trend, "FALLING") == 0) {
         snprintf(outlookBuf, sizeof(outlookBuf), "PM2.5 forecasted to improve by -%.1f ug/m3 over next hour.", val0 - val3);
     } else {
         snprintf(outlookBuf, sizeof(outlookBuf), "PM2.5 expected to remain stable near %.1f ug/m3 with no rapid spikes predicted.", val0);
@@ -480,7 +484,7 @@ void NavosEdgeGUI::drawScreen3_ModelConfidence(const NavosEdgeState& state) {
     if (state.source_confidence >= 0.0f) {
         snprintf(srcConfBuf, sizeof(srcConfBuf), "%.0f %%", state.source_confidence * 100.0f);
     } else {
-        snprintf(srcConfBuf, sizeof(srcConfBuf), "84 %%");
+        snprintf(srcConfBuf, sizeof(srcConfBuf), "-- %%");
     }
     tftDrawString(345, 103, srcConfBuf, GUI_CYAN, GUI_CARD_BG, 2);
 
@@ -508,7 +512,7 @@ void NavosEdgeGUI::drawScreen3_ModelConfidence(const NavosEdgeState& state) {
     if (state.forecast_confidence >= 0.0f) {
         snprintf(fcConfBuf, sizeof(fcConfBuf), "CONFIDENCE: %.0f %%", state.forecast_confidence * 100.0f);
     } else {
-        snprintf(fcConfBuf, sizeof(fcConfBuf), "CONFIDENCE: 85 %%");
+        snprintf(fcConfBuf, sizeof(fcConfBuf), "CONFIDENCE: -- %%");
     }
     drawAdaptiveString(254, 245, fcConfBuf, GUI_WHITE, GUI_CARD_BG, 1, 208, 16);
 
@@ -568,27 +572,27 @@ void NavosEdgeGUI::drawScreen4_RawSensors(const NavosEdgeState& state) {
 
     // MQ2 — label size 1, values size 2
     tftDrawString(165, 62, "MQ2 (Combustible)", GUI_YELLOW, GUI_CARD_BG, 1);
-    snprintf(buf, sizeof(buf), "ADC: %u", state.mq2_adc > 0 ? state.mq2_adc : 350);
+    snprintf(buf, sizeof(buf), "ADC: %u", state.mq2_adc);
     drawAdaptiveString(165, 76, buf, GUI_WHITE, GUI_CARD_BG, 2, 152, 16);
-    snprintf(buf, sizeof(buf), "V: %.2f", state.mq2_voltage > 0.0f ? state.mq2_voltage : 1.71f);
+    snprintf(buf, sizeof(buf), "V: %.2f", state.mq2_voltage);
     drawAdaptiveString(165, 96, buf, GUI_LIGHT_GREY, GUI_CARD_BG, 2, 152, 16);
 
     tftDrawFastHLine(165, 116, 152, GUI_DARK_GREY);
 
     // MQ9 — label size 1, values size 2
     tftDrawString(165, 124, "MQ9 (Carbon Mono)", GUI_YELLOW, GUI_CARD_BG, 1);
-    snprintf(buf, sizeof(buf), "ADC: %u", state.mq9_adc > 0 ? state.mq9_adc : 280);
+    snprintf(buf, sizeof(buf), "ADC: %u", state.mq9_adc);
     drawAdaptiveString(165, 138, buf, GUI_WHITE, GUI_CARD_BG, 2, 152, 16);
-    snprintf(buf, sizeof(buf), "V: %.2f", state.mq9_voltage > 0.0f ? state.mq9_voltage : 1.37f);
+    snprintf(buf, sizeof(buf), "V: %.2f", state.mq9_voltage);
     drawAdaptiveString(165, 158, buf, GUI_LIGHT_GREY, GUI_CARD_BG, 2, 152, 16);
 
     tftDrawFastHLine(165, 178, 152, GUI_DARK_GREY);
 
     // MQ135 — label size 1, values size 2
     tftDrawString(165, 186, "MQ135 (Air Qual)", GUI_YELLOW, GUI_CARD_BG, 1);
-    snprintf(buf, sizeof(buf), "ADC: %u", state.mq135_adc > 0 ? state.mq135_adc : 420);
+    snprintf(buf, sizeof(buf), "ADC: %u", state.mq135_adc);
     drawAdaptiveString(165, 200, buf, GUI_WHITE, GUI_CARD_BG, 2, 152, 16);
-    snprintf(buf, sizeof(buf), "V: %.2f", state.mq135_voltage > 0.0f ? state.mq135_voltage : 2.05f);
+    snprintf(buf, sizeof(buf), "V: %.2f", state.mq135_voltage);
     drawAdaptiveString(165, 220, buf, GUI_LIGHT_GREY, GUI_CARD_BG, 2, 152, 16);
 
     // --- Right Panel: Air Quality (AQ) ---

@@ -163,6 +163,9 @@ public:
                 std::cerr << "[SERIAL] [WARN] MPM10-CS sensor report: FAULT / UNHEALTHY\n";
             }
 
+            out.dht_ok = dht_ok;
+            out.pms_ok = pms_ok;
+
             // Extract MQ values (support both compact and verbose keys)
             out.mq2_raw_adc   = j.value("mq2", j.value("mq2_adc", 0));
             out.mq9_raw_adc   = j.value("mq9", j.value("mq9_adc", 0));

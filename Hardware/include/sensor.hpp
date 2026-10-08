@@ -51,6 +51,10 @@ struct SensorData {
     double temperature_c = 0.0;
     double humidity_pct  = 0.0;
 
+    // Sensor health flags
+    bool   dht_ok        = true;
+    bool   pms_ok        = true;
+
     // Metadata
     std::string timestamp;
     std::string node_id;

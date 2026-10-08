@@ -84,6 +84,14 @@ public:
         // Stop early if we have NaN/Inf — range checks would be meaningless
         if (!r.valid) return r;
 
+        // --- Hardware Health Flags ---
+        if (!d.dht_ok) {
+            r.error("DHT22 hardware fault: invalid temperature/humidity reading");
+        }
+        if (!d.pms_ok) {
+            r.error("MPM10-CS hardware fault: invalid particulate matter reading");
+        }
+
         // --- MQ sensor ADC range ---
         validate_adc(r, "MQ2",   d.mq2_raw_adc);
         validate_adc(r, "MQ9",   d.mq9_raw_adc);
