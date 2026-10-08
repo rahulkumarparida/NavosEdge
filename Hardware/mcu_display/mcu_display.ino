@@ -245,20 +245,29 @@ static bool readDHT22(float &temp, float &hum, DHT22Diagnostic *diag = nullptr) 
     }
 
     // 6. Sensor holds HIGH for ~80µs
-    t_start = micros();
+    uint32_t ref_count = 0;
+    noInterrupts();
     while (readPin()) {
-        if ((micros() - t_start) > 200) {
-            if (diag) diag->failure_reason = "TIMEOUT_RESPONSE_HIGH_HOLD";
-            return false;
-        }
+        ref_count++;
+        if (ref_count > 50000) break;
     }
+    interrupts();
+    if (ref_count > 50000) {
+        if (diag) diag->failure_reason = "TIMEOUT_RESPONSE_HIGH_HOLD";
+        return false;
+    }
+    
+    // Dynamic threshold: 80µs gave us ref_count. 
+    // We want the threshold for 45µs (midway between 28µs and 70µs).
+    uint32_t threshold_count = (ref_count * 45) / 80;
+    if (threshold_count == 0) threshold_count = 1; // Failsafe
 
     // 7. Read 40 data bits (5 bytes)
     for (uint8_t i = 0; i < 40; i++) {
         // Wait for 50µs LOW leading pulse before bit
-        t_start = micros();
+        unsigned long t_low = micros();
         while (!readPin()) {
-            if ((micros() - t_start) > 150) {
+            if ((micros() - t_low) > 150) {
                 if (diag) {
                     diag->bits_received = i;
                     diag->failure_reason = "TIMEOUT_BIT_LOW";
@@ -268,19 +277,17 @@ static bool readDHT22(float &temp, float &hum, DHT22Diagnostic *diag = nullptr) 
         }
 
         // Measure HIGH pulse width: '0' is 26-28µs, '1' is 70µs
-        unsigned long t0 = micros();
         uint32_t hold_count = 0;
         noInterrupts();
         while (readPin()) {
             hold_count++;
-            if (hold_count > 10000) { // Arbitrary hardware safety limit
+            if (hold_count > 50000) { // Arbitrary hardware safety limit
                 break;
             }
         }
         interrupts();
-        unsigned long dur = micros() - t0;
         
-        if (hold_count > 10000) {
+        if (hold_count > 50000) {
             if (diag) {
                 diag->bits_received = i;
                 diag->failure_reason = "TIMEOUT_BIT_HIGH";
@@ -289,8 +296,7 @@ static bool readDHT22(float &temp, float &hum, DHT22Diagnostic *diag = nullptr) 
         }
 
         data[i / 8] <<= 1;
-        // 45µs is optimal midpoint between 27µs and 70µs
-        if (dur > 45) {
+        if (hold_count > threshold_count) {
             data[i / 8] |= 1;
         }
     }

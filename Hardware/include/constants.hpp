@@ -27,7 +27,7 @@ inline const std::string DEFAULT_SERIAL_PORT              = "127.0.0.1:7500";
 inline const std::string DEFAULT_ROUTER_MONITOR_HOST      = "127.0.0.1";
 constexpr int DEFAULT_ROUTER_MONITOR_PORT                 = 7500;
 constexpr int DEFAULT_SERIAL_BAUD                         = 115200;
-constexpr int DEFAULT_SERIAL_TIMEOUT_MS                   = 5000;
+constexpr int DEFAULT_SERIAL_TIMEOUT_MS                   = 15000;
 constexpr int SERIAL_BUFFER_SIZE                          = 512;
 
 // Physical Sensor Bounds (10-bit ADC, 5V reference)
