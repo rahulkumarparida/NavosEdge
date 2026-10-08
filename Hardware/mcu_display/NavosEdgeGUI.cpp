@@ -59,8 +59,8 @@ void NavosEdgeGUI::update(const NavosEdgeState& state) {
         _lastRotateMs = now; // Reset rotation timer on startup so Screen 0 gets its full duration
     }
 
-    // Per-screen duration timing (Environment=20s, others=15s)
-    uint32_t durationMs = (_currentScreen == 0) ? 20000 : 15000;
+    // Per-screen duration timing (User requested 40 seconds per screen)
+    uint32_t durationMs = 40000;
 
     if (now - _lastRotateMs >= durationMs) {
         _currentScreen = (_currentScreen + 1) % GUI_NUM_SCREENS;
@@ -825,7 +825,10 @@ void NavosEdgeGUI::tftFillScreen(uint16_t color) {
 
 void NavosEdgeGUI::tftFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
 #ifdef ARDUINO
-    _tft.fillRect(x, y, w, h, color);
+    for (int16_t r = 0; r < h; r++) {
+        _tft.fillRect(x, y + r, w, 1, color);
+        if (_yieldCb) _yieldCb();
+    }
 #else
     (void)x; (void)y; (void)w; (void)h; (void)color;
 #endif

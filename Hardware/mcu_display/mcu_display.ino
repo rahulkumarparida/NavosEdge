@@ -269,19 +269,24 @@ static bool readDHT22(float &temp, float &hum, DHT22Diagnostic *diag = nullptr) 
 
         // Measure HIGH pulse width: '0' is 26-28µs, '1' is 70µs
         unsigned long t0 = micros();
+        uint32_t hold_count = 0;
         noInterrupts();
         while (readPin()) {
-            if ((micros() - t0) > 150) {
-                interrupts();
-                if (diag) {
-                    diag->bits_received = i;
-                    diag->failure_reason = "TIMEOUT_BIT_HIGH";
-                }
-                return false;
+            hold_count++;
+            if (hold_count > 10000) { // Arbitrary hardware safety limit
+                break;
             }
         }
-        unsigned long dur = micros() - t0;
         interrupts();
+        unsigned long dur = micros() - t0;
+        
+        if (hold_count > 10000) {
+            if (diag) {
+                diag->bits_received = i;
+                diag->failure_reason = "TIMEOUT_BIT_HIGH";
+            }
+            return false;
+        }
 
         data[i / 8] <<= 1;
         // 45µs is optimal midpoint between 27µs and 70µs
@@ -525,12 +530,17 @@ static void sample_and_transmit_sensors(unsigned long now) {
 #endif
 }
 
-// ─── Arduino Setup ────────────────────────────────────────────────
 void background_yield() {
 #if ENABLE_MPM10_SENSOR
     pollPMS();
 #endif
     Bridge.update();
+
+    unsigned long now = millis();
+    if ((now - last_sensor_sample_ms) >= SENSOR_SAMPLE_MS) {
+        last_sensor_sample_ms = now;
+        sample_and_transmit_sensors(now);
+    }
 }
 
 void setup() {
@@ -579,14 +589,8 @@ void loop() {
     gui.update(state);
     unsigned long gui_dur_us = micros() - gui_start_us;
 
-    // 2. Periodically sample physical sensors and stream JSON
+    // 2. Periodic timing telemetry (every 30s)
     unsigned long now = millis();
-    if ((now - last_sensor_sample_ms) >= SENSOR_SAMPLE_MS) {
-        last_sensor_sample_ms = now;
-        sample_and_transmit_sensors(now);
-    }
-
-    // 3. Periodic timing telemetry (every 30s)
     static unsigned long last_telemetry_ms = 0;
     if (now - last_telemetry_ms >= 30000) {
         last_telemetry_ms = now;
