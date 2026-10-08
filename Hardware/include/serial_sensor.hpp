@@ -594,8 +594,7 @@ private:
         SensorData d;
         d.node_id = node_id_;
         d.timestamp = now_iso8601();
-        // Invalidate reading so SensorValidator rejects transmission of partial/zero error data
-        d.pm1_0 = -1.0;
+        // Return valid empty structure for upstream handling, no fake physical sentinels.
         return d;
     }
 

@@ -196,9 +196,7 @@ bool readDHT22(float &temp, float &hum, DHT22Diagnostic *diag = nullptr) {
   delayMicroseconds(15);
   pinMode(DHT22_PIN, INPUT_PULLUP);
 
-  // 4. Critical Section: lock interrupts during response & 40-bit frame (blocks UART1/MPM10 preemption)
-  {
-    InterruptLock lock;
+  // 4. Critical Section removed globally to prevent RouterBridge UART overrun.
 
     // 5. Wait for sensor response: line pulled LOW (typically within 20-40µs)
     unsigned long timeout = micros() + 200;
@@ -249,8 +247,10 @@ bool readDHT22(float &temp, float &hum, DHT22Diagnostic *diag = nullptr) {
       // Measure HIGH pulse width: '0' is 26-28µs, '1' is 70µs
       unsigned long t0 = micros();
       timeout = t0 + 150;
+      noInterrupts();
       while (readPin()) {
         if (micros() > timeout) {
+          interrupts();
           if (diag) {
             diag->bits_received = i;
             diag->failure_reason = "TIMEOUT_BIT_HIGH";
@@ -259,6 +259,7 @@ bool readDHT22(float &temp, float &hum, DHT22Diagnostic *diag = nullptr) {
         }
       }
       unsigned long dur = micros() - t0;
+      interrupts();
 
       data[i / 8] <<= 1;
       // 45µs is optimal midpoint between 27µs and 70µs
@@ -266,7 +267,6 @@ bool readDHT22(float &temp, float &hum, DHT22Diagnostic *diag = nullptr) {
         data[i / 8] |= 1;
       }
     }
-  } // InterruptLock destructor automatically re-enables interrupts here
 
   if (diag) {
     diag->frame_received = true;
@@ -462,8 +462,6 @@ void loop() {
       state.humidity = h_val;
       state.dht_ok = true;
     } else {
-      state.temperature = 0.0f;
-      state.humidity = 0.0f;
       state.dht_ok = false;
       report_dht22_diagnostics(dht_diag);
     }

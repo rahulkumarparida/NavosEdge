@@ -88,8 +88,10 @@ public:
      * Show a connection status message (for startup/errors).
      */
     void showStatus(const char* line1, const char* line2 = nullptr);
+    void setYieldCallback(void (*cb)());
 
 private:
+    void (*_yieldCb)() = nullptr;
     uint8_t _currentScreen;
     unsigned long _lastRotateMs;
     NavosEdgeState _lastDrawnState;

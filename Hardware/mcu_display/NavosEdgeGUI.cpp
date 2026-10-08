@@ -29,6 +29,10 @@ NavosEdgeGUI::NavosEdgeGUI()
     }
 }
 
+void NavosEdgeGUI::setYieldCallback(void (*cb)()) {
+    _yieldCb = cb;
+}
+
 void NavosEdgeGUI::begin() {
 #ifdef ARDUINO
     _tft.begin();
@@ -246,6 +250,8 @@ void NavosEdgeGUI::drawScreen0_Environment(const NavosEdgeState& state) {
     tftFillRect(14, 140, 164, 32, aCol);
     tftDrawString(20, 146, catStr, GUI_BLACK, aCol, 2);
 
+    if (_yieldCb) _yieldCb();
+
     // --- Top Right: Particulate Matter Panel (PM10, PM2.5, PM1.0 with horizontal bars) ---
     tftFillRect(192, 34, 282, 145, GUI_CARD_BG);
     tftDrawRect(192, 34, 282, 145, GUI_CARD_BORDER);
@@ -276,6 +282,8 @@ void NavosEdgeGUI::drawScreen0_Environment(const NavosEdgeState& state) {
     // Bottom Left: Temperature Panel — LABEL stays small, VALUE is large
     snprintf(buf, sizeof(buf), "%.1f C", state.temperature);
     drawLargeValueCard(6, 185, 150, 130, "TEMPERATURE", buf, GUI_CYAN, "Celsius");
+
+    if (_yieldCb) _yieldCb();
 
     // Bottom Middle: Humidity Panel — LABEL stays small, VALUE is large
     snprintf(buf, sizeof(buf), "%.1f %%", state.humidity);
@@ -312,6 +320,8 @@ void NavosEdgeGUI::drawScreen1_AdviceActions(const NavosEdgeState& state) {
     // Advisory text: size 1 for slightly smaller, clean, compact display
     uint8_t advSize = 1;
     drawWrappedString(16, 58, advText, GUI_WHITE, GUI_CARD_BG, advSize, 448, 4);
+
+    if (_yieldCb) _yieldCb();
 
     // --- Bottom Section: ACTIONS ---
     tftFillRect(6, 140, 468, 175, GUI_CARD_BG);
@@ -375,8 +385,9 @@ void NavosEdgeGUI::drawScreen2_Forecast(const NavosEdgeState& state) {
         snprintf(confBuf, sizeof(confBuf), "%.0f %%", state.forecast_confidence * 100.0f);
     } else {
         snprintf(confBuf, sizeof(confBuf), "-- %%");
-    }
     drawCard(324, 34, 150, 68, "MODEL CONFIDENCE", confBuf, GUI_YELLOW);
+
+    if (_yieldCb) _yieldCb();
 
     // --- Middle Panel: Forecast readings → ---
     tftFillRect(6, 108, 468, 100, GUI_CARD_BG);
@@ -417,6 +428,8 @@ void NavosEdgeGUI::drawScreen2_Forecast(const NavosEdgeState& state) {
             tftDrawString(x + boxW + 4, 154, "->", GUI_CYAN, GUI_CARD_BG, 2);
         }
     }
+
+    if (_yieldCb) _yieldCb();
 
     // --- Bottom Panel: Forecast outlook summary ---
     tftFillRect(6, 214, 468, 101, GUI_CARD_BG);
@@ -467,6 +480,8 @@ void NavosEdgeGUI::drawScreen3_ModelConfidence(const NavosEdgeState& state) {
 
     tftDrawString(16, 105, "CONFIDENCE:", GUI_LIGHT_GREY, GUI_CARD_BG, 1);
     tftDrawString(105, 103, "100 %", GUI_WHITE, GUI_CARD_BG, 2);
+
+    if (_yieldCb) _yieldCb();
 
     // Top-Right Panel: Pollution Source
     tftFillRect(244, 34, 228, 136, GUI_CARD_BG);
@@ -796,7 +811,12 @@ uint16_t NavosEdgeGUI::trendColor(const char* trend) {
 
 void NavosEdgeGUI::tftFillScreen(uint16_t color) {
 #ifdef ARDUINO
-    _tft.fillScreen(color);
+    // 320 rows total. If 320 rows take ~10.2s, 1 row takes ~32ms.
+    // Chunking by 1 row guarantees we yield every ~32ms, well within 50ms safety margin.
+    for (int16_t y = 0; y < GUI_HEIGHT; y += 1) {
+        _tft.fillRect(0, y, GUI_WIDTH, 1, color);
+        if (_yieldCb) _yieldCb();
+    }
 #else
     (void)color;
 #endif

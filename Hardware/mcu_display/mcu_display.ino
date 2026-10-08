@@ -269,8 +269,10 @@ static bool readDHT22(float &temp, float &hum, DHT22Diagnostic *diag = nullptr) 
 
         // Measure HIGH pulse width: '0' is 26-28µs, '1' is 70µs
         unsigned long t0 = micros();
+        noInterrupts();
         while (readPin()) {
             if ((micros() - t0) > 150) {
+                interrupts();
                 if (diag) {
                     diag->bits_received = i;
                     diag->failure_reason = "TIMEOUT_BIT_HIGH";
@@ -279,6 +281,7 @@ static bool readDHT22(float &temp, float &hum, DHT22Diagnostic *diag = nullptr) 
             }
         }
         unsigned long dur = micros() - t0;
+        interrupts();
 
         data[i / 8] <<= 1;
         // 45µs is optimal midpoint between 27µs and 70µs
@@ -485,8 +488,6 @@ static void sample_and_transmit_sensors(unsigned long now) {
             hw_sensors.humidity = h_val;
             hw_sensors.dht_ok = true;
         } else {
-            hw_sensors.temperature = 0.0f;
-            hw_sensors.humidity = 0.0f;
             hw_sensors.dht_ok = false;
             // Report diagnostic failure audit for deep troubleshooting (rate-limited to 30s to prevent flooding monitor)
             static unsigned long last_dht_diag_report_ms = 0;
@@ -525,6 +526,13 @@ static void sample_and_transmit_sensors(unsigned long now) {
 }
 
 // ─── Arduino Setup ────────────────────────────────────────────────
+void background_yield() {
+#if ENABLE_MPM10_SENSOR
+    pollPMS();
+#endif
+    Bridge.tick();
+}
+
 void setup() {
     Serial.begin(SERIAL_BAUD);
 #if ENABLE_MPM10_SENSOR
@@ -539,6 +547,7 @@ void setup() {
     navosStateInit(state);
     boot_ms = millis();
 
+    gui.setYieldCallback(background_yield);
     gui.begin();
     gui.showStatus("NavosEdge MCU", "Connecting RPC Bridge...");
 
