@@ -93,30 +93,33 @@ PIDS=()
 COMPONENT_NAMES=()
 
 cleanup() {
-    echo ""
-    echo "========================================"
-    echo "  NAVOSEDGE SHUTDOWN"
-    echo "========================================"
-    local i
-    for (( i=${#PIDS[@]}-1; i>=0; i-- )); do
-        local pid="${PIDS[$i]}"
-        local name="${COMPONENT_NAMES[$i]:-unknown}"
-        if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
-            echo "[STOP] $name (PID $pid)"
-            kill "$pid" 2>/dev/null || true
-        fi
-    done
-    # Give processes a moment to exit gracefully
-    sleep 1
-    # Force-kill anything still alive
-    for pid in "${PIDS[@]}"; do
-        if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
-            kill -9 "$pid" 2>/dev/null || true
-        fi
-    done
-    wait 2>/dev/null || true
-    echo "[DONE] All processes stopped."
-    exit 0
+    local exit_code=$?
+    if [ ${#PIDS[@]} -gt 0 ]; then
+        echo ""
+        echo "========================================"
+        echo "  NAVOSEDGE SHUTDOWN"
+        echo "========================================"
+        local i
+        for (( i=${#PIDS[@]}-1; i>=0; i-- )); do
+            local pid="${PIDS[$i]}"
+            local name="${COMPONENT_NAMES[$i]:-unknown}"
+            if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+                echo "[STOP] $name (PID $pid)"
+                kill "$pid" 2>/dev/null || true
+            fi
+        done
+        # Give processes a moment to exit gracefully
+        sleep 1
+        # Force-kill anything still alive
+        for pid in "${PIDS[@]}"; do
+            if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+                kill -9 "$pid" 2>/dev/null || true
+            fi
+        done
+        wait 2>/dev/null || true
+        echo "[DONE] All processes stopped."
+    fi
+    exit "$exit_code"
 }
 
 trap cleanup SIGINT SIGTERM EXIT
@@ -246,16 +249,32 @@ HW_BINARY="$HW_BUILD_DIR/navos_hardware_bridge"
 
 mkdir -p "$HW_BUILD_DIR"
 
-if [ ! -f "$HW_BINARY" ] || [ "$REPO_ROOT/Hardware/CMakeLists.txt" -nt "$HW_BINARY" ] || \
-   [ "$REPO_ROOT/Hardware/src/main.cpp" -nt "$HW_BINARY" ]; then
     echo "  Running cmake..."
-    cmake -S "$REPO_ROOT/Hardware" -B "$HW_BUILD_DIR" -DCMAKE_BUILD_TYPE=Release > /dev/null 2>&1
+    CMAKE_LOG=$(mktemp /tmp/navos_cmake_XXXXXX.log)
+    if ! cmake -S "$REPO_ROOT/Hardware" -B "$HW_BUILD_DIR" -DCMAKE_BUILD_TYPE=Release > "$CMAKE_LOG" 2>&1; then
+        echo ""
+        echo "  [ERROR] CMake configuration failed!"
+        echo "────────────────────────────────────────"
+        cat "$CMAKE_LOG"
+        echo "────────────────────────────────────────"
+        rm -f "$CMAKE_LOG"
+        exit 1
+    fi
+    rm -f "$CMAKE_LOG"
+
     echo "  Compiling..."
-    make -C "$HW_BUILD_DIR" -j"$(nproc 2>/dev/null || echo 1)" > /dev/null 2>&1
+    MAKE_LOG=$(mktemp /tmp/navos_make_XXXXXX.log)
+    if ! make -C "$HW_BUILD_DIR" -j"$(nproc 2>/dev/null || echo 1)" > "$MAKE_LOG" 2>&1; then
+        echo ""
+        echo "  [ERROR] C++ compilation failed!"
+        echo "────────────────────────────────────────"
+        cat "$MAKE_LOG"
+        echo "────────────────────────────────────────"
+        rm -f "$MAKE_LOG"
+        exit 1
+    fi
+    rm -f "$MAKE_LOG"
     echo "  [DONE] navos_hardware_bridge built."
-else
-    echo "  [DONE] navos_hardware_bridge is up to date."
-fi
 
 # ══════════════════════════════════════════════════════════════════════════════
 # STEP 4: Build/flash MPI3501 display
@@ -272,8 +291,15 @@ if [ "$SKIP_DISPLAY_SIM" != "true" ]; then
        [ "$REPO_ROOT/Hardware/display/CMakeLists.txt" -nt "$DISPLAY_BINARY" ] || \
        [ "$REPO_ROOT/Hardware/display/main.cpp" -nt "$DISPLAY_BINARY" ]; then
         echo "  Building desktop display simulation..."
-        cmake -S "$REPO_ROOT/Hardware/display" -B "$DISPLAY_BUILD_DIR" -DCMAKE_BUILD_TYPE=Release > /dev/null 2>&1
-        make -C "$DISPLAY_BUILD_DIR" -j"$(nproc 2>/dev/null || echo 1)" > /dev/null 2>&1
+        DISP_BUILD_LOG=$(mktemp /tmp/navos_disp_build_XXXXXX.log)
+        if ! cmake -S "$REPO_ROOT/Hardware/display" -B "$DISPLAY_BUILD_DIR" -DCMAKE_BUILD_TYPE=Release > "$DISP_BUILD_LOG" 2>&1 || \
+           ! make -C "$DISPLAY_BUILD_DIR" -j"$(nproc 2>/dev/null || echo 1)" >> "$DISP_BUILD_LOG" 2>&1; then
+            echo "  [ERROR] Desktop display simulation build failed!"
+            cat "$DISP_BUILD_LOG"
+            rm -f "$DISP_BUILD_LOG"
+            exit 1
+        fi
+        rm -f "$DISP_BUILD_LOG"
         echo "  [DONE] navos_display_sim built."
     else
         echo "  [DONE] navos_display_sim is up to date."

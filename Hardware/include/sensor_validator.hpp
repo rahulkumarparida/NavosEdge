@@ -85,10 +85,11 @@ public:
         if (!r.valid) return r;
 
         // --- Hardware Health Flags ---
-        if (!d.dht_ok) {
+        if (!d.dht_ok && !d.pms_ok) {
+            r.error("Hardware fault: both DHT22 and MPM10-CS sensor readings invalid");
+        } else if (!d.dht_ok) {
             r.warn("DHT22 hardware fault: invalid temperature/humidity reading");
-        }
-        if (!d.pms_ok) {
+        } else if (!d.pms_ok) {
             r.warn("MPM10-CS hardware fault: invalid particulate matter reading");
         }
 

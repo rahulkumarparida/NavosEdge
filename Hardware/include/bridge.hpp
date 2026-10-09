@@ -9,6 +9,8 @@
 #include <csignal>
 #include <iomanip>
 #include <cmath>
+#include <chrono>
+#include <ctime>
 #include <nlohmann/json.hpp>
 
 #include "config.hpp"
@@ -544,6 +546,17 @@ private:
     static double round_dp(double val, int dp) {
         double factor = std::pow(10.0, dp);
         return std::round(val * factor) / factor;
+    }
+
+    static std::string now_iso8601() {
+        auto now = std::chrono::system_clock::now();
+        auto time_t_now = std::chrono::system_clock::to_time_t(now);
+        std::tm tm_buf{};
+        gmtime_r(&time_t_now, &tm_buf);
+
+        char buf[32];
+        std::strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%SZ", &tm_buf);
+        return std::string(buf);
     }
 };
 

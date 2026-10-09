@@ -101,28 +101,31 @@ PIDS=()
 COMPONENT_NAMES=()
 
 cleanup() {
-    echo ""
-    echo "========================================"
-    echo "  NAVOSEDGE SHUTDOWN"
-    echo "========================================"
-    local i
-    for (( i=${#PIDS[@]}-1; i>=0; i-- )); do
-        local pid="${PIDS[$i]}"
-        local name="${COMPONENT_NAMES[$i]:-unknown}"
-        if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
-            echo "[STOP] $name (PID $pid)"
-            kill "$pid" 2>/dev/null || true
-        fi
-    done
-    sleep 1
-    for pid in "${PIDS[@]}"; do
-        if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
-            kill -9 "$pid" 2>/dev/null || true
-        fi
-    done
-    wait 2>/dev/null || true
-    echo "[DONE] All processes stopped."
-    exit 0
+    local exit_code=$?
+    if [ ${#PIDS[@]} -gt 0 ]; then
+        echo ""
+        echo "========================================"
+        echo "  NAVOSEDGE SHUTDOWN"
+        echo "========================================"
+        local i
+        for (( i=${#PIDS[@]}-1; i>=0; i-- )); do
+            local pid="${PIDS[$i]}"
+            local name="${COMPONENT_NAMES[$i]:-unknown}"
+            if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+                echo "[STOP] $name (PID $pid)"
+                kill "$pid" 2>/dev/null || true
+            fi
+        done
+        sleep 1
+        for pid in "${PIDS[@]}"; do
+            if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+                kill -9 "$pid" 2>/dev/null || true
+            fi
+        done
+        wait 2>/dev/null || true
+        echo "[DONE] All processes stopped."
+    fi
+    exit "$exit_code"
 }
 
 trap cleanup SIGINT SIGTERM EXIT
@@ -301,16 +304,32 @@ if [ "$NO_BUILD" = "true" ]; then
     echo "  [ OK ] navos_hardware_bridge binary verified (NO_BUILD mode)."
 else
     mkdir -p "$HW_BUILD_DIR"
-    if [ ! -f "$HW_BINARY" ] || [ "$REPO_ROOT/Hardware/CMakeLists.txt" -nt "$HW_BINARY" ] || \
-       [ "$REPO_ROOT/Hardware/src/main.cpp" -nt "$HW_BINARY" ]; then
-        echo "  Running cmake..."
-        cmake -S "$REPO_ROOT/Hardware" -B "$HW_BUILD_DIR" -DCMAKE_BUILD_TYPE=Release > /dev/null 2>&1
-        echo "  Compiling..."
-        make -C "$HW_BUILD_DIR" -j"$(nproc 2>/dev/null || echo 1)" > /dev/null 2>&1
-        echo "  [DONE] navos_hardware_bridge built."
-    else
-        echo "  [DONE] navos_hardware_bridge is up to date."
+    echo "  Running cmake..."
+    CMAKE_LOG=$(mktemp /tmp/navos_cmake_XXXXXX.log)
+    if ! cmake -S "$REPO_ROOT/Hardware" -B "$HW_BUILD_DIR" -DCMAKE_BUILD_TYPE=Release > "$CMAKE_LOG" 2>&1; then
+        echo ""
+        echo "  [ERROR] CMake configuration failed!"
+        echo "────────────────────────────────────────"
+        cat "$CMAKE_LOG"
+        echo "────────────────────────────────────────"
+        rm -f "$CMAKE_LOG"
+        exit 1
     fi
+    rm -f "$CMAKE_LOG"
+
+    echo "  Compiling..."
+    MAKE_LOG=$(mktemp /tmp/navos_make_XXXXXX.log)
+    if ! make -C "$HW_BUILD_DIR" -j"$(nproc 2>/dev/null || echo 1)" > "$MAKE_LOG" 2>&1; then
+        echo ""
+        echo "  [ERROR] C++ compilation failed!"
+        echo "────────────────────────────────────────"
+        cat "$MAKE_LOG"
+        echo "────────────────────────────────────────"
+        rm -f "$MAKE_LOG"
+        exit 1
+    fi
+    rm -f "$MAKE_LOG"
+    echo "  [DONE] navos_hardware_bridge built."
 fi
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -411,6 +430,12 @@ else
 
     if [ $READY -ne 1 ]; then
         echo "  [ERROR] Intelligence Server failed to start within 60 seconds."
+        if [ -f /tmp/navos_server.log ]; then
+            echo "────────────────────────────────────────"
+            echo "  Server log output (/tmp/navos_server.log):"
+            tail -n 30 /tmp/navos_server.log
+            echo "────────────────────────────────────────"
+        fi
         exit 1
     fi
     echo "  [DONE] Intelligence Server READY."
@@ -469,6 +494,12 @@ for i in $(seq 30 -5 5); do
     if ! kill -0 "${PIDS[-1]}" 2>/dev/null; then
         echo ""
         echo "  [ERROR] Physical hardware process exited during warm-up."
+        if [ -f "$HW_LOG_FILE" ]; then
+            echo "────────────────────────────────────────"
+            echo "  Hardware log output ($HW_LOG_FILE):"
+            tail -n 25 "$HW_LOG_FILE"
+            echo "────────────────────────────────────────"
+        fi
         echo ""
         echo "  Possible causes:"
         echo "    • Serial port $SERIAL_PORT is not accessible (permissions?)"
