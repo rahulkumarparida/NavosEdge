@@ -453,6 +453,11 @@ static void pollPMS() {
             hw_sensors.pm10 = p10;
             hw_sensors.pms_ok = true;
             last_pms_rx_ms = millis();
+
+            // Directly update display state with live PM readings
+            state.pm1_0 = p1;
+            state.pm2_5 = p25;
+            state.pm10  = p10;
         }
     }
     // Sensor validity timeout: mark false if no valid frame for 10 seconds
@@ -523,10 +528,19 @@ static void sample_and_transmit_sensors(unsigned long now) {
     state.mq9_voltage = hw_sensors.mq9_adc * (5.0f / 1023.0f);
     state.mq135_adc = (uint16_t)hw_sensors.mq135_adc;
     state.mq135_voltage = hw_sensors.mq135_adc * (5.0f / 1023.0f);
+
+    // If sensors are functioning, activate display state so screens render live data
+    if (hw_sensors.pms_ok || hw_sensors.dht_ok || hw_sensors.mq_warmed) {
+        state.valid = true;
+    }
 #endif
 }
 
 void background_yield() {
+    static bool in_yield = false;
+    if (in_yield) return;
+    in_yield = true;
+
 #if ENABLE_MPM10_SENSOR
     pollPMS();
 #endif
@@ -534,17 +548,11 @@ void background_yield() {
 
     unsigned long now = millis();
 
-    // Background DHT22 sampling (runs every 2.5s to ensure valid data before 10s JSON payload)
+    // Background DHT22 sampling (runs every 2.0s to ensure valid data before 10s JSON payload)
     if ((now - last_dht_sample_ms) >= DHT_MIN_INTERVAL) {
         last_dht_sample_ms = now;
         float t_val = 0.0f, h_val = 0.0f;
         bool success = readDHT22(t_val, h_val, &dht_diag);
-
-        // Retry once on failure (DHT22 checksum errors are often transient)
-        if (!success) {
-            delayMicroseconds(500);
-            success = readDHT22(t_val, h_val, &dht_diag);
-        }
 
         if (success) {
             hw_sensors.temperature = t_val;
@@ -552,6 +560,10 @@ void background_yield() {
             hw_sensors.dht_ok = true;
             hw_sensors.dht_ever_ok = true;
             hw_sensors.dht_consecutive_fails = 0;
+
+            // Propagate directly to display state
+            state.temperature = t_val;
+            state.humidity    = h_val;
         } else {
             hw_sensors.dht_consecutive_fails++;
             // Only mark FAULT after 3+ consecutive failures (6+ seconds of no valid reading).
@@ -570,6 +582,8 @@ void background_yield() {
         last_sensor_sample_ms = now;
         sample_and_transmit_sensors(now);
     }
+
+    in_yield = false;
 }
 
 void setup() {
@@ -610,10 +624,8 @@ void setup() {
 void loop() {
     unsigned long loop_start_us = micros();
 
-    // 0. Non-blocking MPM10 (PMS) UART stream poll
-#if ENABLE_MPM10_SENSOR
-    pollPMS();
-#endif
+    // 0. Process background tasks continuously (PMS UART, Bridge RPC, DHT22, JSON transmission)
+    background_yield();
 
     // 1. Update physical display GUI non-blockingly
     unsigned long gui_start_us = micros();

@@ -85,7 +85,14 @@ public:
                 last_poll = now;
                 std::cout << "[HW] [Warm-up " << elapsed << "/" << warmup_seconds << "s] Probing hardware sensors to monitor stabilization...\n";
                 // Probe sensors to verify hardware response and display stabilization
-                sensor_->read();
+                SensorData probe = sensor_->read();
+                bool probe_valid = (probe.mq2_raw_adc != 0 || probe.mq9_raw_adc != 0 ||
+                                    probe.mq135_raw_adc != 0 || probe.pm2_5 != 0.0 ||
+                                    probe.temperature_c != 0.0);
+                if (probe_valid) {
+                    last_valid_reading_ = probe;
+                    has_valid_reading_ = true;
+                }
             }
 
             std::this_thread::sleep_for(std::chrono::milliseconds(200));
@@ -439,7 +446,7 @@ private:
         if (is_empty && has_valid_reading_) {
             // Reuse last-known-good reading on timeout/error instead of sending zeros
             data = last_valid_reading_;
-            data.timestamp = last_valid_reading_.timestamp; // Keep original timestamp for staleness tracking
+            data.timestamp = now_iso8601(); // Refresh timestamp for live ingestion
             std::cout << "[HW] Using cached sensor reading (serial timeout/empty frame)\n";
         } else if (is_empty && !has_valid_reading_) {
             // No valid data ever received — skip transmission entirely

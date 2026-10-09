@@ -171,4 +171,4 @@ int main(int argc, char* argv[]) {
 
     return 0;
 }
-// Force rebuild v3 -- DHT22 resilience + bridge caching + validator fix
+// Force rebuild v4 -- Continuous MCU loop + warm-up caching + display live-binding
