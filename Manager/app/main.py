@@ -23,7 +23,7 @@ logger = logging.getLogger("ManagerServer")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    from app.config import HOST, PORT, UNO_Q_BASE_URL, UNO_Q_POLL_INTERVAL_S, UNO_Q_POLL_ENABLED
+    from .config import HOST, PORT, UNO_Q_BASE_URL, UNO_Q_POLL_INTERVAL_S, UNO_Q_POLL_ENABLED
     logger.info("Starting NavosEdge Parent Manager Server on http://%s:%s", HOST, PORT)
     if UNO_Q_POLL_ENABLED:
         logger.info("UNO Q Polling enabled — Base URL: %s, Interval: %.1fs", UNO_Q_BASE_URL, UNO_Q_POLL_INTERVAL_S)

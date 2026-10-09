@@ -5,7 +5,15 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-from .content import AQI_VARIANTS, SOURCE_VARIANTS, FORECAST_VARIANTS, WEATHER_VARIANTS
+from .content import (
+    AQI_ACTIONS,
+    AQI_VARIANTS,
+    FORECAST_VARIANTS,
+    SOURCE_ACTIONS,
+    SOURCE_VARIANTS,
+    TREND_ACTIONS,
+    WEATHER_VARIANTS,
+)
 
 @dataclass(frozen=True)
 class AdvisoryConfig:
@@ -28,6 +36,7 @@ class AdvisoryConfig:
     cold_temperature: float = 16.0
     humid_humidity: float = 75.0
     dry_humidity: float = 30.0
+    hysteresis_margin: float = 3.0
 
 
 @dataclass(frozen=True)
@@ -35,6 +44,7 @@ class LayerResult:
     severity: str = "NORMAL"
     advice: str = ""
     actions: tuple[str, ...] = ()
+    sub_level: str = "LOW"
 
 
 @dataclass(frozen=True)
@@ -55,23 +65,55 @@ def _get_seed(data: dict[str, Any]) -> int:
     pm25 = _number(pm.get("PM2_5"))
     temp = _number(data.get("temperature_C"))
     hum = _number(data.get("humidity_pct"))
-    # Simple deterministic seed
-    return int(abs(aqi * 100 + pm25 * 10 + temp * 10 + hum))
+    seq = int(_number(data.get("sample_seq"), 0))
+    ts = data.get("timestamp")
+    time_offset = 0
+    if isinstance(ts, str) and len(ts) >= 16:
+        try:
+            time_offset = int(ts[14:16])
+        except Exception:
+            time_offset = 0
+    elif hasattr(ts, "minute"):
+        time_offset = getattr(ts, "minute", 0)
+    return int(abs(aqi * 100 + pm25 * 10 + temp * 10 + hum + seq + time_offset))
 
 def _pick(variants: list[str], seed: int) -> str:
     if not variants:
         return ""
     return variants[seed % len(variants)]
 
-def _get_sub_level(value: float, min_val: float, max_val: float) -> str:
-    if max_val <= min_val or value <= min_val: return "LOW"
-    ratio = (value - min_val) / (max_val - min_val)
-    if ratio < 0.33: return "LOW"
-    elif ratio < 0.66: return "MODERATE"
-    else: return "HIGH"
+def _get_sub_level(
+    value: float,
+    min_val: float,
+    max_val: float,
+    prev_val: float | None = None,
+    prev_sub: str | None = None,
+    hysteresis_margin: float = 3.0,
+) -> str:
+    if max_val <= min_val or value <= min_val:
+        raw_sub = "LOW"
+    else:
+        ratio = (value - min_val) / (max_val - min_val)
+        if ratio < 0.33:
+            raw_sub = "LOW"
+        elif ratio < 0.66:
+            raw_sub = "MODERATE"
+        else:
+            raw_sub = "HIGH"
 
-def current_air_quality(data: dict[str, Any], config: AdvisoryConfig) -> LayerResult:
-    """Evaluate AQI and PM without calculating or fabricating AQI."""
+    if prev_val is not None and prev_sub in ("LOW", "MODERATE", "HIGH"):
+        if abs(value - prev_val) < hysteresis_margin:
+            return prev_sub
+
+    return raw_sub
+
+def current_air_quality(
+    data: dict[str, Any],
+    config: AdvisoryConfig,
+    prev_aqi: float | None = None,
+    prev_sub: str | None = None,
+) -> LayerResult:
+    """Evaluate AQI and PM with CPCB thresholds, hysteresis, and sub-band actions."""
     aqi = data.get("aqi")
     pm = data.get("pm") or {}
     aqi_value = _number(aqi, -1.0) if aqi is not None else -1.0
@@ -80,55 +122,70 @@ def current_air_quality(data: dict[str, Any], config: AdvisoryConfig) -> LayerRe
     seed = _get_seed(data)
 
     if aqi_value >= config.aqi_critical:
-        sub = _get_sub_level(aqi_value, config.aqi_critical, config.aqi_critical + 50)
-        variants = AQI_VARIANTS["CRITICAL"][sub]
-        return LayerResult("CRITICAL", _pick(variants, seed), ("Avoid outdoor exposure.", "Use suitable respiratory protection."))
-    if aqi_value >= config.aqi_severe or pm25 >= config.pm25_severe or pm10 >= config.pm10_severe:
-        sub = _get_sub_level(aqi_value, config.aqi_severe, config.aqi_critical)
-        variants = AQI_VARIANTS["SEVERE"][sub]
-        return LayerResult("SEVERE", _pick(variants, seed), ("Limit outdoor activity.", "Keep windows closed where practical."))
-    if aqi_value >= config.aqi_high or pm25 >= config.pm25_high or pm10 >= config.pm10_high:
-        sub = _get_sub_level(aqi_value, config.aqi_high, config.aqi_severe)
-        variants = AQI_VARIANTS["HIGH"][sub]
-        return LayerResult("HIGH", _pick(variants, seed), ("Reduce prolonged outdoor activity.", "Sensitive people should take extra care."))
-    if aqi_value >= config.aqi_moderate or pm25 >= config.pm25_moderate or pm10 >= config.pm10_moderate:
-        sub = _get_sub_level(aqi_value, config.aqi_moderate, config.aqi_high)
-        variants = AQI_VARIANTS["MODERATE"][sub]
-        return LayerResult("MODERATE", _pick(variants, seed), ("Prefer well-ventilated, lower-pollution areas." ,))
-    
-    sub = _get_sub_level(max(aqi_value, 0), 0, config.aqi_moderate)
-    variants = AQI_VARIANTS["NORMAL"][sub]
-    return LayerResult("NORMAL", _pick(variants, seed), ())
+        severity = "CRITICAL"
+        sub = _get_sub_level(aqi_value, config.aqi_critical, config.aqi_critical + 50, prev_aqi, prev_sub, config.hysteresis_margin)
+    elif aqi_value >= config.aqi_severe or pm25 >= config.pm25_severe or pm10 >= config.pm10_severe:
+        severity = "SEVERE"
+        sub = _get_sub_level(aqi_value, config.aqi_severe, config.aqi_critical, prev_aqi, prev_sub, config.hysteresis_margin)
+    elif aqi_value >= config.aqi_high or pm25 >= config.pm25_high or pm10 >= config.pm10_high:
+        severity = "HIGH"
+        sub = _get_sub_level(aqi_value, config.aqi_high, config.aqi_severe, prev_aqi, prev_sub, config.hysteresis_margin)
+    elif aqi_value >= config.aqi_moderate or pm25 >= config.pm25_moderate or pm10 >= config.pm10_moderate:
+        severity = "MODERATE"
+        sub = _get_sub_level(aqi_value, config.aqi_moderate, config.aqi_high, prev_aqi, prev_sub, config.hysteresis_margin)
+    else:
+        severity = "NORMAL"
+        sub = _get_sub_level(max(aqi_value, 0), 0, config.aqi_moderate, prev_aqi, prev_sub, config.hysteresis_margin)
+
+    variants = AQI_VARIANTS[severity][sub]
+    advice = _pick(variants, seed)
+
+    # Specific pollutant emphasis when elevated
+    if severity in ("HIGH", "SEVERE", "CRITICAL"):
+        if pm25 > 90 and pm25 > pm10 * 0.7:
+            advice += " Fine particles (PM2.5) are especially elevated."
+        elif pm10 > 180 and pm10 > pm25 * 2.0:
+            advice += " Coarse dust (PM10) is heavily elevated."
+
+    sub_idx = 0 if sub == "LOW" else (1 if sub == "MODERATE" else 2)
+    actions_options = AQI_ACTIONS.get(severity, [()])
+    act_idx = (sub_idx + (seed % len(actions_options))) % len(actions_options)
+    actions = actions_options[act_idx]
+
+    return LayerResult(severity, advice, actions, sub_level=sub)
 
 
-def source_advice(data: dict[str, Any], config: AdvisoryConfig) -> LayerResult:
+def source_advice(
+    data: dict[str, Any],
+    config: AdvisoryConfig,
+    aqi_severity: str = "NORMAL",
+    sub_level: str = "LOW",
+) -> LayerResult:
     source = ((data.get("predictions") or {}).get("source") or {})
     value = str(source.get("value") or "UNKNOWN").upper()
     confidence = source.get("confidence")
     seed = _get_seed(data)
-    
+    sub_idx = 0 if sub_level == "LOW" else (1 if sub_level == "MODERATE" else 2)
+
     if confidence is None or _number(confidence) < config.source_confidence_minimum or value in {"UNKNOWN", "UNAVAILABLE"}:
-        sub = _get_sub_level(_number(confidence), 0, config.source_confidence_minimum)
-        variants = SOURCE_VARIANTS.get("UNKNOWN", SOURCE_VARIANTS["MIXED"])[sub]
-        return LayerResult("NORMAL", _pick(variants, seed), ("Use general pollution precautions.",))
-    
-    sub = _get_sub_level(_number(confidence), config.source_confidence_minimum, 1.0)
+        conf_sub = _get_sub_level(_number(confidence), 0, config.source_confidence_minimum)
+        variants = SOURCE_VARIANTS.get("UNKNOWN", SOURCE_VARIANTS["MIXED"])[conf_sub]
+        act_dict = SOURCE_ACTIONS.get("UNKNOWN", {})
+        act_sev_list = act_dict.get(aqi_severity, act_dict.get("NORMAL", [("Use general pollution precautions.",)]))
+        actions = act_sev_list[sub_idx % len(act_sev_list)]
+        return LayerResult("NORMAL", _pick(variants, seed), actions, sub_level=conf_sub)
+
+    conf_sub = _get_sub_level(_number(confidence), config.source_confidence_minimum, 1.0)
     variants = SOURCE_VARIANTS.get(value)
     if not variants:
         variants = SOURCE_VARIANTS["MIXED"]
-    
-    actions_map = {
-        "TRAFFIC": ("Reduce exposure near busy roads when practical.",),
-        "HEAVY_DUST": ("Avoid visibly dusty areas and use respiratory protection if needed.",),
-        "CONSTRUCTION": ("Avoid active dust-generating areas when practical.",),
-        "COMBUSTION": ("Avoid smoke and poorly ventilated combustion areas.",),
-        "BIOMASS_OR_WASTE_BURNING": ("Avoid smoke and keep indoor air protected.",),
-        "INDUSTRIAL": ("Limit exposure near industrial zones.",),
-        "INDOOR_ACTIVITY": ("Improve indoor ventilation.",),
-    }
-    actions = actions_map.get(value, ("Use general pollution precautions.",))
-    
-    return LayerResult("NORMAL", _pick(variants[sub], seed), actions)
+
+    src_dict = SOURCE_ACTIONS.get(value, SOURCE_ACTIONS["MIXED"])
+    src_sev_list = src_dict.get(aqi_severity, src_dict.get("NORMAL", [("Use general pollution precautions.",)]))
+    act_idx = (sub_idx + (seed % len(src_sev_list))) % len(src_sev_list)
+    actions = src_sev_list[act_idx]
+
+    return LayerResult("NORMAL", _pick(variants[conf_sub], seed), actions, sub_level=conf_sub)
 
 
 def forecast_advice(data: dict[str, Any], config: AdvisoryConfig) -> ForecastTrend:
@@ -136,7 +193,7 @@ def forecast_advice(data: dict[str, Any], config: AdvisoryConfig) -> ForecastTre
     confidence = forecast.get("confidence")
     values = forecast.get("value")
     seed = _get_seed(data)
-    
+
     if not isinstance(values, dict) or confidence is None or _number(confidence) < config.forecast_confidence_minimum:
         return ForecastTrend()
     current = _number((data.get("pm") or {}).get("PM2_5"))
@@ -146,18 +203,22 @@ def forecast_advice(data: dict[str, Any], config: AdvisoryConfig) -> ForecastTre
     future = _number(series[-1], current)
     if current <= 0:
         return ForecastTrend()
-    
+
     change = (future - current) / current
-    
+
     if change >= config.forecast_change_fraction:
         sub = _get_sub_level(change, config.forecast_change_fraction, config.forecast_change_fraction + 0.5)
-        return ForecastTrend("rising", LayerResult("HIGH", _pick(FORECAST_VARIANTS["RISING"][sub], seed), ("Take precautions before the forecast period.",)))
+        rising_actions = TREND_ACTIONS.get("RISING", ("Take precautions before the forecast period.",))
+        act = (rising_actions[seed % len(rising_actions)],)
+        return ForecastTrend("rising", LayerResult("HIGH", _pick(FORECAST_VARIANTS["RISING"][sub], seed), act, sub_level=sub))
     if change <= -config.forecast_change_fraction:
         sub = _get_sub_level(-change, config.forecast_change_fraction, config.forecast_change_fraction + 0.5)
-        return ForecastTrend("falling", LayerResult("NORMAL", _pick(FORECAST_VARIANTS["FALLING"][sub], seed), ()))
-    
+        falling_actions = TREND_ACTIONS.get("FALLING", ())
+        act = (falling_actions[seed % len(falling_actions)],) if falling_actions else ()
+        return ForecastTrend("falling", LayerResult("NORMAL", _pick(FORECAST_VARIANTS["FALLING"][sub], seed), act, sub_level=sub))
+
     sub = _get_sub_level(abs(change), 0, config.forecast_change_fraction)
-    return ForecastTrend("stable", LayerResult("NORMAL", _pick(FORECAST_VARIANTS["STABLE"][sub], seed), ()))
+    return ForecastTrend("stable", LayerResult("NORMAL", _pick(FORECAST_VARIANTS["STABLE"][sub], seed), (), sub_level=sub))
 
 
 def weather_advice(data: dict[str, Any], config: AdvisoryConfig) -> str:

@@ -44,7 +44,7 @@ class AQIService:
                 detail="No AQI calculation available yet",
             )
         return LatestAQIResponse(
-            status="available",
+            status=latest.status,
             aqi=latest.aqi,
             category=latest.category,
             dominant_pollutant=latest.dominant_pollutant,
@@ -52,4 +52,9 @@ class AQIService:
             sub_indices=latest.sub_indices,
             timestamp=latest.timestamp,
             node_id=latest.node_id,
+            calculation_basis=getattr(latest, "calculation_basis", "PM_BASED_ESTIMATE"),
+            cpcb_compliant=getattr(latest, "cpcb_compliant", False),
+            data_sufficiency=getattr(latest, "data_sufficiency", "INSUFFICIENT_POLLUTANTS"),
+            official_cpcb_aqi=getattr(latest, "official_cpcb_aqi", None),
+            pm_based_aqi=getattr(latest, "pm_based_aqi", latest.aqi),
         )

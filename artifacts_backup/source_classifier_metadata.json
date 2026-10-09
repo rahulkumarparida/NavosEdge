@@ -1,0 +1,39 @@
+{
+  "version": "1.0.0-retrained-20261002",
+  "created_at": "2026-10-01T21:12:17.983964+00:00",
+  "model_type": "DecisionTreeClassifier",
+  "training_data": "Calibrated from real dataset (2672 aligned samples)",
+  "classes": [
+    "BIOMASS_OR_WASTE_BURNING",
+    "CLEAN_OR_BACKGROUND",
+    "CONSTRUCTION_ACTIVITY",
+    "COOKING_OR_FUEL_COMBUSTION",
+    "HEAVY_DUST",
+    "INDOOR_ACTIVITY",
+    "INDUSTRIAL_OR_GENERATOR_EMISSIONS",
+    "TRAFFIC"
+  ],
+  "features": [
+    "mq2_v",
+    "mq9_v",
+    "mq135_v",
+    "temp_c",
+    "hum_pct",
+    "pm1_0",
+    "pm2_5",
+    "pm10",
+    "pm_coarse_ratio",
+    "pm_fine_ratio",
+    "mq_mean_v",
+    "mq_max_v",
+    "mq2_mq9_ratio",
+    "mq135_mq2_ratio"
+  ],
+  "evaluation": {
+    "accuracy": 0.2383654937570942,
+    "tree_depth": 8,
+    "n_leaves": 74,
+    "n_train": 7044,
+    "n_test": 1762
+  }
+}

@@ -19,7 +19,7 @@ from app.aqi.calculator import AQICalculator
 class AqiProcessor:
     """AQI processor using regulatory standard breakpoint calculation."""
 
-    def __init__(self, standard: str = "EPA") -> None:
+    def __init__(self, standard: str = "CPCB") -> None:
         self.calculator = AQICalculator(standard=standard)
 
     def calculate(self, pm: dict[str, float]) -> float | None:

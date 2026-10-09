@@ -16,9 +16,9 @@ The NavosEdge node integrates five environmental sensors and a 3.5" TFT display 
 
 | Peripheral | Sensor Model | Target Pin (UNO Q) | Pin Mode / Interface | Signal Description | Power Requirement |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Combustible Gas / Smoke** | MQ2 | **A0** | Analog Input (ADC) | 0–5V analog voltage proportional to gas | 5V @ ~160mA (Heater) |
-| **Carbon Monoxide (CO)** | MQ9 | **A1** | Analog Input (ADC) | 0–5V analog voltage proportional to CO | 5V @ ~170mA (Heater) |
-| **Air Quality (NH3, NOx)** | MQ135 | **A2** | Analog Input (ADC) | 0–5V analog voltage for broad VOCs/CO2 | 5V @ ~160mA (Heater) |
+| **Combustible Gas / Smoke** | MQ2 | **A0** | Analog Input (ADC via Divider) | 0–3.3V scaled analog voltage (Uncalibrated ADC count) | 5V @ ~160mA (Heater) |
+| **Carbon Monoxide (CO)** | MQ9 | **A1** | Analog Input (ADC via Divider) | 0–3.3V scaled analog voltage (Uncalibrated ADC count) | 5V @ ~170mA (Heater) |
+| **Air Quality (NH3, NOx)** | MQ135 | **A2** | Analog Input (ADC via Divider) | 0–3.3V scaled analog voltage (Uncalibrated ADC count) | 5V @ ~160mA (Heater) |
 | **Particulate Matter (TX)** | MPM10-CS | **D0 / RX** | Hardware `Serial1` (RX) | Sensor TX transmits 32-byte PMS binary frame | 5V @ ~100mA (Laser/Fan) |
 | **Particulate Matter (RX)** | MPM10-CS | **D1 / TX** | Hardware `Serial1` (TX) | Optional: Sleep/Active commands | Shared with MPM10 VCC |
 | **Temperature & Humidity** | DHT22 (AM2302) | **D8** | Digital Bidirectional | Single-wire bit-banged timing (10kΩ pull-up) | 3.3V or 5V @ ~2.5mA |
@@ -28,6 +28,20 @@ The NavosEdge node integrates five environmental sensors and a 3.5" TFT display 
 | **TFT Display — SPI MISO** | MPI3501 (ILI9486) | **D12** | Hardware SPI | Master In Slave Out (Touch / Read) | 3.3V / 5V |
 | **TFT Display — SPI SCK** | MPI3501 (ILI9486) | **D13** | Hardware SPI | Serial SPI Clock line | 3.3V / 5V |
 | **Telemetry to Linux MPU** | Onboard Bridge | **USB** | CDC Serial @ 115200 | Transmits JSON lines to `/dev/ttyACM0` | Powered via board bus |
+
+> [!WARNING]
+> **CRITICAL ELECTRICAL SPECIFICATION: 3.3V ADC MAXIMUM & VOLTAGE DIVIDERS**
+> The Arduino UNO Q MCU is an **STM32U585 ARM Cortex-M33** with a **3.3V analog reference ($V_{REF} = 3.3\text{V}$)**. Its analog input pins (A0–A5) **ARE NOT 5V TOLERANT**.
+> 
+> The MQ2, MQ9, and MQ135 sensor breakout boards run their heating coils from the 5V rail and can output analog voltages up to 5.0V under high gas concentrations. Feeding 5.0V directly into pins A0–A2 will cause ADC saturation at count 1023 and risks permanent electrical damage to the STM32U5 input stage.
+> 
+> **A resistive voltage divider ($R_1 = 4.7\text{ k}\Omega, R_2 = 10\text{ k}\Omega$) is REQUIRED** on each analog output line to step down $0–5.0\text{V}$ to $0–3.4\text{V}$ (or $R_1 = 1\text{ k}\Omega, R_2 = 2\text{ k}\Omega$ for $0–3.33\text{V}$). Never attempt to solve this electrical overvoltage problem in software.
+>
+> Reference: [Arduino UNO Q Official Datasheet](https://docs.arduino.cc/resources/datasheets/ABX00162-ABX00173-datasheet.pdf)
+
+> [!IMPORTANT]
+> **Uncalibrated Chemo-Resistive Gas Sensors Note:**
+> Metal-oxide semiconductor (MOS) sensors (MQ-2, MQ-9, MQ-135) deliver broad qualitative electrical responses with significant cross-sensitivity to humidity, temperature, and ambient volatile compounds. They are **not** regulatory-grade gas analyzers and cannot uniquely identify specific gases or report calibrated ppm concentrations without certified gas chamber calibration. NavosEdge reports their values strictly as raw ADC counts ($0–1023$) and uncalibrated voltages, using them solely as qualitative features for neural network source classification.
 
 > [!IMPORTANT]
 > **Why DHT22 is assigned to Pin D8 instead of Pin D2:**
@@ -40,49 +54,61 @@ The NavosEdge node integrates five environmental sensors and a 3.5" TFT display 
 
 ## 3. Individual Sensor Wiring Diagrams
 
-### 3.1 MQ2 — Flammable Gas & Smoke Sensor
+#### 3.1 MQ2 — Flammable Gas & Smoke Sensor
 ```
-      MQ2 Breakout Board               Arduino UNO Q
-   ┌───────────────────────┐        ┌─────────────────┐
-   │ VCC                   ├────────┤ 5V              │
-   │ GND                   ├────────┤ GND             │
-   │ AOUT (Analog Signal)  ├────────┤ A0 (ADC Input)  │
-   │ DOUT (Digital Out)    │ (N/C)  │                 │
-   └───────────────────────┘        └─────────────────┘
+      MQ2 Breakout Board                                Arduino UNO Q
+   ┌───────────────────────┐                         ┌─────────────────┐
+   │ VCC (5V Power)        ├─────────────────────────┤ 5V              │
+   │ GND                   ├──────────────┬──────────┤ GND             │
+   │ AOUT (0–5V Analog)    ├───[4.7kΩ]──┬─┴──────────┤ A0 (0–3.3V ADC) │
+   │                       │            │            └─────────────────┘
+   │                       │         [10kΩ]
+   │                       │            │
+   │ DOUT (Digital Out)    │ (N/C)     GND
+   └───────────────────────┘
 ```
-- **AOUT → A0**: Outputs continuous voltage 0.0V–5.0V (mapped to ADC 0–1023 in firmware).
+- **AOUT → Divider → A0**: Module AOUT connects through a voltage divider ($R_1 = 4.7\text{ k}\Omega, R_2 = 10\text{ k}\Omega$, dividing by $\approx 0.68$), scaling $0–5.0\text{V}$ to safe $0–3.4\text{V}$ for the STM32U5 3.3V ADC.
+- **Uncalibrated Signal**: Produces an ADC count $0–1023$ reflecting broad chemo-resistive changes. It is **not** calibrated in ppm.
 - **DOUT**: Leave unconnected (digital comparator threshold is not used).
-- **Warm-Up Note**: Requires a mandatory **30-second warm-up** period upon boot for the internal heater coil to stabilize.
+- **Warm-Up Note**: Requires a mandatory **30-second thermal stabilization** upon boot for the internal heating element.
 
 ---
 
 ### 3.2 MQ9 — Carbon Monoxide & Flammable Gas Sensor
 ```
-      MQ9 Breakout Board               Arduino UNO Q
-   ┌───────────────────────┐        ┌─────────────────┐
-   │ VCC                   ├────────┤ 5V              │
-   │ GND                   ├────────┤ GND             │
-   │ AOUT (Analog Signal)  ├────────┤ A1 (ADC Input)  │
-   │ DOUT (Digital Out)    │ (N/C)  │                 │
-   └───────────────────────┘        └─────────────────┘
+      MQ9 Breakout Board                                Arduino UNO Q
+   ┌───────────────────────┐                         ┌─────────────────┐
+   │ VCC (5V Power)        ├─────────────────────────┤ 5V              │
+   │ GND                   ├──────────────┬──────────┤ GND             │
+   │ AOUT (0–5V Analog)    ├───[4.7kΩ]──┬─┴──────────┤ A1 (0–3.3V ADC) │
+   │                       │            │            └─────────────────┘
+   │                       │         [10kΩ]
+   │                       │            │
+   │ DOUT (Digital Out)    │ (N/C)     GND
+   └───────────────────────┘
 ```
-- **AOUT → A1**: ADC reading 0–1023.
+- **AOUT → Divider → A1**: Voltage divider ($R_1 = 4.7\text{ k}\Omega, R_2 = 10\text{ k}\Omega$) protects the 3.3V analog input from 5V overvoltage.
+- **Uncalibrated Signal**: Read as raw ADC count $0–1023$, representing uncalibrated sensor voltage.
 - **DOUT**: Leave unconnected.
-- **Warm-Up Note**: Requires a 30-second thermal stabilization cycle.
+- **Warm-Up Note**: Requires 30-second thermal stabilization.
 
 ---
 
 ### 3.3 MQ135 — Hazardous Gas & Air Quality Sensor
 ```
-     MQ135 Breakout Board              Arduino UNO Q
-   ┌───────────────────────┐        ┌─────────────────┐
-   │ VCC                   ├────────┤ 5V              │
-   │ GND                   ├────────┤ GND             │
-   │ AOUT (Analog Signal)  ├────────┤ A2 (ADC Input)  │
-   │ DOUT (Digital Out)    │ (N/C)  │                 │
-   └───────────────────────┘        └─────────────────┘
+      MQ135 Breakout Board                              Arduino UNO Q
+   ┌───────────────────────┐                         ┌─────────────────┐
+   │ VCC (5V Power)        ├─────────────────────────┤ 5V              │
+   │ GND                   ├──────────────┬──────────┤ GND             │
+   │ AOUT (0–5V Analog)    ├───[4.7kΩ]──┬─┴──────────┤ A2 (0–3.3V ADC) │
+   │                       │            │            └─────────────────┘
+   │                       │         [10kΩ]
+   │                       │            │
+   │ DOUT (Digital Out)    │ (N/C)     GND
+   └───────────────────────┘
 ```
-- **AOUT → A2**: Used by the GasNet machine learning model for VOC, NH3, benzene, and CO2 source discrimination.
+- **AOUT → Divider → A2**: Stepped down via voltage divider ($4.7\text{ k}\Omega / 10\text{ k}\Omega$) to protect the STM32U5 ADC.
+- **Uncalibrated Signal**: Used by the GasNet machine learning model as a qualitative relative feature for VOC/combustion/clean air classification. Not calibrated in ppm.
 - **DOUT**: Leave unconnected.
 
 ---
@@ -126,38 +152,45 @@ The NavosEdge node integrates five environmental sensors and a 3.5" TFT display 
 ## 4. Full System Interconnection Schematic
 
 ```
-                                      ARDUINO UNO Q
-                      ┌───────────────────────────────────────────┐
-                      │                                           │
-  MQ2 [AOUT] ─────────┤ A0                                     5V ├───┬───┬───┬───┬─── 5V VCC Rail
-  MQ9 [AOUT] ─────────┤ A1                                    GND ├──┬┼───┼───┼───┼───┼── Common GND Rail
-  MQ135 [AOUT] ───────┤ A2                                        │  ││   │   │   │   │
-                      │ A3 (Available)                            │  ││   │   │   │   │
-                      │ A4 (Available)                            │  ││   │   │   │   │
-                      │ A5 (Available)                            │  ││   │   │   │   │
-                      │                                           │  ││   │   │   │   │
-  MPM10-CS [TX] ──────┤ D0 (Hardware Serial1 RX)                  │  ││   │   │   │   │
-  MPM10-CS [RX] ──────┤ D1 (Hardware Serial1 TX)                  │  ││   │   │   │   │
-  TFT Display [DC] ───┤ D2 (Reserved for Display Command/Data)    │  ││   │   │   │   │
-                      │ D3..D7 (Available for Expansion)          │  ││   │   │   │   │
-  DHT22 [DATA] ───────┤ D8 (Bit-Bang I/O)                         │  ││   │   │   │   │
-                      │    │                                      │  ││   │   │   │   │
-                      │    └── [ 10kΩ Pull-Up Resistor ] ─────────┼──┼┴───┼───┼───┼───┘
-                      │                                           │  ││   │   │   │
-  TFT Display [CS] ───┤ D10 (SPI Chip Select)                     │  ││   │   │   │
-  TFT Display [MOSI] ─┤ D11 (SPI MOSI)                            │  ││   │   │   │
-  TFT Display [MISO] ─┤ D12 (SPI MISO)                            │  ││   │   │   │
-  TFT Display [SCK] ──┤ D13 (SPI Clock)                           │  ││   │   │   │
-                      │                                           │  ││   │   │   │
-                      │ USB-C Port ──► Linux MPU (/dev/ttyACM0)   │  ││   │   │   │
-                      └───────────────────────────────────────────┘  ││   │   │   │
-                                                                     ││   │   │   │
-  Power Distribution Connections:                                    ││   │   │   │
-    • MQ2   VCC & GND ───────────────────────────────────────────────┘│   │   │   │
-    • MQ9   VCC & GND ────────────────────────────────────────────────┘   │   │   │
-    • MQ135 VCC & GND ────────────────────────────────────────────────────┘   │   │
-    • DHT22 VCC & GND ────────────────────────────────────────────────────────┘   │
-    • MPM10 VCC & GND ────────────────────────────────────────────────────────────┘
+                                              ARDUINO UNO Q
+                              ┌───────────────────────────────────────────┐
+                              │                                           │
+  MQ2 [AOUT] ───[4.7k]─┬──────┤ A0 (ADC 0..3.3V)                       5V ├───┬───┬───┬───┬─── 5V VCC Rail
+                       │      │                                       GND ├──┬┼───┼───┼───┼───┼── Common GND Rail
+                    [10k]     │                                           │  ││   │   │   │   │
+                       │      │                                           │  ││   │   │   │   │
+  MQ9 [AOUT] ───[4.7k]─┼┬─────┤ A1 (ADC 0..3.3V)                          │  ││   │   │   │   │
+                       ││     │                                           │  ││   │   │   │   │
+                    [10k]     │                                           │  ││   │   │   │   │
+                       ││     │                                           │  ││   │   │   │   │
+  MQ135 [AOUT] ─[4.7k]─┼┼┬────┤ A2 (ADC 0..3.3V)                          │  ││   │   │   │   │
+                       │││    │                                           │  ││   │   │   │   │
+                    [10k]     │ A3..A5 (Available)                        │  ││   │   │   │   │
+                       │││    │                                           │  ││   │   │   │   │
+                       ┴┴┴    │                                           │  ││   │   │   │   │
+                      (GND)   │                                           │  ││   │   │   │   │
+  MPM10-CS [TX] ──────────────┤ D0 (Hardware Serial1 RX)                  │  ││   │   │   │   │
+  MPM10-CS [RX] ──────────────┤ D1 (Hardware Serial1 TX)                  │  ││   │   │   │   │
+  TFT Display [DC] ───────────┤ D2 (Reserved for Display Command/Data)    │  ││   │   │   │   │
+                              │ D3..D7 (Available for Expansion)          │  ││   │   │   │   │
+  DHT22 [DATA] ───────────────┤ D8 (Bit-Bang I/O)                         │  ││   │   │   │   │
+                              │    │                                      │  ││   │   │   │   │
+                              │    └── [ 10kΩ Pull-Up Resistor ] ─────────┼──┼┴───┼───┼───┼───┘
+                              │                                           │  ││   │   │   │
+  TFT Display [CS] ───────────┤ D10 (SPI Chip Select)                     │  ││   │   │   │
+  TFT Display [MOSI] ─────────┤ D11 (SPI MOSI)                            │  ││   │   │   │
+  TFT Display [MISO] ─────────┤ D12 (SPI MISO)                            │  ││   │   │   │
+  TFT Display [SCK] ──────────┤ D13 (SPI Clock)                           │  ││   │   │   │
+                              │                                           │  ││   │   │   │
+                              │ USB-C Port ──► Linux MPU (/dev/ttyACM0)   │  ││   │   │   │
+                              └───────────────────────────────────────────┘  ││   │   │   │
+                                                                             ││   │   │   │
+  Power Distribution Connections:                                            ││   │   │   │
+    • MQ2   VCC & GND ───────────────────────────────────────────────────────┘│   │   │   │
+    • MQ9   VCC & GND ────────────────────────────────────────────────────────┘   │   │   │
+    • MQ135 VCC & GND ────────────────────────────────────────────────────────────┘   │   │
+    • DHT22 VCC & GND ────────────────────────────────────────────────────────────────┘   │
+    • MPM10 VCC & GND ────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -210,6 +243,7 @@ The Linux C++ hardware bridge reads this line via [`Hardware/include/serial_sens
 | :--- | :--- | :--- |
 | `"dht_ok": false` in JSON | Missing pull-up resistor or wrong pin | Verify DATA is on **D8** and check the 10kΩ resistor between VCC and DATA. |
 | `"pms_ok": false` in JSON | Reversed serial TX/RX lines | Swap sensor pins: Sensor **TX** must go to **D0 (RX)** and Sensor **RX** to **D1 (TX)**. |
-| MQ values consistently 0 or 1023 | Bad connection or reversed VCC/GND | Verify analog wiring to **A0, A1, A2**. Ensure board ground is shared. |
+| MQ values saturated at 1023 | Missing voltage divider (5V on 3.3V ADC) | Install $4.7\text{ k}\Omega / 10\text{ k}\Omega$ resistive voltage divider between module AOUT and UNO Q analog pin. |
+| MQ values consistently 0 | Disconnected analog line or heater unpowered | Verify 5V power to MQ module heater and check common ground rail connection. |
 | MQ values fluctuate wildly | Insufficient power supply current | Replace power source with a dedicated 5V 2.5A+ USB-C supply. |
 | Display is blank / white screen | SPI conflict with sensor | Ensure DHT22 is moved to **D8**, leaving **D2** free for the TFT DC line. |

@@ -269,7 +269,7 @@ class ManagerService:
         except Exception:
             pass
 
-        from app.config import UNO_Q_POLL_INTERVAL_S
+        from .config import UNO_Q_POLL_INTERVAL_S
         curr_url = os.getenv("NAVOS_UNO_Q_URL", self.uno_q_base_url).rstrip("/")
         curr_ip = os.getenv("NAVOS_UNO_Q_IP", self.uno_q_ip)
         try:
@@ -320,7 +320,7 @@ class ManagerService:
                     pass
 
         target_port = port if port is not None else self.uno_q_port
-        from app.config import set_uno_q_config
+        from .config import set_uno_q_config
         new_url = set_uno_q_config(clean_ip, target_port, poll_enabled=poll_enabled, persist_env=True)
         self.uno_q_ip = clean_ip
         self.uno_q_port = target_port
@@ -602,7 +602,7 @@ class ManagerService:
         If UNO Q is unreachable, marks active nodes as inactive cleanly without crashing.
         Survives individual node failures and malformed data.
         """
-        from app.config import UNO_Q_BASE_URL, UNO_Q_POLL_ENABLED
+        from .config import UNO_Q_BASE_URL, UNO_Q_POLL_ENABLED
 
         base_url = os.getenv("NAVOS_UNO_Q_URL", getattr(self, "uno_q_base_url", UNO_Q_BASE_URL)).rstrip("/")
         poll_enabled_env = os.getenv("NAVOS_POLL_ENABLED")

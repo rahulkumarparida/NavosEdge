@@ -311,66 +311,84 @@ bool readDHT22(float &temp, float &hum, DHT22Diagnostic *diag = nullptr) {
   return true;
 }
 
-// ─── PMS (MPM10-CS) Frame Reader ────────────────────────────────
-bool readPMS(float &pm1, float &pm25, float &pm10_val) {
-  if (!pmsSerial.available()) return false;
+// ─── PMS (MPM10-CS) Non-Blocking Frame Stream Parser ──────────────
+static unsigned long last_pms_rx_ms = 0;
 
-  unsigned long start = millis();
-  uint8_t buf[PMS_FRAME_LEN];
-  int idx = 0;
-  bool header_found = false;
+static bool parsePMSByte(uint8_t b, float &pm1, float &pm25, float &pm10_val) {
+  static uint8_t buf[PMS_FRAME_LEN];
+  static uint8_t idx = 0;
+  static uint8_t parse_state = 0; // 0=wait high, 1=wait low, 2=read payload
 
-  while ((millis() - start) < PMS_FRAME_TIMEOUT) {
-    if (!pmsSerial.available()) continue;
-    uint8_t b = pmsSerial.read();
-
-    if (!header_found) {
-      if (b == PMS_HEADER_HIGH) {
-        buf[0] = b;
-        idx = 1;
-        unsigned long h2_timeout = millis() + 20;
-        while (millis() < h2_timeout) {
-          if (pmsSerial.available()) {
-            uint8_t b2 = pmsSerial.read();
-            if (b2 == PMS_HEADER_LOW) {
-              buf[1] = b2;
-              idx = 2;
-              header_found = true;
-            }
-            break;
-          }
-        }
-      }
-      continue;
+  if (parse_state == 0) {
+    if (b == PMS_HEADER_HIGH) {
+      buf[0] = b;
+      idx = 1;
+      parse_state = 1;
     }
-
+    return false;
+  } else if (parse_state == 1) {
+    if (b == PMS_HEADER_LOW) {
+      buf[1] = b;
+      idx = 2;
+      parse_state = 2;
+    } else {
+      parse_state = (b == PMS_HEADER_HIGH) ? 1 : 0;
+      idx = (b == PMS_HEADER_HIGH) ? 1 : 0;
+      if (idx == 1) buf[0] = b;
+    }
+    return false;
+  } else { // parse_state == 2
     buf[idx++] = b;
-    if (idx >= PMS_FRAME_LEN) break;
+    if (idx >= PMS_FRAME_LEN) {
+      parse_state = 0;
+      idx = 0;
+
+      // Verify frame length field (standard PMS frame length payload is 28)
+      uint16_t frame_len = ((uint16_t)buf[2] << 8) | buf[3];
+      if (frame_len != (PMS_FRAME_LEN - 4)) return false;
+
+      // Verify checksum: sum of bytes 0..29 equals 16-bit word at bytes 30..31
+      uint16_t calc_check = 0;
+      for (int i = 0; i < PMS_FRAME_LEN - 2; i++) {
+        calc_check += buf[i];
+      }
+      uint16_t recv_check = ((uint16_t)buf[PMS_FRAME_LEN - 2] << 8) | buf[PMS_FRAME_LEN - 1];
+      if (calc_check != recv_check) return false;
+
+      // Extract atmospheric environment PM values (bytes 10-15)
+      pm1      = (float)(((uint16_t)buf[10] << 8) | buf[11]);
+      pm25     = (float)(((uint16_t)buf[12] << 8) | buf[13]);
+      pm10_val = (float)(((uint16_t)buf[14] << 8) | buf[15]);
+
+      if (pm1 < 0.0f || pm25 < 0.0f || pm10_val < 0.0f) return false;
+      if (pm1 > 1000.0f || pm25 > 1000.0f || pm10_val > 1000.0f) return false;
+
+      return true;
+    }
+    return false;
   }
+}
 
-  if (idx < PMS_FRAME_LEN) return false;
-
-  // Verify frame length field
-  uint16_t frame_len = ((uint16_t)buf[2] << 8) | buf[3];
-  if (frame_len != (PMS_FRAME_LEN - 4)) return false;
-
-  // Verify checksum
-  uint16_t calc_check = 0;
-  for (int i = 0; i < PMS_FRAME_LEN - 2; i++) {
-    calc_check += buf[i];
+static void pollPMS() {
+#if ENABLE_MPM10_SENSOR
+  while (pmsSerial.available() > 0) {
+    uint8_t b = pmsSerial.read();
+    float p1, p25, p10;
+    if (parsePMSByte(b, p1, p25, p10)) {
+      state.pm1_0 = p1;
+      state.pm2_5 = p25;
+      state.pm10  = p10;
+      state.pms_ok = true;
+      last_pms_rx_ms = millis();
+    }
   }
-  uint16_t recv_check = ((uint16_t)buf[PMS_FRAME_LEN - 2] << 8) | buf[PMS_FRAME_LEN - 1];
-  if (calc_check != recv_check) return false;
-
-  // Extract atmospheric environment PM values (bytes 10-15)
-  pm1      = (float)(((uint16_t)buf[10] << 8) | buf[11]);
-  pm25     = (float)(((uint16_t)buf[12] << 8) | buf[13]);
-  pm10_val = (float)(((uint16_t)buf[14] << 8) | buf[15]);
-
-  if (pm1 < 0.0f || pm25 < 0.0f || pm10_val < 0.0f) return false;
-  if (pm1 > 1000.0f || pm25 > 1000.0f || pm10_val > 1000.0f) return false;
-
-  return true;
+  // If sensor stops communicating for >10 seconds, flag unhealthy
+  if (last_pms_rx_ms > 0 && (millis() - last_pms_rx_ms) > 10000) {
+    state.pms_ok = false;
+  }
+#else
+  state.pms_ok = false;
+#endif
 }
 
 // ─── MQ Analog Read with Oversampling ───────────────────────────
@@ -434,6 +452,9 @@ void setup() {
 
 // ─── Arduino Loop ───────────────────────────────────────────────
 void loop() {
+  // 1. Non-blocking MPM10 UART stream polling (consumes <5µs per loop)
+  pollPMS();
+
   unsigned long now = millis();
 
   if ((now - last_sample_ms) < SAMPLE_INTERVAL) return;
@@ -466,16 +487,6 @@ void loop() {
       report_dht22_diagnostics(dht_diag);
     }
   }
-
-#if ENABLE_MPM10_SENSOR
-  // Read PMS (MPM10-CS)
-  state.pms_ok = readPMS(state.pm1_0, state.pm2_5, state.pm10);
-#else
-  state.pm1_0 = 0.0f;
-  state.pm2_5 = 0.0f;
-  state.pm10  = 0.0f;
-  state.pms_ok = false;
-#endif
 
   transmitJSON();
 }

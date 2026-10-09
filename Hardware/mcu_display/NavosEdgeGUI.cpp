@@ -239,16 +239,18 @@ void NavosEdgeGUI::drawScreen0_Environment(const NavosEdgeState& state) {
     snprintf(aqiBuf, sizeof(aqiBuf), "%.0f", state.aqi);
     tftDrawString(18, 62, aqiBuf, aCol, GUI_CARD_BG, 5);
 
-    // AQI Category pill
+    // AQI Category pill (CPCB Canonical Categories)
     const char* catStr = "Good";
-    if (state.aqi > 300) catStr = "Hazardous";
-    else if (state.aqi > 200) catStr = "V.Unhealthy";
-    else if (state.aqi > 150) catStr = "Unhealthy";
-    else if (state.aqi > 100) catStr = "Unhealthy*";
-    else if (state.aqi > 50)  catStr = "Moderate";
+    if (state.aqi > 400.0f) catStr = "Severe";
+    else if (state.aqi > 300.0f) catStr = "Very Poor";
+    else if (state.aqi > 200.0f) catStr = "Poor";
+    else if (state.aqi > 100.0f) catStr = "Moderate";
+    else if (state.aqi > 50.0f)  catStr = "Satisfactory";
 
     tftFillRect(14, 140, 164, 32, aCol);
-    tftDrawString(20, 146, catStr, GUI_BLACK, aCol, 2);
+    uint8_t catSize = (strlen(catStr) > 10) ? 1 : 2;
+    int catY = (catSize == 1) ? 152 : 146;
+    tftDrawString(20, catY, catStr, GUI_BLACK, aCol, catSize);
 
     if (_yieldCb) _yieldCb();
 
@@ -625,14 +627,16 @@ void NavosEdgeGUI::drawScreen4_RawSensors(const NavosEdgeState& state) {
     tftDrawString(339, 100, buf, aCol, GUI_CARD_BG, 5);
 
     const char* catStr = "Good";
-    if (state.aqi > 300) catStr = "Hazardous";
-    else if (state.aqi > 200) catStr = "V.Unhealthy";
-    else if (state.aqi > 150) catStr = "Unhealthy";
-    else if (state.aqi > 100) catStr = "Unhealthy*";
-    else if (state.aqi > 50)  catStr = "Moderate";
+    if (state.aqi > 400.0f) catStr = "Severe";
+    else if (state.aqi > 300.0f) catStr = "Very Poor";
+    else if (state.aqi > 200.0f) catStr = "Poor";
+    else if (state.aqi > 100.0f) catStr = "Moderate";
+    else if (state.aqi > 50.0f)  catStr = "Satisfactory";
 
     tftFillRect(339, 180, 127, 32, aCol);
-    tftDrawString(345, 186, catStr, GUI_BLACK, aCol, 2);
+    uint8_t catSize = (strlen(catStr) > 8) ? 1 : 2;
+    int catY = (catSize == 1) ? 192 : 186;
+    tftDrawString(345, catY, catStr, GUI_BLACK, aCol, catSize);
 
     drawStatusBadge("RAW", GUI_YELLOW, -1, 312 - 24);
 }
@@ -782,12 +786,12 @@ int16_t NavosEdgeGUI::drawWrappedString(int16_t x, int16_t y, const char* str,
 }
 
 uint16_t NavosEdgeGUI::aqiColor(float aqi) {
-    if (aqi <= 50.0f)  return GUI_GOOD_GREEN;
-    if (aqi <= 100.0f) return GUI_WARN_YELLOW;
-    if (aqi <= 150.0f) return GUI_WARN_ORANGE;
-    if (aqi <= 200.0f) return GUI_BAD_RED;
-    if (aqi <= 300.0f) return GUI_PURPLE;
-    return GUI_BAD_RED;
+    if (aqi <= 50.0f)  return GUI_GOOD_GREEN;   // Good (0-50)
+    if (aqi <= 100.0f) return GUI_GOOD_GREEN;   // Satisfactory (51-100)
+    if (aqi <= 200.0f) return GUI_WARN_YELLOW;  // Moderate (101-200)
+    if (aqi <= 300.0f) return GUI_WARN_ORANGE;  // Poor (201-300)
+    if (aqi <= 400.0f) return GUI_BAD_RED;      // Very Poor (301-400)
+    return GUI_PURPLE;                           // Severe (401-500+)
 }
 
 uint16_t NavosEdgeGUI::severityColor(const char* severity) {

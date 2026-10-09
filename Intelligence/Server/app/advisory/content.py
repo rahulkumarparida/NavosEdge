@@ -714,3 +714,296 @@ WEATHER_VARIANTS = {
     },
 }
 
+
+# ─────────────────────────────────────────────────────────────
+# Action Variants (<35 chars each for 480x320 display)
+# Grouped by Source, Severity, and Sub-level
+# ─────────────────────────────────────────────────────────────
+
+SOURCE_ACTIONS: dict[str, dict[str, list[tuple[str, ...]]]] = {
+    "TRAFFIC": {
+        "NORMAL": [
+            ("Reduce exposure near busy roads.",),
+            ("Choose quieter walking routes.",),
+            ("Avoid rush-hour road exposure.",),
+        ],
+        "MODERATE": [
+            ("Reduce exposure near busy roads.",),
+            ("Choose quieter walking routes.", "Avoid rush-hour road exposure."),
+            ("Keep vehicle windows closed.", "Prefer indoor paths near roads."),
+        ],
+        "HIGH": [
+            ("Reduce exposure near busy roads.", "Wear N95 mask near traffic."),
+            ("Close road-facing windows.", "Avoid outdoor cardio near roads."),
+            ("Avoid heavy traffic corridors.", "Keep indoor air filtered."),
+        ],
+        "SEVERE": [
+            ("Reduce exposure near busy roads.", "Wear N95 mask near traffic."),
+            ("Close road-facing windows.", "Avoid outdoor cardio near roads."),
+            ("Stay away from major highways.", "Wear particulate respirator."),
+        ],
+        "CRITICAL": [
+            ("Reduce exposure near busy roads.", "Wear N95 mask near traffic."),
+            ("Close road-facing windows.", "Wear particulate respirator."),
+            ("Stay away from heavy traffic.", "Run indoor HEPA air filtration."),
+        ],
+    },
+    "HEAVY_DUST": {
+        "NORMAL": [
+            ("Avoid visibly dusty areas.",),
+            ("Wipe dusty window sills.",),
+            ("Avoid unpaved dusty tracks.",),
+        ],
+        "MODERATE": [
+            ("Avoid visibly dusty areas.",),
+            ("Mist water to suppress dust.", "Avoid unpaved dusty tracks."),
+            ("Keep windows shut on dusty days.", "Dust surfaces with damp cloth."),
+        ],
+        "HIGH": [
+            ("Avoid visibly dusty areas.", "Wear dust-protective mask."),
+            ("Keep windows sealed from dust.", "Stay indoors during dust waves."),
+            ("Run HEPA air purifier.", "Protect eyes from airborne dust."),
+        ],
+        "SEVERE": [
+            ("Avoid visibly dusty areas.", "Wear dust-protective mask."),
+            ("Seal doors against blowing dust.", "Stay indoors during dust waves."),
+            ("Avoid outdoor cardio in dust.", "Wear certified N95 dust mask."),
+        ],
+        "CRITICAL": [
+            ("Avoid visibly dusty areas.", "Wear certified N95 dust mask."),
+            ("Seal doors against blowing dust.", "Run indoor HEPA air filtration."),
+            ("Stay indoors during dust waves.", "Wear dust-protective mask."),
+        ],
+    },
+    "CONSTRUCTION": {
+        "NORMAL": [
+            ("Stay upwind of building sites.",),
+            ("Close windows facing worksites.",),
+            ("Bypass active demolition paths.",),
+        ],
+        "MODERATE": [
+            ("Stay upwind of building sites.", "Close windows facing worksites."),
+            ("Bypass active demolition paths.", "Keep distance from open digging."),
+            ("Close windows facing worksites.", "Stay upwind of active sites."),
+        ],
+        "HIGH": [
+            ("Avoid active construction zones.", "Wear N95 particulate mask."),
+            ("Seal construction-facing doors.", "Keep indoor vents filtered."),
+            ("Avoid dusty renovation areas.", "Stay away from demolition dust."),
+        ],
+        "SEVERE": [
+            ("Avoid active construction zones.", "Wear N95 particulate mask."),
+            ("Seal construction-facing doors.", "Stay away from demolition dust."),
+            ("Keep indoor vents filtered.", "Avoid dusty renovation areas."),
+        ],
+        "CRITICAL": [
+            ("Avoid active construction zones.", "Wear N95 particulate mask."),
+            ("Seal construction-facing doors.", "Run indoor HEPA air filtration."),
+            ("Stay away from demolition dust.", "Keep indoor vents filtered."),
+        ],
+    },
+    "COMBUSTION": {
+        "NORMAL": [
+            ("Avoid smoky combustion areas.",),
+            ("Ensure chimney flues vent well.",),
+            ("Keep distance from engine fumes.",),
+        ],
+        "MODERATE": [
+            ("Avoid smoky combustion areas.", "Air out indoor cooking smoke."),
+            ("Ensure chimney flues vent well.", "Keep distance from engine fumes."),
+            ("Avoid smoky combustion areas.", "Keep distance from exhaust plumes."),
+        ],
+        "HIGH": [
+            ("Avoid smoky or exhaust plumes.", "Move away from combustion smoke."),
+            ("Wear certified particulate mask.", "Keep windows shut against smoke."),
+            ("Run air cleaner on high fan.", "Avoid poorly ventilated smoke."),
+        ],
+        "SEVERE": [
+            ("Avoid smoky or exhaust plumes.", "Move away from combustion smoke."),
+            ("Wear certified particulate mask.", "Keep windows shut against smoke."),
+            ("Run air cleaner on high fan.", "Stay away from exhaust plumes."),
+        ],
+        "CRITICAL": [
+            ("Move away from combustion smoke.", "Wear certified particulate mask."),
+            ("Keep windows shut against smoke.", "Run indoor HEPA air filtration."),
+            ("Avoid smoky or exhaust plumes.", "Wear certified particulate mask."),
+        ],
+    },
+    "BIOMASS_OR_WASTE_BURNING": {
+        "NORMAL": [
+            ("Avoid smoke from burning.",),
+            ("Keep indoor air protected.",),
+            ("Stay away from burning areas.",),
+        ],
+        "MODERATE": [
+            ("Avoid smoke from burning.", "Keep indoor air protected."),
+            ("Stay away from burning areas.", "Keep windows closed if smoky."),
+            ("Avoid smoke from burning.", "Keep doors shut against smoke."),
+        ],
+        "HIGH": [
+            ("Avoid smoke from burning.", "Wear N95 mask against smoke."),
+            ("Stay indoors and seal windows.", "Keep vulnerable groups inside."),
+            ("Run air filtration indoors.", "Stay far from open burning."),
+        ],
+        "SEVERE": [
+            ("Avoid smoke from burning.", "Stay indoors and seal windows."),
+            ("Wear N95 mask against smoke.", "Keep vulnerable groups inside."),
+            ("Run air filtration indoors.", "Stay far from open burning."),
+        ],
+        "CRITICAL": [
+            ("Avoid smoke from burning.", "Stay indoors and seal windows."),
+            ("Wear N95 mask against smoke.", "Run indoor HEPA air filtration."),
+            ("Keep vulnerable groups inside.", "Stay far from open burning."),
+        ],
+    },
+    "INDUSTRIAL": {
+        "NORMAL": [
+            ("Limit time near industrial zones.",),
+            ("Keep factory-facing vents shut.",),
+            ("Bypass factory smoke corridors.",),
+        ],
+        "MODERATE": [
+            ("Limit time near industrial zones.", "Keep factory-facing vents shut."),
+            ("Bypass factory smoke corridors.", "Keep indoor spaces filtered."),
+            ("Limit time near industrial zones.", "Bypass factory smoke corridors."),
+        ],
+        "HIGH": [
+            ("Avoid exposure near factories.", "Wear respiratory protection."),
+            ("Stay indoors in factory zones.", "Keep windows tightly shut."),
+            ("Limit outdoor exercise nearby.", "Monitor indoor air quality."),
+        ],
+        "SEVERE": [
+            ("Avoid exposure near factories.", "Wear respiratory protection."),
+            ("Stay indoors in factory zones.", "Keep windows tightly shut."),
+            ("Limit outdoor exercise nearby.", "Wear respiratory protection."),
+        ],
+        "CRITICAL": [
+            ("Avoid exposure near factories.", "Wear respiratory protection."),
+            ("Stay indoors in factory zones.", "Run indoor HEPA air filtration."),
+            ("Keep windows tightly shut.", "Wear respiratory protection."),
+        ],
+    },
+    "INDOOR_ACTIVITY": {
+        "NORMAL": [
+            ("Increase indoor ventilation.",),
+            ("Open opposite windows for flow.",),
+            ("Run kitchen exhaust fan.",),
+        ],
+        "MODERATE": [
+            ("Increase indoor ventilation.", "Open opposite windows for flow."),
+            ("Run kitchen exhaust fan.", "Ventilate after cooking or dust."),
+            ("Increase indoor ventilation.", "Run kitchen exhaust fan."),
+        ],
+        "HIGH": [
+            ("Improve indoor ventilation.", "Open windows to flush stale air."),
+            ("Turn on HEPA air purifier.", "Ventilate rooms immediately."),
+            ("Avoid indoor smoke or fumes.", "Use exhaust fans at high speed."),
+        ],
+        "SEVERE": [
+            ("Improve indoor ventilation.", "Open windows to flush stale air."),
+            ("Turn on HEPA air purifier.", "Use exhaust fans at high speed."),
+            ("Ventilate rooms immediately.", "Avoid indoor smoke or fumes."),
+        ],
+        "CRITICAL": [
+            ("Improve indoor ventilation.", "Turn on HEPA air purifier."),
+            ("Open windows to flush stale air.", "Use exhaust fans at high speed."),
+            ("Ventilate rooms immediately.", "Turn on HEPA air purifier."),
+        ],
+    },
+    "MIXED": {
+        "NORMAL": [
+            ("Use general pollution precautions.",),
+            ("Prefer well-ventilated areas.",),
+            ("Stay mindful of air changes.",),
+        ],
+        "MODERATE": [
+            ("Use general pollution precautions.",),
+            ("Prefer well-ventilated areas.", "Stay mindful of air changes."),
+            ("Keep indoor areas ventilated.", "Use general pollution precautions."),
+        ],
+        "HIGH": [
+            ("Use general pollution precautions.", "Limit prolonged outdoor time."),
+            ("Wear respiratory mask outside.", "Stay in cleaner indoor spaces."),
+            ("Reduce outdoor exertion.", "Keep doors and windows closed."),
+        ],
+        "SEVERE": [
+            ("Use general pollution precautions.", "Limit prolonged outdoor time."),
+            ("Wear respiratory mask outside.", "Stay in cleaner indoor spaces."),
+            ("Reduce outdoor exertion.", "Keep doors and windows closed."),
+        ],
+        "CRITICAL": [
+            ("Use general pollution precautions.", "Limit prolonged outdoor time."),
+            ("Wear respiratory mask outside.", "Run indoor HEPA air filtration."),
+            ("Reduce outdoor exertion.", "Stay in cleaner indoor spaces."),
+        ],
+    },
+    "UNKNOWN": {
+        "NORMAL": [
+            ("Use general pollution precautions.",),
+            ("Use general pollution precautions.",),
+            ("Use general pollution precautions.",),
+        ],
+        "MODERATE": [
+            ("Use general pollution precautions.",),
+            ("Prefer well-ventilated areas.",),
+            ("Stay mindful of air quality.",),
+        ],
+        "HIGH": [
+            ("Use general pollution precautions.",),
+            ("Limit prolonged outdoor time.",),
+            ("Wear respiratory mask outside.",),
+        ],
+        "SEVERE": [
+            ("Use general pollution precautions.", "Limit outdoor activity."),
+            ("Wear respiratory mask outside.", "Keep windows closed if possible."),
+            ("Limit outdoor activity.", "Wear respiratory mask outside."),
+        ],
+        "CRITICAL": [
+            ("Avoid outdoor exposure.", "Wear respiratory mask outside."),
+            ("Use general pollution precautions.", "Avoid outdoor exposure."),
+            ("Wear respiratory mask outside.", "Run indoor HEPA air filtration."),
+        ],
+    },
+}
+
+AQI_ACTIONS: dict[str, list[tuple[str, ...]]] = {
+    "NORMAL": [
+        (),
+        ("Enjoy normal outdoor routine.",),
+        ("Open windows for fresh air.",),
+    ],
+    "MODERATE": [
+        ("Prefer well-ventilated areas.",),
+        ("Sensitive people take breaks.",),
+        ("Keep outdoor activities moderate.",),
+    ],
+    "HIGH": [
+        ("Reduce prolonged outdoor activity.", "Sensitive people should take extra care."),
+        ("Limit prolonged outdoor exertion.", "Sensitive people take extra care."),
+        ("Take regular breaks when outside.", "Prefer well-ventilated spaces."),
+    ],
+    "SEVERE": [
+        ("Limit outdoor activity.", "Keep windows closed where practical."),
+        ("Keep windows closed if possible.", "Limit outdoor activity."),
+        ("Wear mask during outdoor trips.", "Avoid heavy outdoor exertion."),
+    ],
+    "CRITICAL": [
+        ("Avoid outdoor exposure.", "Use suitable respiratory protection."),
+        ("Wear N95 respiratory protection.", "Avoid outdoor exposure."),
+        ("Stay indoors as much as possible.", "Run indoor HEPA air filtration."),
+    ],
+}
+
+TREND_ACTIONS: dict[str, tuple[str, ...]] = {
+    "RISING": (
+        "Take precautions before the forecast period.",
+        "Take precautions before peak.",
+        "Plan outdoor tasks earlier.",
+    ),
+    "FALLING": (
+        "Air quality is improving soon.",
+        "Conditions trending cleaner.",
+    ),
+    "STABLE": (),
+}
+

@@ -29,8 +29,8 @@ It runs locally on the **Arduino UNO Q** microcomputer (combining a Linux MPU an
 |  [ MPU / Linux Side ]                                                                                   |
 |  +-------------------------------------+      POST /hardware/ready      +--------------------------------+  |
 |  | Hardware C++ Bridge                 | -----------------------------> | Intelligence Server (FastAPI)  |  |
-|  | (navos_hardware_bridge)             |                                |  - EPA AQI Engine              |  |
-|  |  - Sensor Provider / Sampler      |      POST /hardware/data       |  - Anomaly Engine (EWMA/Z-Score|  |
+|  | (navos_hardware_bridge)             |                                |  - Indian CPCB AQI Engine      |  |
+|  |  - Sensor Provider / Sampler        |      POST /hardware/data       |  - Anomaly Engine (EWMA/Z-Score|  |
 |  |  - 30s Mandatory Warm-Up Period     | -----------------------------> |  - GasNet ML Model (NumPy/PyT) |  |
 |  |  - 60s Acquisition Cycle            |                                |  - PM Forecast Plugin          |  |
 |  |  - HTTP / SSE Client (libcurl)      | <----------------------------- |  - Dynamic Advisory Engine     |  |
@@ -51,7 +51,7 @@ It runs locally on the **Arduino UNO Q** microcomputer (combining a Linux MPU an
 |                     |                                                                                   |
 |                     v Updates NavosEdgeState                                                            |
 |  +-------------------------------------+                                                                |
-|  | NavosEdgeGUI Renderer (C++)         | (3-Screen 10s Non-blocking Rotation)                             |
+|  | NavosEdgeGUI Renderer (C++)         | (5-Screen 10s Non-blocking Rotation)                             |
 |  +-------------------------------------+                                                                |
 |                     | Hardware SPI (MOSI=D11, SCK=D13, CS=D10, DC=D2)                                   |
 |                     v                                                                                   |
@@ -67,29 +67,31 @@ It runs locally on the **Arduino UNO Q** microcomputer (combining a Linux MPU an
 
 ### 1. Intelligence Server (`Intelligence/Server/`)
 A lightweight FastAPI application running on the UNO Q Linux MPU:
-- **EPA AQI Engine**: Calculates standard Air Quality Index values and categorizations (`Good`, `Moderate`, `Unhealthy for Sensitive Groups`, `Unhealthy`, `Very Unhealthy`, `Hazardous`) based on PM2.5 and PM10 concentrations.
+- **Indian National CPCB AQI Engine**: Implements the official Central Pollution Control Board (CPCB) methodology with 6 canonical categories (`Good`, `Satisfactory`, `Moderate`, `Poor`, `Very Poor`, `Severe`). Computes piecewise linear sub-indices across regulatory concentration breakpoints. Strictly enforces CPCB's data sufficiency rule requiring at least 3 eligible criteria pollutants (including at least one PM parameter) for an official CPCB AQI; otherwise marks as `PM_BASED_ESTIMATE` (`cpcb_compliant: false`). PM1.0 is properly excluded from CPCB sub-index calculations, and uncalibrated MQ sensor voltages are never substituted for regulatory criteria gases.
 - **Anomaly Engine**: Applies Exponentially Weighted Moving Average (EWMA) and dynamic Z-score filtering to flag sudden environmental spikes or sensor anomalies.
-- **GasNet ML Model**: Neural network for air pollution source classification (`Clean Indoor`, `Traffic`, `Dust / Construction`, `Combustion / Smoke`, `High Humidity`). Features a dual-backend architecture:
+- **GasNet ML Model**: Neural network for Indian air pollution source classification (`Clean Indoor`, `Traffic`, `Dust / Construction`, `Combustion / Smoke`, `High Humidity`, `Industrial / Solvent`, `Stubble / Biomass Burning`). Features a dual-backend architecture:
   - **PyTorch Backend**: Used for model training and development.
   - **NumPy Edge Backend**: Pure NumPy matrix math engine (`.npz` weights) providing zero-dependency, ultra-fast inference on resource-constrained edge hardware without PyTorch overhead.
 - **Forecast Plugin**: Generates short-term PM2.5 trend projections using Holt-Winters exponential smoothing.
-- **Advisory Engine**: Synthesizes AQI metrics, detected anomalies, and predicted pollution sources into actionable public health recommendations.
+- **Dynamic Advisory Engine**: Synthesizes AQI category, multi-pollutant metrics, detected anomalies, predicted pollution source, Holt-Winters trend, and ambient weather through a deterministic 11-step decision tree. Features a broadened action matrix across 7 pollution sources, 5 AQI categories, 3 trends, and 7 weather states. Employs a 3.0-point hysteresis margin to eliminate boundary jitter, and strictly formats actions under 35 characters for the 480×320 TFT display. When sensor data is invalid or stale, health advisories are suppressed in favor of explicit hardware connection alerts.
 - **SSE Stream (`GET /hardware/stream`)**: Pushes `request_data` trigger events to hardware and broadcasts `intelligence_update` events upon inference completion.
 
 ### 2. Hardware C++ Bridge (`Hardware/`)
 High-performance C++ executable (`navos_hardware_bridge`) running on the UNO Q Linux MPU:
 - **30-Second Sensor Warm-Up**: Enforces a mandatory 30-second sensor stabilization window upon startup before transmitting telemetry for inference.
 - **Handshake Sequence**: Sends `POST /hardware/ready` signal to Intelligence Server once sensors are warm.
-- **60-Second Acquisition Loop**: Listens for SSE `request_data` events, samples PM, MQ gas (MQ2, MQ3, MQ4, MQ6, MQ7, MQ8, MQ135), temperature, and humidity sensors every 60 seconds, and posts payload to `POST /hardware/data`.
-- **MessagePack-RPC Client**: Listens for `intelligence_update` events, formats screen display state, and transmits RPC calls (`update_environment`, `update_advice`, `update_actions`) to the MCU over `/var/run/arduino-router.sock`.
+- **60-Second Acquisition Loop**: Listens for SSE `request_data` events, samples PM, MQ gas (MQ2, MQ9, MQ135), temperature, and humidity sensors every 60 seconds, and posts payload to `POST /hardware/data`.
+- **MessagePack-RPC Client**: Listens for `intelligence_update` events, formats screen display state, and transmits RPC calls (`update_environment`, `update_advice`, `update_actions`, `update_forecast`, `update_model_confidence`, `update_raw_sensors`) to the MCU over `/var/run/arduino-router.sock`.
 
 ### 3. MCU Physical Display Driver (`Hardware/mcu_display/`)
 Firmware sketch running on the STM32U5 Zephyr MCU:
 - **RPC Receiver**: Listens for incoming MessagePack-RPC commands from the MPU via `Arduino_RouterBridge`.
-- **`NavosEdgeGUI` Renderer**: Formats and draws real-time data across 3 dedicated UI screens:
-  - **Screen 1**: Real-time AQI, primary PM values, temperature/humidity, and anomaly status.
-  - **Screen 2**: Pollution source classification breakdown and short-term PM forecast.
-  - **Screen 3**: Actionable health advisories and safety recommendations.
+- **`NavosEdgeGUI` Renderer**: Formats and draws real-time data across 5 dedicated UI screens:
+  - **Screen 0 (Environment)**: Real-time CPCB AQI, primary PM2.5 / PM10 values, temperature/humidity, and CPCB color-coded banner.
+  - **Screen 1 (Advice & Actions)**: Actionable health advisories and safety recommendations (under 35 chars).
+  - **Screen 2 (Forecast)**: Short-term PM forecast, Holt-Winters trend direction, and baseline EWMA.
+  - **Screen 3 (Model Confidence)**: Pollution source classification probabilities and anomaly detection status.
+  - **Screen 4 (Raw Sensor Readings)**: PM1.0, PM2.5, PM10, MQ2, MQ9, MQ135 raw ADC counts, and per-sensor validity flags.
 - **Non-Blocking Rotation**: Rotates through display screens every 10 seconds using non-blocking timer loops (`millis()`) without interrupting hardware RPC reception.
 - **`UNOQ_MPI3501` Driver**: Low-level hardware SPI driver driving the 3.5" (480x320 ILI9486) display.
 
@@ -231,9 +233,16 @@ UNO_Q_POLL_INTERVAL_SECONDS=3600
 
 ## 📚 Documentation Directory Index
 
-All technical documentation and phase development runbooks are consolidated in [docs/phases/](docs/phases/):
+### Engineering Audits, Standards & Implementation Reports (`docs/`)
+- 📕 [NavosEdge Complete Sensor Data & Calibration Audit](docs/NAVOSEDGE_SENSOR_DATA_AUDIT.md) — Comprehensive hardware-to-UI signal path audit (MPM10-CS, DHT22, MQ2/9/135), ADC electrical limits, and framing fixes.
+- 📕 [Official Indian National CPCB AQI Implementation](docs/INDIA_CPCB_AQI_IMPLEMENTATION.md) — Mathematical specification, sub-index formulas, CPCB breakpoints, PM-based estimate protocol, and regulatory compliance rules.
+- 📕 [Indian Air Pollution Source Classification Framework](docs/INDIAN_POLLUTION_SOURCE_CLASSIFICATION.md) — Taxonomy, chemical signatures, stubble/biomass burning, and GasNet ML model dual-backend verification.
+- 📕 [Dynamic Environmental Advisory Engine Design](docs/ADVISORY_ENGINE_DESIGN.md) — 11-step deterministic decision order, sub-level quantization, hysteresis, broadened action matrix, and display limits.
+- 📕 [NavosEdge End-to-End System Data Flow](docs/NAVOSEDGE_END_TO_END_DATA_FLOW.md) — Full telemetry lifecycle tracing from STM32U5 physical acquisition to 5-screen GUI and Parent Manager.
+- 📕 [Final Audit, Repair & Verification Test Report](docs/NAVOSEDGE_REPAIR_AND_TEST_REPORT.md) — Complete test execution report covering 176+ test cases, zero-regression verification, and physical hardware checklist.
 
-- 📘 [Comprehensive Sensor & Hardware Wiring Guide](WIRING_GUIDE.md) — Complete pinout, schematic, power budget, and troubleshooting for Arduino UNO Q.
+### Phase Runbooks & Hardware Guides
+- 📘 [Comprehensive Sensor & Hardware Wiring Guide](WIRING_GUIDE.md) — Complete pinout, schematic, 3.3V voltage dividers, power budget, and troubleshooting for Arduino UNO Q.
 - 📘 [Phase 13 Runtime Flow Specification](docs/phases/phase13RuntimeFlow.md) — 30s warm-up, `READY` handshake, 60s cycle, fault recovery, and shutdown flow.
 - 📘 [Parent Manager Integration Guide](docs/phases/UNO_Q_MANAGER_INTEGRATION.md) — Wi-Fi network setup, `.env` configuration, and polling specs.
 - 📘 [UNO Q Deployment Manual](docs/phases/UNO_Q_DEPLOYMENT.md) — Comprehensive guide for deploying on physical Arduino UNO Q hardware.

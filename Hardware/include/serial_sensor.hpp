@@ -594,7 +594,11 @@ private:
         SensorData d;
         d.node_id = node_id_;
         d.timestamp = now_iso8601();
-        // Return valid empty structure for upstream handling, no fake physical sentinels.
+        d.is_valid = false;
+        d.dht_ok = false;
+        d.pms_ok = false;
+        d.mq_ok = false;
+        d.error_msg = reason;
         return d;
     }
 

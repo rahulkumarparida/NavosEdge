@@ -30,6 +30,8 @@ while project_root != project_root.parent and not (project_root / "Manager").is_
 manager_dir = project_root / "Manager"
 intel_dir = project_root / "Intelligence" / "Server"
 
+if str(project_root) not in sys.path:
+    sys.path.append(str(project_root))
 if str(manager_dir) in sys.path:
     sys.path.remove(str(manager_dir))
 sys.path.insert(0, str(manager_dir))

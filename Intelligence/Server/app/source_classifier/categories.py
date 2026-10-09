@@ -80,6 +80,39 @@ SOURCE_DESCRIPTIONS: Dict[SourceCategory, str] = {
     ),
 }
 
+# Cautious public-facing hypothesis phrasing (avoiding claiming definitive proof)
+SOURCE_HYPOTHESIS_PHRASING: Dict[str, str] = {
+    SourceCategory.CLEAN_OR_BACKGROUND.value: "Background ambient conditions observed.",
+    SourceCategory.TRAFFIC.value: "Traffic pattern may be present.",
+    SourceCategory.HEAVY_DUST.value: "Resuspended road dust may be present.",
+    SourceCategory.CONSTRUCTION_ACTIVITY.value: "Construction dust pattern may be present.",
+    SourceCategory.BIOMASS_OR_WASTE_BURNING.value: "Biomass or waste combustion smoke may be present.",
+    SourceCategory.INDUSTRIAL_OR_GENERATOR_EMISSIONS.value: "Industrial or generator exhaust pattern may be present.",
+    SourceCategory.COOKING_OR_FUEL_COMBUSTION.value: "Domestic fuel or combustion pattern may be present.",
+    SourceCategory.INDOOR_ACTIVITY.value: "Indoor activity pattern may be present.",
+    SourceCategory.MIXED_POLLUTION.value: "Mixed regional pollution patterns detected.",
+    SourceCategory.UNKNOWN.value: "Source pattern is undetermined or unclassified.",
+    # Synonyms and short names
+    "ROAD_DUST": "Resuspended road dust may be present.",
+    "CONSTRUCTION": "Construction dust pattern may be present.",
+    "BIOMASS_BURNING": "Biomass or open burning smoke may be present.",
+    "INDUSTRIAL": "Industrial emission pattern may be present.",
+    "DG_SET_EMISSIONS": "Diesel generator exhaust pattern may be present.",
+    "DOMESTIC_COMBUSTION": "Domestic fuel combustion pattern may be present.",
+}
+
+# Indian source taxonomy normalization map
+TAXONOMY_ALIASES: Dict[str, str] = {
+    "ROAD_DUST": SourceCategory.HEAVY_DUST.value,
+    "CONSTRUCTION": SourceCategory.CONSTRUCTION_ACTIVITY.value,
+    "BIOMASS_BURNING": SourceCategory.BIOMASS_OR_WASTE_BURNING.value,
+    "INDUSTRIAL": SourceCategory.INDUSTRIAL_OR_GENERATOR_EMISSIONS.value,
+    "DG_SET_EMISSIONS": SourceCategory.INDUSTRIAL_OR_GENERATOR_EMISSIONS.value,
+    "DOMESTIC_COMBUSTION": SourceCategory.COOKING_OR_FUEL_COMBUSTION.value,
+    "SMOKE": SourceCategory.BIOMASS_OR_WASTE_BURNING.value,
+    "DUST": SourceCategory.HEAVY_DUST.value,
+}
+
 
 from app.core.constants import (
     RAW_FEATURES as SOURCE_CLASSIFIER_FEATURES,

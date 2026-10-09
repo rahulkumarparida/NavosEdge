@@ -71,6 +71,13 @@ public:
     static ValidationResult validate(const SensorData& d) {
         ValidationResult r;
 
+        // Check if explicitly marked invalid (e.g. communication or transport failure)
+        if (!d.is_valid) {
+            std::string reason = d.error_msg.empty() ? "Reading marked invalid" : d.error_msg;
+            r.error("Sensor data is invalid: " + reason);
+            return r;
+        }
+
         // --- NaN / Inf checks ---
         if (!is_finite(d.pm1_0))   r.error("PM1.0 is NaN/Inf");
         if (!is_finite(d.pm2_5))   r.error("PM2.5 is NaN/Inf");

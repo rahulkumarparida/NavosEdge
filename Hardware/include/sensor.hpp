@@ -51,9 +51,17 @@ struct SensorData {
     double temperature_c = 0.0;
     double humidity_pct  = 0.0;
 
-    // Sensor health flags
+    // Sensor health & validity flags
+    bool   is_valid      = true;
     bool   dht_ok        = true;
     bool   pms_ok        = true;
+    bool   mq_ok         = true;
+    bool   mq_warmed     = true;
+
+    // Sequence & diagnostics
+    uint64_t sample_seq  = 0;
+    std::string error_msg;
+    std::string gas_calibration_status = "uncalibrated";
 
     // Metadata
     std::string timestamp;
@@ -65,7 +73,8 @@ struct SensorData {
             << ", MQ-9=[ADC:" << mq9_raw_adc << ", " << mq9_voltage_v << "V]"
             << ", MQ-135=[ADC:" << mq135_raw_adc << ", " << mq135_voltage_v << "V]"
             << ", DHT22=[Temp:" << std::setprecision(2) << temperature_c << " °C, Hum:" << humidity_pct << "%]"
-            << ", MPM10=[PM1.0:" << std::setprecision(1) << pm1_0 << ", PM2.5:" << pm2_5 << ", PM10:" << pm10 << " ug/m3]";
+            << ", MPM10=[PM1.0:" << std::setprecision(1) << pm1_0 << ", PM2.5:" << pm2_5 << ", PM10:" << pm10 << " ug/m3]"
+            << ", Valid=" << (is_valid ? "YES" : "NO");
         return oss.str();
     }
 };
