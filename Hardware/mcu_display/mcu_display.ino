@@ -74,6 +74,8 @@ struct SensorHWState {
     bool   dht_ok;
     bool   pms_ok;
     bool   mq_warmed;
+    uint8_t dht_consecutive_fails; // Track consecutive DHT22 failures
+    bool   dht_ever_ok;           // Has DHT22 ever succeeded since boot?
 };
 
 static NavosEdgeGUI gui;
@@ -495,7 +497,9 @@ static void sample_and_transmit_sensors(unsigned long now) {
     hw_sensors.mq135_adc = 0;
 #endif
 
-    bool is_ready = hw_sensors.dht_ok && hw_sensors.pms_ok && hw_sensors.mq_warmed;
+    // Transmit data if MQ sensors are warmed AND at least PMS is working.
+    // Don't block transmission just because DHT22 had a transient checksum failure.
+    bool is_ready = hw_sensors.pms_ok && hw_sensors.mq_warmed;
 
     // Build atomic JSON string in a single stack buffer (avoids multi-packet RPC splitting)
     char json_buf[256];
@@ -534,12 +538,31 @@ void background_yield() {
     if ((now - last_dht_sample_ms) >= DHT_MIN_INTERVAL) {
         last_dht_sample_ms = now;
         float t_val = 0.0f, h_val = 0.0f;
-        if (readDHT22(t_val, h_val, &dht_diag)) {
+        bool success = readDHT22(t_val, h_val, &dht_diag);
+
+        // Retry once on failure (DHT22 checksum errors are often transient)
+        if (!success) {
+            delayMicroseconds(500);
+            success = readDHT22(t_val, h_val, &dht_diag);
+        }
+
+        if (success) {
             hw_sensors.temperature = t_val;
             hw_sensors.humidity = h_val;
             hw_sensors.dht_ok = true;
+            hw_sensors.dht_ever_ok = true;
+            hw_sensors.dht_consecutive_fails = 0;
         } else {
-            hw_sensors.dht_ok = false;
+            hw_sensors.dht_consecutive_fails++;
+            // Only mark FAULT after 3+ consecutive failures (6+ seconds of no valid reading).
+            // This prevents a single transient checksum glitch from zeroing valid data.
+            if (hw_sensors.dht_consecutive_fails >= 3) {
+                hw_sensors.dht_ok = false;
+            }
+            // If DHT22 has never succeeded, keep dht_ok=false (true hardware fault)
+            if (!hw_sensors.dht_ever_ok) {
+                hw_sensors.dht_ok = false;
+            }
         }
     }
 
@@ -560,6 +583,8 @@ void setup() {
     pinMode(MQ135_PIN, INPUT);
 
     memset(&hw_sensors, 0, sizeof(hw_sensors));
+    hw_sensors.dht_consecutive_fails = 0;
+    hw_sensors.dht_ever_ok = false;
     navosStateInit(state);
     boot_ms = millis();
 

@@ -198,6 +198,8 @@ private:
     NavosEdgeState app_state_;
     std::atomic<bool> running_;
     int consecutive_failures_;
+    SensorData last_valid_reading_;   // Cache of last successfully parsed sensor frame
+    bool has_valid_reading_ = false;  // Whether we've ever gotten a valid reading
     std::atomic<int> sampling_interval_seconds_;
     std::atomic<int> reading_count_;
     std::atomic<bool> is_warmup_complete_;
@@ -427,6 +429,28 @@ private:
 
     void transmit_reading() {
         SensorData data = sensor_->read();
+
+        // Check if this is a valid reading (not a timeout/error empty frame)
+        bool is_empty = (data.mq2_raw_adc == 0 && data.mq9_raw_adc == 0 &&
+                         data.mq135_raw_adc == 0 && data.pm1_0 == 0.0 &&
+                         data.pm2_5 == 0.0 && data.pm10 == 0.0 &&
+                         data.temperature_c == 0.0 && data.humidity_pct == 0.0);
+
+        if (is_empty && has_valid_reading_) {
+            // Reuse last-known-good reading on timeout/error instead of sending zeros
+            data = last_valid_reading_;
+            data.timestamp = last_valid_reading_.timestamp; // Keep original timestamp for staleness tracking
+            std::cout << "[HW] Using cached sensor reading (serial timeout/empty frame)\n";
+        } else if (is_empty && !has_valid_reading_) {
+            // No valid data ever received — skip transmission entirely
+            std::cerr << "[HW] No valid sensor data available yet — skipping transmission\n";
+            return;
+        } else {
+            // Got fresh data — cache it
+            last_valid_reading_ = data;
+            has_valid_reading_ = true;
+        }
+
         app_state_.mq2_adc = (uint16_t)data.mq2_raw_adc;
         app_state_.mq2_voltage = (float)data.mq2_voltage_v;
         app_state_.mq9_adc = (uint16_t)data.mq9_raw_adc;
