@@ -23,10 +23,17 @@ class JsonlStorageService:
                 self._locks[node_id] = threading.Lock()
             return self._locks[node_id]
 
-    def _get_current_file(self, node_id: str) -> Path:
-        """Returns the path for today's JSONL file"""
-        today_str = date.today().isoformat()
-        return self.data_dir / "readings" / node_id / f"{today_str}.jsonl"
+    def _get_current_file(self, node_id: str, record_timestamp: Optional[str] = None) -> Path:
+        """Returns the path for the JSONL file partitioned by record date (or today if none)"""
+        if record_timestamp:
+            try:
+                dt = datetime.fromisoformat(record_timestamp)
+                date_str = dt.date().isoformat()
+            except (ValueError, TypeError):
+                date_str = date.today().isoformat()
+        else:
+            date_str = date.today().isoformat()
+        return self.data_dir / "readings" / node_id / f"{date_str}.jsonl"
 
     def _rotate_if_needed(self, filepath: Path, node_id: str) -> None:
         """
@@ -43,11 +50,11 @@ class JsonlStorageService:
             filepath.rename(rotated_path)
             logger.info(f"Rotated file {filepath} to {rotated_path}")
 
-        # Enforce max files per node
+        # Enforce max files per node - sort chronologically by date filename
         node_dir = self.data_dir / "readings" / node_id
         if node_dir.exists():
             all_files = [f for f in node_dir.iterdir() if f.is_file() and ".jsonl" in f.name]
-            all_files.sort(key=lambda x: x.stat().st_mtime)
+            all_files.sort(key=lambda x: x.name)
             
             while len(all_files) > self.max_files_per_node:
                 oldest = all_files.pop(0)
@@ -61,7 +68,7 @@ class JsonlStorageService:
         lock = self._get_node_lock(node_id)
         with lock:
             try:
-                filepath = self._get_current_file(node_id)
+                filepath = self._get_current_file(node_id, record.get("timestamp"))
                 filepath.parent.mkdir(parents=True, exist_ok=True)
                 
                 json_line = json.dumps(record) + "\n"
@@ -227,13 +234,17 @@ class JsonlStorageService:
             return False
 
     def _sync_get_recent_readings(
-        self, node_id: str, hours: int = 24, max_records: int = 10000
+        self,
+        node_id: str,
+        hours: int = 24,
+        max_records: int = 10000,
+        reference_time: Optional[datetime] = None,
     ) -> List[dict]:
         """
         Stream recent observations from JSONL files within the last *hours*.
 
-        Only opens files whose date could fall within the window (today,
-        yesterday, and the day before to handle timezone edge-cases).
+        Only opens files whose date could fall within the window relative to reference_time
+        (defaulting to now).
         Reads line-by-line — never loads an entire file into memory.
         Returns at most *max_records* entries, newest last.
         """
@@ -243,14 +254,16 @@ class JsonlStorageService:
             if not node_dir.exists():
                 return []
 
-            cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+            ref_dt = reference_time or datetime.now(timezone.utc)
+            if ref_dt.tzinfo is None:
+                ref_dt = ref_dt.replace(tzinfo=timezone.utc)
+            cutoff = ref_dt - timedelta(hours=hours)
 
-            # Determine which date-files could possibly contain data in the
-            # window.  We check today, yesterday, and the day before yesterday
-            # to be safe across timezone boundaries and rotation suffixes.
+            # Determine candidate dates from ref_dt
             candidate_dates: list[str] = []
+            ref_date = ref_dt.date()
             for offset_days in range(hours // 24 + 2):
-                d = (date.today() - timedelta(days=offset_days)).isoformat()
+                d = (ref_date - timedelta(days=offset_days)).isoformat()
                 candidate_dates.append(d)
 
             # Gather candidate file paths (includes rotated files)
@@ -313,13 +326,17 @@ class JsonlStorageService:
             return results
 
     async def get_recent_readings(
-        self, node_id: str, hours: int = 24, max_records: int = 10000
+        self,
+        node_id: str,
+        hours: int = 24,
+        max_records: int = 10000,
+        reference_time: Optional[datetime] = None,
     ) -> List[dict]:
         """
         Async wrapper — retrieve recent readings within the rolling window.
         """
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
-            None, self._sync_get_recent_readings, node_id, hours, max_records
+            None, self._sync_get_recent_readings, node_id, hours, max_records, reference_time
         )
 

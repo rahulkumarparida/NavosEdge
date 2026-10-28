@@ -42,8 +42,14 @@ def test_high_pollution_takes_priority():
 
 
 def test_severe_and_critical_levels_are_distinct():
-    assert AdvisoryEngine().evaluate(reading(aqi=160, pm25=160, pm10=260))["severity"] == "SEVERE"
-    assert AdvisoryEngine().evaluate(reading(aqi=220, pm25=160, pm10=260))["severity"] == "CRITICAL"
+    # Under CPCB defaults: Poor (201-300) -> SEVERE, Very Poor/Severe (>300) -> CRITICAL
+    assert AdvisoryEngine().evaluate(reading(aqi=250, pm25=105, pm10=300))["severity"] == "SEVERE"
+    assert AdvisoryEngine().evaluate(reading(aqi=350, pm25=185, pm10=390))["severity"] == "CRITICAL"
+
+    # Explicit EPA standard preserves EPA thresholds (Unhealthy 151-200 -> SEVERE, Very Unhealthy 201+ -> CRITICAL)
+    epa_engine = AdvisoryEngine(standard="EPA")
+    assert epa_engine.evaluate(reading(aqi=160, pm25=160, pm10=260))["severity"] == "SEVERE"
+    assert epa_engine.evaluate(reading(aqi=220, pm25=160, pm10=260))["severity"] == "CRITICAL"
 
 
 def test_high_confidence_source_adds_source_aware_action():
@@ -124,3 +130,45 @@ def test_conflicting_conditions_keep_weather_separate():
 def test_weather_recommendations(temperature, humidity, expected):
     result = AdvisoryEngine().evaluate(reading(temperature=temperature, humidity=humidity))
     assert expected.lower() in result["weather_advice"].lower()
+
+
+@pytest.mark.parametrize(
+    ("aqi", "pm25", "pm10", "expected_severity"),
+    [
+        (35, 15.0, 30.0, "NORMAL"),      # Good (0-50)
+        (75, 45.0, 75.0, "MODERATE"),    # Satisfactory (51-100)
+        (150, 75.0, 180.0, "HIGH"),      # Moderate (101-200)
+        (250, 105.0, 300.0, "SEVERE"),   # Poor (201-300)
+        (350, 185.0, 390.0, "CRITICAL"), # Very Poor (301-400)
+        (450, 300.0, 480.0, "CRITICAL"), # Severe (401-500)
+    ],
+)
+def test_cpcb_category_transitions(aqi, pm25, pm10, expected_severity):
+    result = AdvisoryEngine().evaluate(reading(aqi=aqi, pm25=pm25, pm10=pm10))
+    assert result["severity"] == expected_severity
+
+
+def test_provisional_pm_advice_when_insufficient_data():
+    # When data sufficiency is INSUFFICIENT_DATA, advice must be clearly labelled as provisional
+    r = reading(aqi=85, pm25=50.0, pm10=80.0)
+    r["data_sufficiency"] = "INSUFFICIENT_DATA"
+    r["is_provisional"] = True
+    result = AdvisoryEngine().evaluate(r)
+    assert result["severity"] == "MODERATE"
+    assert "provisional" in result["advice"].lower()
+
+
+def test_missing_measurements_not_interpreted_as_zero_pollution():
+    # If aqi is None and pm dict is missing readings, it should not claim zero pollution
+    r = {
+        "aqi": None,
+        "pm": {},
+        "temperature_C": 25.0,
+        "humidity_pct": 50.0,
+        "predictions": {
+            "source": {"value": "UNKNOWN", "confidence": None},
+            "forecast": {"value": None, "confidence": None},
+        },
+    }
+    result = AdvisoryEngine().evaluate(r)
+    assert "unavailable" in result["advice"].lower() or "unverified" in result["advice"].lower()

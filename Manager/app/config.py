@@ -4,6 +4,7 @@ Manager Server Configuration
 
 import os
 from pathlib import Path
+from typing import Optional
 
 # Load .env configuration if present
 try:
@@ -34,6 +35,8 @@ from app.constants import (
     ENV_UNO_Q_PORT_KEY,
     ENV_UNO_Q_POLL_INTERVAL_KEY,
     ENV_UNO_Q_POLL_ENABLED_KEY,
+    DEFAULT_AQI_STANDARD,
+    ENV_AQI_STANDARD_KEY,
 )
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -44,6 +47,8 @@ STATE_FILE = DATA_DIR / STATE_FILENAME
 
 HOST = os.getenv(ENV_HOST_KEY, HOST_DEFAULT)
 PORT = int(os.getenv(ENV_PORT_KEY, str(PORT_DEFAULT)))
+
+AQI_STANDARD = os.getenv(ENV_AQI_STANDARD_KEY, DEFAULT_AQI_STANDARD).upper()
 
 # ------------------------------------------------------------------
 # UNO Q Integration & Polling Settings

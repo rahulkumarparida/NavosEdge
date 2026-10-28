@@ -1,0 +1,106 @@
+{
+  "dataset_identity": "Delhi Winter-Smog Synthetic Challenge (35 days, 5-min interval)",
+  "location": "delhi",
+  "start_date": "2024-11-01",
+  "random_seed": 888,
+  "sampling_interval_seconds": 300.0,
+  "days": 35,
+  "total_records": 10056,
+  "code_commit": "fcd6a1d34afdc035fc1db81f5b4d510460ce55d5",
+  "git_branch": "navos_v2",
+  "timestamp": "2026-10-26T13:31:24.083856+00:00",
+  "metrics": {
+    "tp": 328,
+    "fp": 26,
+    "tn": 9682,
+    "fn": 20,
+    "precision": 0.9266,
+    "recall": 0.9425,
+    "false_positive_rate": 0.0027,
+    "f1_score": 0.9345
+  },
+  "per_fault": {
+    "rail_high": {
+      "detected": 6,
+      "total": 6,
+      "recall": 1.0,
+      "delay_min": 0.0
+    },
+    "rail_low": {
+      "detected": 6,
+      "total": 6,
+      "recall": 1.0,
+      "delay_min": 0.0
+    },
+    "sensor_drift": {
+      "detected": 268,
+      "total": 288,
+      "recall": 0.9306,
+      "delay_min": 50.0
+    },
+    "stuck_value": {
+      "detected": 48,
+      "total": 48,
+      "recall": 1.0,
+      "delay_min": 0.0
+    }
+  },
+  "detection_delays_minutes": {
+    "rail_high": 0.0,
+    "rail_low": 0.0,
+    "sensor_drift": 50.0,
+    "stuck_value": 0.0
+  },
+  "mean_detection_delay_minutes": 12.5,
+  "per_scenario": {
+    "clean_background": {
+      "hw_fp": 0,
+      "total_non_hw": 1440,
+      "hw_fp_rate": 0.0,
+      "env_events": 45,
+      "total_readings": 1440
+    },
+    "combustion_smoke": {
+      "hw_fp": 1,
+      "total_non_hw": 1152,
+      "hw_fp_rate": 0.0009,
+      "env_events": 192,
+      "total_readings": 1152
+    },
+    "construction_dust": {
+      "hw_fp": 0,
+      "total_non_hw": 1440,
+      "hw_fp_rate": 0.0,
+      "env_events": 220,
+      "total_readings": 1440
+    },
+    "mixed_pollution": {
+      "hw_fp": 1,
+      "total_non_hw": 1440,
+      "hw_fp_rate": 0.0007,
+      "env_events": 459,
+      "total_readings": 1440
+    },
+    "seasonal_drift": {
+      "hw_fp": 1,
+      "total_non_hw": 1440,
+      "hw_fp_rate": 0.0007,
+      "env_events": 476,
+      "total_readings": 1440
+    },
+    "sensor_health_and_faults": {
+      "hw_fp": 21,
+      "total_non_hw": 1356,
+      "hw_fp_rate": 0.0155,
+      "env_events": 509,
+      "total_readings": 1704
+    },
+    "traffic": {
+      "hw_fp": 2,
+      "total_non_hw": 1440,
+      "hw_fp_rate": 0.0014,
+      "env_events": 327,
+      "total_readings": 1440
+    }
+  }
+}

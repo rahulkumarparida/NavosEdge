@@ -47,6 +47,8 @@ class AnomalyDecision(BaseModel):
     detected: bool = False
     score: float = 0.0
     severity: AnomalySeverity = AnomalySeverity.NONE
+    is_hardware_fault: bool = False
+    is_environmental_event: bool = False
 
 
 class DataQuality(BaseModel):
@@ -67,6 +69,8 @@ class AnomalyReport(BaseModel):
     system_state: AnomalySystemState = AnomalySystemState.BOOTSTRAPPING
     anomaly_source: str = "UNKNOWN"
     anomaly_source_detail: str = ""
+    is_hardware_fault: bool = False
+    is_environmental_event: bool = False
     explanations: List[str] = []
 
     @classmethod
@@ -74,6 +78,8 @@ class AnomalyReport(BaseModel):
         """Construct from the dict returned by AnomalyEngine.analyse()."""
         anomaly_data = data.get("anomaly", {})
         dq_data = data.get("data_quality", {})
+        is_hw = bool(anomaly_data.get("is_hardware_fault", data.get("is_hardware_fault", False)))
+        is_env = bool(anomaly_data.get("is_environmental_event", data.get("is_environmental_event", False)))
 
         evidence = {}
         for fname, fdata in data.get("sensor_evidence", {}).items():
@@ -85,6 +91,8 @@ class AnomalyReport(BaseModel):
                 detected=anomaly_data.get("detected", False),
                 score=anomaly_data.get("score", 0.0),
                 severity=anomaly_data.get("severity", "NONE"),
+                is_hardware_fault=is_hw,
+                is_environmental_event=is_env,
             ),
             sensor_evidence=evidence,
             data_quality=DataQuality(
@@ -97,5 +105,7 @@ class AnomalyReport(BaseModel):
             system_state=data.get("system_state", "BOOTSTRAPPING"),
             anomaly_source=data.get("anomaly_source", "UNKNOWN"),
             anomaly_source_detail=data.get("anomaly_source_detail", ""),
+            is_hardware_fault=is_hw,
+            is_environmental_event=is_env,
             explanations=data.get("explanations", []),
         )

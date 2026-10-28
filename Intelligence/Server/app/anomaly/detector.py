@@ -92,6 +92,7 @@ class DetectionResult:
         "missing_features", "features_used", "explanations",
         "anomaly_source", "anomaly_source_detail",
         "data_status",
+        "is_hardware_fault", "is_environmental_event",
     )
 
     def __init__(self):
@@ -108,6 +109,8 @@ class DetectionResult:
         self.anomaly_source: str = "UNKNOWN"
         self.anomaly_source_detail: str = ""
         self.data_status: str = "OK"  # OK, PARTIAL_DATA, STALE, INSUFFICIENT_DATA
+        self.is_hardware_fault: bool = False
+        self.is_environmental_event: bool = False
 
     def to_dict(self) -> dict:
         """Serialise to a plain dictionary for JSON output."""
@@ -128,6 +131,8 @@ class DetectionResult:
                 "detected": self.detected,
                 "score": round(self.combined_score, 3),
                 "severity": self.severity.value,
+                "is_hardware_fault": self.is_hardware_fault,
+                "is_environmental_event": self.is_environmental_event,
             },
             "sensor_evidence": sensor_evidence,
             "data_quality": {
@@ -142,6 +147,8 @@ class DetectionResult:
             "system_state": self.system_state.value,
             "anomaly_source": self.anomaly_source,
             "anomaly_source_detail": self.anomaly_source_detail,
+            "is_hardware_fault": self.is_hardware_fault,
+            "is_environmental_event": self.is_environmental_event,
             "explanations": self.explanations,
         }
 
@@ -203,11 +210,12 @@ class AnomalyDetector:
         self.observation_count = window.count()
 
         # --- Determine system state ---
-        result.system_state = self._determine_state(window)
+        result.system_state = self._determine_state(window, observation.timestamp)
 
         # --- Analyse each feature ---
         feature_scores: Dict[str, float] = {}
         feature_statuses: Dict[str, SensorStatus] = {}
+        recent_values_map: Dict[str, List[float]] = {}
         available_features: List[str] = []
         missing_features: List[str] = []
 
@@ -216,7 +224,8 @@ class AnomalyDetector:
 
             # Get recent values for health checking
             recent_vals = window.get_values(feature_name)
-            prev_val = recent_vals[-1] if recent_vals else None
+            recent_values_map[feature_name] = recent_vals
+            prev_val = recent_vals[-2] if len(recent_vals) >= 2 else None
 
             # Sensor health check
             sensor_status, sensor_issues = self.health_checker.check_feature(
@@ -240,12 +249,16 @@ class AnomalyDetector:
 
             if sensor_status == SensorStatus.FAILED:
                 missing_features.append(feature_name)
+                exp = self.baseline.predict(feature_name, observation.timestamp)
+                res_val = (actual - exp) if exp is not None else 0.0
+                score_val = 5.0
+                feature_scores[feature_name] = score_val
                 result.feature_results[feature_name] = FeatureResult(
                     feature_name=feature_name,
                     actual=actual,
-                    expected=None,
-                    residual=None,
-                    score=0.0,
+                    expected=exp,
+                    residual=res_val,
+                    score=score_val,
                     status_label="SENSOR_FAILED",
                     sensor_status=sensor_status,
                     sensor_issues=sensor_issues,
@@ -344,12 +357,26 @@ class AnomalyDetector:
             result.detected = False
 
         # --- Classify anomaly source ---
-        if result.detected:
-            source, detail = self.health_checker.classify_anomaly_source(
-                feature_statuses, feature_scores, self.threshold_medium
-            )
-            result.anomaly_source = source
-            result.anomaly_source_detail = detail
+        classification = self.health_checker.classify_anomaly_source(
+            feature_statuses,
+            feature_scores,
+            self.threshold_medium,
+            observation.features,
+            recent_values_map,
+        )
+        result.anomaly_source = classification.source
+        result.anomaly_source_detail = classification.explanation
+        result.is_hardware_fault = classification.is_hardware_fault
+        result.is_environmental_event = classification.is_environmental_event
+
+        # Ensure hardware faults and environmental events are reliably flagged
+        if result.is_hardware_fault:
+            result.detected = True
+            result.severity = Severity.HIGH
+        elif result.is_environmental_event:
+            result.detected = True
+            if result.severity == Severity.LOW:
+                result.severity = Severity.MEDIUM
 
         # --- Confidence ---
         result.confidence = self._estimate_confidence(
@@ -417,7 +444,11 @@ class AnomalyDetector:
     # State machine
     # ------------------------------------------------------------------
 
-    def _determine_state(self, window: RollingWindow) -> SystemState:
+    def _determine_state(
+        self,
+        window: RollingWindow,
+        reference_timestamp: Optional[datetime] = None,
+    ) -> SystemState:
         count = window.count()
 
         if count < self.bootstrap_samples:
@@ -437,9 +468,12 @@ class AnomalyDetector:
         # Check data freshness
         newest = window.newest()
         if newest is not None:
-            age_minutes = (
-                datetime.now(timezone.utc) - newest.timestamp
-            ).total_seconds() / 60.0
+            now_ref = reference_timestamp or datetime.now(timezone.utc)
+            if abs((now_ref - newest.timestamp).total_seconds()) > 86400 * 30 and reference_timestamp is None:
+                # If window data is historical replay and no reference timestamp provided,
+                # use newest.timestamp to avoid falsely marking replay as stale
+                now_ref = newest.timestamp
+            age_minutes = (now_ref - newest.timestamp).total_seconds() / 60.0
             if age_minutes > 60:  # 1 hour stale
                 return SystemState.DEGRADED
 

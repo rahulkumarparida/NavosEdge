@@ -1,0 +1,508 @@
+{
+  "tinygasnet": {
+    "meta": {
+      "model_version": "20261024_163508",
+      "architecture": {
+        "n_features": 5,
+        "hidden1": 32,
+        "hidden2": 16,
+        "n_classes": 5,
+        "p_drop": 0.1
+      },
+      "feature_order": [
+        "MQ2_V",
+        "MQ9_V",
+        "MQ135_V",
+        "temperature_C",
+        "humidity_pct"
+      ],
+      "class_labels": [
+        "Alcohol",
+        "CO",
+        "CleanAir",
+        "LPG",
+        "Smoke"
+      ],
+      "calibration_temperature": 1.05,
+      "preprocessing": {
+        "scaler_mean": [
+          1.4888036665178481,
+          1.4295145230882225,
+          1.5041231192577453,
+          28.040198799769083,
+          58.171758350871855
+        ],
+        "scaler_scale": [
+          0.826041950522418,
+          0.7676627192263228,
+          0.7945061850795757,
+          5.94873176996711,
+          14.764349310387253
+        ]
+      },
+      "evaluation": {
+        "accuracy": 0.9922222222222222,
+        "macro_f1": 0.9910408743426216,
+        "safety_f1": 0.999137187230371,
+        "n_test_samples": 1800,
+        "confusion_matrix": [
+          [
+            268,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            259,
+            1,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            636,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            287,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            11,
+            336
+          ]
+        ],
+        "per_class": {
+          "Alcohol": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 268.0
+          },
+          "CO": {
+            "precision": 0.9961538461538462,
+            "recall": 0.9923371647509579,
+            "f1-score": 0.9942418426103646,
+            "support": 261.0
+          },
+          "CleanAir": {
+            "precision": 0.9984301412872841,
+            "recall": 1.0,
+            "f1-score": 0.9992144540455616,
+            "support": 636.0
+          },
+          "LPG": {
+            "precision": 0.959866220735786,
+            "recall": 0.9965277777777778,
+            "f1-score": 0.9778534923339012,
+            "support": 288.0
+          },
+          "Smoke": {
+            "precision": 1.0,
+            "recall": 0.968299711815562,
+            "f1-score": 0.9838945827232797,
+            "support": 347.0
+          },
+          "accuracy": 0.9922222222222222,
+          "macro avg": {
+            "precision": 0.9908900416353832,
+            "recall": 0.9914329308688595,
+            "f1-score": 0.9910408743426216,
+            "support": 1800.0
+          },
+          "weighted avg": {
+            "precision": 0.9924662195982071,
+            "recall": 0.9922222222222222,
+            "f1-score": 0.992239299828569,
+            "support": 1800.0
+          }
+        }
+      },
+      "expected_input_ranges": {
+        "MQ2_V": [
+          0.0,
+          5.0
+        ],
+        "MQ9_V": [
+          0.0,
+          5.0
+        ],
+        "MQ135_V": [
+          0.0,
+          5.0
+        ],
+        "temperature_C": [
+          -35.0,
+          80.0
+        ],
+        "humidity_pct": [
+          0.0,
+          100.0
+        ]
+      },
+      "export_timestamp": "2026-10-24T16:35:08.128185+00:00"
+    },
+    "results": [
+      {
+        "name": "Clean Air (Nominal 30C, 87%H)",
+        "expected": "CleanAir",
+        "predicted": "CleanAir",
+        "confidence": 0.9995,
+        "safety": "safe",
+        "uncertainty": 0.0032,
+        "features_scaled_t": 0.3546640329090818,
+        "features_scaled_h": 1.9559440813833397
+      },
+      {
+        "name": "Clean Air (Real-world 25C, 50%H)",
+        "expected": "CleanAir",
+        "predicted": "CleanAir",
+        "confidence": 1.0,
+        "safety": "safe",
+        "uncertainty": 0.0003,
+        "features_scaled_t": -0.5110667142730982,
+        "features_scaled_h": -0.5534790717206025
+      },
+      {
+        "name": "Clean Air (Cool 20C, 60%H)",
+        "expected": "CleanAir",
+        "predicted": "CleanAir",
+        "confidence": 1.0,
+        "safety": "safe",
+        "uncertainty": 0.0001,
+        "features_scaled_t": -1.351582002799487,
+        "features_scaled_h": 0.12382812209962489
+      },
+      {
+        "name": "Smoke Event (Elevated MQ2, 25C, 50%H)",
+        "expected": "Smoke",
+        "predicted": "Smoke",
+        "confidence": 0.9992,
+        "safety": "unsafe",
+        "uncertainty": 0.004,
+        "features_scaled_t": -0.5110667142730982,
+        "features_scaled_h": -0.5534790717206025
+      },
+      {
+        "name": "Alcohol Event (Elevated MQ135, 25C, 50%H)",
+        "expected": "Alcohol",
+        "predicted": "Alcohol",
+        "confidence": 0.9987,
+        "safety": "unsafe",
+        "uncertainty": 0.0063,
+        "features_scaled_t": -0.5110667142730982,
+        "features_scaled_h": -0.5534790717206025
+      },
+      {
+        "name": "CO Event (Elevated MQ9, 25C, 50%H)",
+        "expected": "CO",
+        "predicted": "CO",
+        "confidence": 1.0,
+        "safety": "unsafe",
+        "uncertainty": 0.0003,
+        "features_scaled_t": -0.5110667142730982,
+        "features_scaled_h": -0.5534790717206025
+      },
+      {
+        "name": "LPG Event (Elevated MQ2 & MQ9, 25C, 50%H)",
+        "expected": "LPG",
+        "predicted": "LPG",
+        "confidence": 0.9916,
+        "safety": "unsafe",
+        "uncertainty": 0.032,
+        "features_scaled_t": -0.5110667142730982,
+        "features_scaled_h": -0.5534790717206025
+      }
+    ]
+  },
+  "source_classifier": {
+    "meta": {
+      "version": "1.1.0-retrained-20261024",
+      "created_at": "2026-10-24T16:35:08.223280+00:00",
+      "model_type": "DecisionTreeClassifier",
+      "training_data": "SYNTHETIC \u2014 multi-scenario urban environmental modeling",
+      "classes": [
+        "BIOMASS_OR_WASTE_BURNING",
+        "CLEAN_OR_BACKGROUND",
+        "CONSTRUCTION_ACTIVITY",
+        "COOKING_OR_FUEL_COMBUSTION",
+        "HEAVY_DUST",
+        "INDOOR_ACTIVITY",
+        "INDUSTRIAL_OR_GENERATOR_EMISSIONS",
+        "TRAFFIC"
+      ],
+      "features": [
+        "mq2_v",
+        "mq9_v",
+        "mq135_v",
+        "temp_c",
+        "hum_pct",
+        "pm1_0",
+        "pm2_5",
+        "pm10",
+        "pm_coarse_ratio",
+        "pm_fine_ratio",
+        "mq_mean_v",
+        "mq_max_v",
+        "mq2_mq9_ratio",
+        "mq135_mq2_ratio"
+      ],
+      "evaluation": {
+        "accuracy": 0.8277777777777777,
+        "macro_f1": 0.8233309262889119,
+        "tree_depth": 8,
+        "n_leaves": 76,
+        "n_train": 1440,
+        "n_test": 360,
+        "confusion_matrix": [
+          [
+            47,
+            0,
+            0,
+            2,
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            53,
+            0,
+            0,
+            0,
+            7,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            34,
+            0,
+            2,
+            0,
+            0,
+            4
+          ],
+          [
+            6,
+            0,
+            1,
+            26,
+            0,
+            1,
+            1,
+            5
+          ],
+          [
+            0,
+            0,
+            2,
+            0,
+            38,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            6,
+            0,
+            0,
+            0,
+            34,
+            0,
+            0
+          ],
+          [
+            3,
+            0,
+            0,
+            2,
+            0,
+            0,
+            33,
+            2
+          ],
+          [
+            0,
+            0,
+            8,
+            4,
+            0,
+            0,
+            5,
+            33
+          ]
+        ],
+        "per_class": {
+          "BIOMASS_OR_WASTE_BURNING": {
+            "precision": 0.8392857142857143,
+            "recall": 0.94,
+            "f1-score": 0.8867924528301887,
+            "support": 50.0
+          },
+          "CLEAN_OR_BACKGROUND": {
+            "precision": 0.8983050847457628,
+            "recall": 0.8833333333333333,
+            "f1-score": 0.8907563025210085,
+            "support": 60.0
+          },
+          "CONSTRUCTION_ACTIVITY": {
+            "precision": 0.7555555555555555,
+            "recall": 0.85,
+            "f1-score": 0.8,
+            "support": 40.0
+          },
+          "COOKING_OR_FUEL_COMBUSTION": {
+            "precision": 0.7647058823529411,
+            "recall": 0.65,
+            "f1-score": 0.7027027027027027,
+            "support": 40.0
+          },
+          "HEAVY_DUST": {
+            "precision": 0.95,
+            "recall": 0.95,
+            "f1-score": 0.95,
+            "support": 40.0
+          },
+          "INDOOR_ACTIVITY": {
+            "precision": 0.8095238095238095,
+            "recall": 0.85,
+            "f1-score": 0.8292682926829268,
+            "support": 40.0
+          },
+          "INDUSTRIAL_OR_GENERATOR_EMISSIONS": {
+            "precision": 0.825,
+            "recall": 0.825,
+            "f1-score": 0.825,
+            "support": 40.0
+          },
+          "TRAFFIC": {
+            "precision": 0.75,
+            "recall": 0.66,
+            "f1-score": 0.7021276595744681,
+            "support": 50.0
+          },
+          "accuracy": 0.8277777777777777,
+          "macro avg": {
+            "precision": 0.824047005807973,
+            "recall": 0.8260416666666666,
+            "f1-score": 0.8233309262889119,
+            "support": 360.0
+          },
+          "weighted avg": {
+            "precision": 0.8265388908231215,
+            "recall": 0.8277777777777777,
+            "f1-score": 0.825472843296996,
+            "support": 360.0
+          }
+        }
+      },
+      "config": {
+        "max_depth": 8,
+        "min_samples_split": 10,
+        "min_samples_leaf": 5
+      }
+    },
+    "results": [
+      {
+        "expected": "CLEAN_OR_BACKGROUND",
+        "predicted": "CLEAN_OR_BACKGROUND",
+        "match_score": 0.9424,
+        "uncertainty": true,
+        "correct": true
+      },
+      {
+        "expected": "TRAFFIC",
+        "predicted": "TRAFFIC",
+        "match_score": 0.978,
+        "uncertainty": true,
+        "correct": true
+      },
+      {
+        "expected": "CONSTRUCTION_ACTIVITY",
+        "predicted": "CONSTRUCTION_ACTIVITY",
+        "match_score": 0.9893,
+        "uncertainty": true,
+        "correct": true
+      },
+      {
+        "expected": "BIOMASS_OR_WASTE_BURNING",
+        "predicted": "BIOMASS_OR_WASTE_BURNING",
+        "match_score": 0.9835,
+        "uncertainty": true,
+        "correct": true
+      },
+      {
+        "expected": "HEAVY_DUST",
+        "predicted": "HEAVY_DUST",
+        "match_score": 0.9429,
+        "uncertainty": true,
+        "correct": true
+      }
+    ],
+    "accuracy": 1.0
+  },
+  "forecasting": {
+    "15m (3 steps)": {
+      "PM2.5": {
+        "persistence_mae": 1.8361722249875558,
+        "persistence_rmse": 2.81084284180635,
+        "ar_mae": 1.7000447984071676,
+        "ar_rmse": 2.6996845952606217,
+        "eval_count": 2009
+      },
+      "PM10": {
+        "persistence_mae": 2.20550024888004,
+        "persistence_rmse": 3.8395807762802554,
+        "ar_mae": 2.1690691886510702,
+        "ar_rmse": 3.8075519911429114,
+        "eval_count": 2009
+      }
+    },
+    "30m (6 steps)": {
+      "PM2.5": {
+        "persistence_mae": 2.165807577268195,
+        "persistence_rmse": 3.4119360526127456,
+        "ar_mae": 2.1034695912263213,
+        "ar_rmse": 3.32237167387724,
+        "eval_count": 2006
+      },
+      "PM10": {
+        "persistence_mae": 2.822168494516451,
+        "persistence_rmse": 4.863129390382,
+        "ar_mae": 2.934616151545364,
+        "ar_rmse": 4.862644154724215,
+        "eval_count": 2006
+      }
+    },
+    "60m (12 steps)": {
+      "PM2.5": {
+        "persistence_mae": 2.85448,
+        "persistence_rmse": 4.434153166050988,
+        "ar_mae": 2.890605,
+        "ar_rmse": 4.391306212278985,
+        "eval_count": 2000
+      },
+      "PM10": {
+        "persistence_mae": 4.07726,
+        "persistence_rmse": 6.542392551658759,
+        "ar_mae": 4.363770000000001,
+        "ar_rmse": 6.630136484266368,
+        "eval_count": 2000
+      }
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-10-24T16:35:08.230050+00:00",
+  "gasnet": {
+    "accuracy": 0.9922222222222222,
+    "macro_f1": 0.9910408743426216,
+    "safety_f1": 0.999137187230371,
+    "classes": [
+      "Alcohol",
+      "CO",
+      "CleanAir",
+      "LPG",
+      "Smoke"
+    ],
+    "optimal_T": 1.05
+  },
+  "source_classifier": {
+    "accuracy": 0.8277777777777777,
+    "macro_f1": 0.8233309262889119,
+    "classes": [
+      "BIOMASS_OR_WASTE_BURNING",
+      "CLEAN_OR_BACKGROUND",
+      "CONSTRUCTION_ACTIVITY",
+      "COOKING_OR_FUEL_COMBUSTION",
+      "HEAVY_DUST",
+      "INDOOR_ACTIVITY",
+      "INDUSTRIAL_OR_GENERATOR_EMISSIONS",
+      "TRAFFIC"
+    ]
+  }
+}

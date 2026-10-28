@@ -55,3 +55,9 @@ DEFAULT_LOCATIONS: Dict[str, str] = {
 # ------------------------------------------------------------------
 SYSTEM_VERSION: str = "1.0.0"
 SSE_HEARTBEAT_TIMEOUT_S: float = 10.0
+
+# ------------------------------------------------------------------
+# Regulatory AQI Standard Defaults
+# ------------------------------------------------------------------
+DEFAULT_AQI_STANDARD: str = "CPCB"
+ENV_AQI_STANDARD_KEY: str = "NAVOS_AQI_STANDARD"

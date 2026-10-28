@@ -1,0 +1,190 @@
+{
+  "version": "1.1.0-retrained-20261024",
+  "created_at": "2026-10-24T16:35:08.223280+00:00",
+  "model_type": "DecisionTreeClassifier",
+  "training_data": "SYNTHETIC \u2014 multi-scenario urban environmental modeling",
+  "classes": [
+    "BIOMASS_OR_WASTE_BURNING",
+    "CLEAN_OR_BACKGROUND",
+    "CONSTRUCTION_ACTIVITY",
+    "COOKING_OR_FUEL_COMBUSTION",
+    "HEAVY_DUST",
+    "INDOOR_ACTIVITY",
+    "INDUSTRIAL_OR_GENERATOR_EMISSIONS",
+    "TRAFFIC"
+  ],
+  "features": [
+    "mq2_v",
+    "mq9_v",
+    "mq135_v",
+    "temp_c",
+    "hum_pct",
+    "pm1_0",
+    "pm2_5",
+    "pm10",
+    "pm_coarse_ratio",
+    "pm_fine_ratio",
+    "mq_mean_v",
+    "mq_max_v",
+    "mq2_mq9_ratio",
+    "mq135_mq2_ratio"
+  ],
+  "evaluation": {
+    "accuracy": 0.8277777777777777,
+    "macro_f1": 0.8233309262889119,
+    "tree_depth": 8,
+    "n_leaves": 76,
+    "n_train": 1440,
+    "n_test": 360,
+    "confusion_matrix": [
+      [
+        47,
+        0,
+        0,
+        2,
+        0,
+        0,
+        1,
+        0
+      ],
+      [
+        0,
+        53,
+        0,
+        0,
+        0,
+        7,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        34,
+        0,
+        2,
+        0,
+        0,
+        4
+      ],
+      [
+        6,
+        0,
+        1,
+        26,
+        0,
+        1,
+        1,
+        5
+      ],
+      [
+        0,
+        0,
+        2,
+        0,
+        38,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        6,
+        0,
+        0,
+        0,
+        34,
+        0,
+        0
+      ],
+      [
+        3,
+        0,
+        0,
+        2,
+        0,
+        0,
+        33,
+        2
+      ],
+      [
+        0,
+        0,
+        8,
+        4,
+        0,
+        0,
+        5,
+        33
+      ]
+    ],
+    "per_class": {
+      "BIOMASS_OR_WASTE_BURNING": {
+        "precision": 0.8392857142857143,
+        "recall": 0.94,
+        "f1-score": 0.8867924528301887,
+        "support": 50.0
+      },
+      "CLEAN_OR_BACKGROUND": {
+        "precision": 0.8983050847457628,
+        "recall": 0.8833333333333333,
+        "f1-score": 0.8907563025210085,
+        "support": 60.0
+      },
+      "CONSTRUCTION_ACTIVITY": {
+        "precision": 0.7555555555555555,
+        "recall": 0.85,
+        "f1-score": 0.8,
+        "support": 40.0
+      },
+      "COOKING_OR_FUEL_COMBUSTION": {
+        "precision": 0.7647058823529411,
+        "recall": 0.65,
+        "f1-score": 0.7027027027027027,
+        "support": 40.0
+      },
+      "HEAVY_DUST": {
+        "precision": 0.95,
+        "recall": 0.95,
+        "f1-score": 0.95,
+        "support": 40.0
+      },
+      "INDOOR_ACTIVITY": {
+        "precision": 0.8095238095238095,
+        "recall": 0.85,
+        "f1-score": 0.8292682926829268,
+        "support": 40.0
+      },
+      "INDUSTRIAL_OR_GENERATOR_EMISSIONS": {
+        "precision": 0.825,
+        "recall": 0.825,
+        "f1-score": 0.825,
+        "support": 40.0
+      },
+      "TRAFFIC": {
+        "precision": 0.75,
+        "recall": 0.66,
+        "f1-score": 0.7021276595744681,
+        "support": 50.0
+      },
+      "accuracy": 0.8277777777777777,
+      "macro avg": {
+        "precision": 0.824047005807973,
+        "recall": 0.8260416666666666,
+        "f1-score": 0.8233309262889119,
+        "support": 360.0
+      },
+      "weighted avg": {
+        "precision": 0.8265388908231215,
+        "recall": 0.8277777777777777,
+        "f1-score": 0.825472843296996,
+        "support": 360.0
+      }
+    }
+  },
+  "config": {
+    "max_depth": 8,
+    "min_samples_split": 10,
+    "min_samples_leaf": 5
+  }
+}

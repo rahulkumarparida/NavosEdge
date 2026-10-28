@@ -33,6 +33,7 @@ class ForecastStore:
         self.max_file_size_mb = max_file_size_mb
         self._locks: dict[str, threading.Lock] = {}
         self._locks_lock = threading.Lock()
+        self._last_seen: dict[str, datetime] = {}
 
     # ------------------------------------------------------------------ #
     #  Internal helpers                                                    #
@@ -50,7 +51,9 @@ class ForecastStore:
     def _file_for_date(self, node_id: str, d: date) -> Path:
         return self._node_dir(node_id) / f"{d.isoformat()}.jsonl"
 
-    def _current_file(self, node_id: str) -> Path:
+    def _current_file(self, node_id: str, record_ts: Optional[datetime] = None) -> Path:
+        if record_ts is not None:
+            return self._file_for_date(node_id, record_ts.date())
         return self._file_for_date(node_id, date.today())
 
     @staticmethod
@@ -65,15 +68,18 @@ class ForecastStore:
         except (ValueError, TypeError):
             return None
 
-    def _candidate_files(self, node_id: str, hours: int) -> List[Path]:
+    def _candidate_files(self, node_id: str, hours: int, reference_time: Optional[datetime] = None) -> List[Path]:
         """Return JSONL files that *could* contain data within the window."""
         node_dir = self._node_dir(node_id)
         if not node_dir.exists():
             return []
 
+        ref = reference_time or self._last_seen.get(node_id) or datetime.now(timezone.utc)
+        ref_date = ref.date() if isinstance(ref, datetime) else date.today()
+
         dates_needed: set[str] = set()
         for offset in range(hours // 24 + 2):
-            d = (date.today() - timedelta(days=offset)).isoformat()
+            d = (ref_date - timedelta(days=offset)).isoformat()
             dates_needed.add(d)
 
         files: list[Path] = []
@@ -93,7 +99,10 @@ class ForecastStore:
         """Append a single record (dict) as a JSON line."""
         lock = self._lock_for(node_id)
         with lock:
-            fp = self._current_file(node_id)
+            ts = self._parse_ts(record.get("timestamp"))
+            if ts is not None:
+                self._last_seen[node_id] = ts
+            fp = self._current_file(node_id, ts)
             fp.parent.mkdir(parents=True, exist_ok=True)
             line = json.dumps(record, default=str) + "\n"
             with open(fp, "a", encoding="utf-8") as fh:
@@ -105,12 +114,15 @@ class ForecastStore:
     # ------------------------------------------------------------------ #
 
     def _stream_records(
-        self, node_id: str, hours: int, max_records: int = 50_000
+        self, node_id: str, hours: int, max_records: int = 50_000, reference_time: Optional[datetime] = None
     ) -> Iterator[dict]:
         """Yield records within the time window, oldest first."""
-        cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+        ref = reference_time or self._last_seen.get(node_id) or datetime.now(timezone.utc)
+        if ref.tzinfo is None:
+            ref = ref.replace(tzinfo=timezone.utc)
+        cutoff = ref - timedelta(hours=hours)
         count = 0
-        for fp in self._candidate_files(node_id, hours):
+        for fp in self._candidate_files(node_id, hours, reference_time=ref):
             try:
                 with open(fp, "r", encoding="utf-8") as fh:
                     for line in fh:
@@ -132,13 +144,13 @@ class ForecastStore:
                 logger.warning("Error reading %s: %s", fp, exc)
 
     def get_history(
-        self, node_id: str, hours: int | None = None, max_records: int = 50_000
+        self, node_id: str, hours: int | None = None, max_records: int = 50_000, reference_time: Optional[datetime] = None
     ) -> List[dict]:
         """Return records within the retention window."""
         lock = self._lock_for(node_id)
         with lock:
             h = hours if hours is not None else self.retention_hours
-            return list(self._stream_records(node_id, h, max_records))
+            return list(self._stream_records(node_id, h, max_records, reference_time=reference_time))
 
     def get_record_count(self, node_id: str) -> int:
         lock = self._lock_for(node_id)

@@ -191,7 +191,7 @@ All configuration via environment variables with `NAVOS_` prefix or `.env` file:
 | `NAVOS_FORECAST_ENABLED` | `True` | Enable forecast plugin |
 | `NAVOS_FORECAST_STORAGE_DIR` | `./data/forecast` | Forecast data |
 | `NAVOS_AQI_STORAGE_FILE` | `./data/aqi_latest.json` | AQI state |
-| `NAVOS_AQI_STANDARD` | `EPA` | AQI calculation standard |
+| `NAVOS_AQI_STANDARD` | `CPCB` | AQI calculation standard (CPCB default, optional EPA) |
 | `NAVOS_SSE_HEARTBEAT_INTERVAL_S` | `15.0` | SSE heartbeat |
 
 ---

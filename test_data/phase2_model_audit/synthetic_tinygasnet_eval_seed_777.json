@@ -1,0 +1,3571 @@
+{
+  "label": "SYNTHETIC \u2014 INDEPENDENT GENERALIZATION EVALUATION",
+  "seed": 777,
+  "n_samples": 356,
+  "data": [
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 1.038,
+      "mq9": 0.643,
+      "mq135": 3.663,
+      "t": 28.8,
+      "h": 48.8,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 0.778,
+      "mq9": 0.53,
+      "mq135": 2.704,
+      "t": 27.3,
+      "h": 59.8,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 0.732,
+      "mq9": 0.835,
+      "mq135": 2.187,
+      "t": 33.8,
+      "h": 69.6,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 0.939,
+      "mq9": 0.531,
+      "mq135": 2.827,
+      "t": 22.3,
+      "h": 24.4,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 1.176,
+      "mq9": 0.807,
+      "mq135": 2.338,
+      "t": 36.1,
+      "h": 31.0,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 0.968,
+      "mq9": 0.643,
+      "mq135": 2.376,
+      "t": 34.4,
+      "h": 27.2,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 0.939,
+      "mq9": 0.91,
+      "mq135": 2.333,
+      "t": 13.4,
+      "h": 25.0,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 1.402,
+      "mq9": 0.945,
+      "mq135": 3.327,
+      "t": 15.8,
+      "h": 54.4,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 1.156,
+      "mq9": 0.858,
+      "mq135": 2.208,
+      "t": 21.9,
+      "h": 44.4,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 1.322,
+      "mq9": 0.814,
+      "mq135": 3.497,
+      "t": 38.4,
+      "h": 72.1,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 1.095,
+      "mq9": 0.823,
+      "mq135": 2.73,
+      "t": 23.2,
+      "h": 78.5,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 0.956,
+      "mq9": 0.829,
+      "mq135": 2.253,
+      "t": 41.6,
+      "h": 25.9,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 1.12,
+      "mq9": 0.809,
+      "mq135": 2.529,
+      "t": 15.8,
+      "h": 37.9,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 1.263,
+      "mq9": 1.028,
+      "mq135": 3.267,
+      "t": 22.4,
+      "h": 23.8,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 0.885,
+      "mq9": 0.466,
+      "mq135": 2.772,
+      "t": 17.7,
+      "h": 29.7,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 0.997,
+      "mq9": 0.762,
+      "mq135": 3.338,
+      "t": 23.0,
+      "h": 40.4,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 0.966,
+      "mq9": 0.53,
+      "mq135": 3.042,
+      "t": 24.6,
+      "h": 48.0,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 1.39,
+      "mq9": 0.91,
+      "mq135": 3.125,
+      "t": 11.2,
+      "h": 23.9,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 1.342,
+      "mq9": 0.979,
+      "mq135": 2.942,
+      "t": 37.3,
+      "h": 25.9,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 1.119,
+      "mq9": 0.813,
+      "mq135": 3.32,
+      "t": 18.4,
+      "h": 89.5,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 1.065,
+      "mq9": 0.956,
+      "mq135": 2.121,
+      "t": 38.6,
+      "h": 43.7,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 1.237,
+      "mq9": 0.704,
+      "mq135": 3.817,
+      "t": 33.6,
+      "h": 25.8,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 0.88,
+      "mq9": 0.875,
+      "mq135": 2.199,
+      "t": 22.9,
+      "h": 40.8,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 1.231,
+      "mq9": 0.952,
+      "mq135": 2.985,
+      "t": 26.5,
+      "h": 46.7,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 1.097,
+      "mq9": 0.894,
+      "mq135": 2.89,
+      "t": 34.4,
+      "h": 55.6,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 1.23,
+      "mq9": 0.804,
+      "mq135": 3.535,
+      "t": 16.8,
+      "h": 33.3,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 1.256,
+      "mq9": 0.911,
+      "mq135": 3.409,
+      "t": 17.5,
+      "h": 83.4,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 0.983,
+      "mq9": 0.499,
+      "mq135": 3.259,
+      "t": 13.9,
+      "h": 33.0,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 1.166,
+      "mq9": 0.778,
+      "mq135": 3.404,
+      "t": 34.1,
+      "h": 77.5,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 1.146,
+      "mq9": 0.758,
+      "mq135": 3.755,
+      "t": 38.5,
+      "h": 61.5,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 1.303,
+      "mq9": 0.928,
+      "mq135": 3.025,
+      "t": 39.7,
+      "h": 65.2,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 1.344,
+      "mq9": 0.753,
+      "mq135": 3.533,
+      "t": 25.9,
+      "h": 43.8,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 1.062,
+      "mq9": 0.804,
+      "mq135": 3.233,
+      "t": 11.4,
+      "h": 37.4,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 1.192,
+      "mq9": 0.98,
+      "mq135": 2.436,
+      "t": 16.0,
+      "h": 47.6,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 1.134,
+      "mq9": 0.688,
+      "mq135": 3.284,
+      "t": 34.0,
+      "h": 34.8,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 1.183,
+      "mq9": 0.668,
+      "mq135": 3.111,
+      "t": 20.7,
+      "h": 78.5,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 1.256,
+      "mq9": 0.801,
+      "mq135": 3.578,
+      "t": 13.4,
+      "h": 75.9,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 1.276,
+      "mq9": 0.75,
+      "mq135": 2.644,
+      "t": 25.3,
+      "h": 55.0,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 0.917,
+      "mq9": 0.798,
+      "mq135": 2.135,
+      "t": 24.9,
+      "h": 63.6,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 1.105,
+      "mq9": 0.823,
+      "mq135": 2.377,
+      "t": 40.2,
+      "h": 62.8,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 1.265,
+      "mq9": 0.732,
+      "mq135": 2.701,
+      "t": 18.5,
+      "h": 45.0,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 1.094,
+      "mq9": 0.551,
+      "mq135": 2.438,
+      "t": 34.4,
+      "h": 37.5,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 1.193,
+      "mq9": 0.641,
+      "mq135": 2.223,
+      "t": 18.2,
+      "h": 68.4,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 1.122,
+      "mq9": 0.851,
+      "mq135": 2.062,
+      "t": 24.6,
+      "h": 75.0,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 1.154,
+      "mq9": 0.628,
+      "mq135": 2.807,
+      "t": 15.5,
+      "h": 32.3,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 1.119,
+      "mq9": 0.843,
+      "mq135": 2.501,
+      "t": 27.5,
+      "h": 78.0,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 1.237,
+      "mq9": 0.901,
+      "mq135": 2.908,
+      "t": 39.2,
+      "h": 78.8,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 0.926,
+      "mq9": 0.738,
+      "mq135": 2.963,
+      "t": 38.0,
+      "h": 72.6,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 1.136,
+      "mq9": 0.845,
+      "mq135": 2.224,
+      "t": 12.0,
+      "h": 86.0,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 0.992,
+      "mq9": 0.93,
+      "mq135": 3.237,
+      "t": 22.5,
+      "h": 73.6,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 0.916,
+      "mq9": 0.823,
+      "mq135": 3.276,
+      "t": 14.7,
+      "h": 90.7,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 1.251,
+      "mq9": 0.713,
+      "mq135": 3.278,
+      "t": 30.5,
+      "h": 81.8,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 1.277,
+      "mq9": 0.819,
+      "mq135": 2.338,
+      "t": 27.3,
+      "h": 27.3,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 0.924,
+      "mq9": 0.853,
+      "mq135": 2.334,
+      "t": 17.8,
+      "h": 44.5,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 1.006,
+      "mq9": 0.584,
+      "mq135": 3.757,
+      "t": 32.6,
+      "h": 29.0,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 1.023,
+      "mq9": 0.763,
+      "mq135": 2.386,
+      "t": 11.3,
+      "h": 24.7,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 1.074,
+      "mq9": 0.624,
+      "mq135": 2.234,
+      "t": 11.4,
+      "h": 74.9,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 1.316,
+      "mq9": 0.796,
+      "mq135": 3.29,
+      "t": 40.1,
+      "h": 54.0,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 1.449,
+      "mq9": 0.835,
+      "mq135": 3.753,
+      "t": 27.5,
+      "h": 27.9,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Alcohol",
+      "mq2": 0.973,
+      "mq9": 0.832,
+      "mq135": 2.311,
+      "t": 15.2,
+      "h": 29.0,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.169,
+      "mq9": 2.21,
+      "mq135": 0.78,
+      "t": 27.6,
+      "h": 42.9,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.086,
+      "mq9": 3.243,
+      "mq135": 0.955,
+      "t": 30.3,
+      "h": 38.2,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.075,
+      "mq9": 2.157,
+      "mq135": 0.728,
+      "t": 36.3,
+      "h": 31.0,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.261,
+      "mq9": 2.261,
+      "mq135": 0.764,
+      "t": 11.6,
+      "h": 65.3,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.257,
+      "mq9": 2.523,
+      "mq135": 0.904,
+      "t": 36.7,
+      "h": 64.3,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.057,
+      "mq9": 2.11,
+      "mq135": 0.823,
+      "t": 41.3,
+      "h": 60.2,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 0.838,
+      "mq9": 2.313,
+      "mq135": 0.865,
+      "t": 41.7,
+      "h": 74.8,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.298,
+      "mq9": 2.538,
+      "mq135": 0.658,
+      "t": 24.9,
+      "h": 35.4,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.027,
+      "mq9": 2.19,
+      "mq135": 0.903,
+      "t": 29.1,
+      "h": 69.9,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.348,
+      "mq9": 3.456,
+      "mq135": 0.916,
+      "t": 18.5,
+      "h": 90.8,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.254,
+      "mq9": 2.423,
+      "mq135": 0.966,
+      "t": 33.3,
+      "h": 29.6,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.174,
+      "mq9": 2.483,
+      "mq135": 0.967,
+      "t": 10.2,
+      "h": 71.2,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.519,
+      "mq9": 2.59,
+      "mq135": 0.752,
+      "t": 32.1,
+      "h": 88.9,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.069,
+      "mq9": 2.457,
+      "mq135": 0.833,
+      "t": 8.7,
+      "h": 47.9,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.024,
+      "mq9": 2.128,
+      "mq135": 0.918,
+      "t": 23.6,
+      "h": 64.0,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.174,
+      "mq9": 2.748,
+      "mq135": 0.64,
+      "t": 26.1,
+      "h": 72.9,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.302,
+      "mq9": 3.171,
+      "mq135": 0.793,
+      "t": 22.4,
+      "h": 49.5,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.078,
+      "mq9": 3.725,
+      "mq135": 0.906,
+      "t": 8.2,
+      "h": 39.9,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.195,
+      "mq9": 2.59,
+      "mq135": 0.756,
+      "t": 15.8,
+      "h": 34.9,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.584,
+      "mq9": 3.65,
+      "mq135": 0.675,
+      "t": 25.8,
+      "h": 86.5,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.321,
+      "mq9": 2.779,
+      "mq135": 0.695,
+      "t": 36.4,
+      "h": 43.3,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.338,
+      "mq9": 3.082,
+      "mq135": 0.811,
+      "t": 26.6,
+      "h": 71.3,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.067,
+      "mq9": 3.274,
+      "mq135": 0.938,
+      "t": 10.8,
+      "h": 79.6,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.141,
+      "mq9": 2.804,
+      "mq135": 0.716,
+      "t": 16.2,
+      "h": 41.2,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 0.991,
+      "mq9": 2.92,
+      "mq135": 0.788,
+      "t": 34.2,
+      "h": 33.3,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.405,
+      "mq9": 2.576,
+      "mq135": 0.843,
+      "t": 40.7,
+      "h": 84.4,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.098,
+      "mq9": 2.405,
+      "mq135": 0.896,
+      "t": 37.6,
+      "h": 43.8,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.217,
+      "mq9": 2.909,
+      "mq135": 0.86,
+      "t": 28.9,
+      "h": 39.6,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.233,
+      "mq9": 2.88,
+      "mq135": 0.736,
+      "t": 23.8,
+      "h": 32.2,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.559,
+      "mq9": 3.598,
+      "mq135": 1.041,
+      "t": 16.0,
+      "h": 29.7,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.273,
+      "mq9": 3.931,
+      "mq135": 1.019,
+      "t": 27.3,
+      "h": 66.8,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.223,
+      "mq9": 2.431,
+      "mq135": 0.812,
+      "t": 27.1,
+      "h": 56.5,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.299,
+      "mq9": 2.352,
+      "mq135": 0.837,
+      "t": 40.5,
+      "h": 27.0,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.261,
+      "mq9": 3.653,
+      "mq135": 1.015,
+      "t": 20.3,
+      "h": 62.9,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.205,
+      "mq9": 3.257,
+      "mq135": 0.923,
+      "t": 41.1,
+      "h": 47.2,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 0.96,
+      "mq9": 2.317,
+      "mq135": 0.97,
+      "t": 24.8,
+      "h": 71.9,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.026,
+      "mq9": 2.012,
+      "mq135": 0.654,
+      "t": 14.2,
+      "h": 63.5,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.48,
+      "mq9": 3.914,
+      "mq135": 1.078,
+      "t": 23.4,
+      "h": 48.2,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.048,
+      "mq9": 2.973,
+      "mq135": 0.965,
+      "t": 40.1,
+      "h": 80.3,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.25,
+      "mq9": 2.356,
+      "mq135": 1.053,
+      "t": 29.9,
+      "h": 58.3,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.217,
+      "mq9": 2.531,
+      "mq135": 0.94,
+      "t": 12.5,
+      "h": 35.1,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.464,
+      "mq9": 2.364,
+      "mq135": 1.091,
+      "t": 22.4,
+      "h": 25.3,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.184,
+      "mq9": 2.386,
+      "mq135": 0.993,
+      "t": 28.3,
+      "h": 63.8,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.253,
+      "mq9": 2.072,
+      "mq135": 0.873,
+      "t": 9.9,
+      "h": 68.2,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.296,
+      "mq9": 3.44,
+      "mq135": 0.862,
+      "t": 18.0,
+      "h": 40.4,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.51,
+      "mq9": 3.82,
+      "mq135": 0.88,
+      "t": 39.1,
+      "h": 63.0,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.288,
+      "mq9": 3.503,
+      "mq135": 0.933,
+      "t": 33.3,
+      "h": 85.4,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.203,
+      "mq9": 2.859,
+      "mq135": 0.896,
+      "t": 16.0,
+      "h": 91.0,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.113,
+      "mq9": 2.781,
+      "mq135": 1.016,
+      "t": 32.8,
+      "h": 86.6,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.089,
+      "mq9": 2.064,
+      "mq135": 0.975,
+      "t": 40.5,
+      "h": 82.9,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.233,
+      "mq9": 3.471,
+      "mq135": 0.778,
+      "t": 15.5,
+      "h": 47.5,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 0.911,
+      "mq9": 2.265,
+      "mq135": 1.064,
+      "t": 34.8,
+      "h": 30.2,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.194,
+      "mq9": 2.445,
+      "mq135": 0.737,
+      "t": 20.6,
+      "h": 38.1,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.459,
+      "mq9": 3.755,
+      "mq135": 1.022,
+      "t": 31.2,
+      "h": 40.7,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.38,
+      "mq9": 3.742,
+      "mq135": 0.709,
+      "t": 11.9,
+      "h": 30.6,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.091,
+      "mq9": 3.223,
+      "mq135": 0.795,
+      "t": 37.3,
+      "h": 88.2,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.143,
+      "mq9": 3.491,
+      "mq135": 0.788,
+      "t": 25.7,
+      "h": 59.3,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.395,
+      "mq9": 2.949,
+      "mq135": 0.942,
+      "t": 11.6,
+      "h": 82.9,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.46,
+      "mq9": 3.656,
+      "mq135": 0.753,
+      "t": 13.5,
+      "h": 27.0,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CO",
+      "mq2": 1.387,
+      "mq9": 2.293,
+      "mq135": 1.046,
+      "t": 26.6,
+      "h": 57.8,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.594,
+      "mq9": 0.643,
+      "mq135": 0.732,
+      "t": 34.3,
+      "h": 35.6,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.673,
+      "mq9": 0.558,
+      "mq135": 0.785,
+      "t": 28.6,
+      "h": 80.6,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.708,
+      "mq9": 0.526,
+      "mq135": 0.598,
+      "t": 28.4,
+      "h": 39.9,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.83,
+      "mq9": 0.595,
+      "mq135": 0.548,
+      "t": 33.7,
+      "h": 58.5,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.825,
+      "mq9": 0.747,
+      "mq135": 0.703,
+      "t": 15.6,
+      "h": 45.0,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.737,
+      "mq9": 0.568,
+      "mq135": 0.783,
+      "t": 26.4,
+      "h": 77.7,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.795,
+      "mq9": 0.789,
+      "mq135": 0.849,
+      "t": 19.6,
+      "h": 55.5,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.67,
+      "mq9": 0.573,
+      "mq135": 0.702,
+      "t": 8.7,
+      "h": 61.7,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.643,
+      "mq9": 0.696,
+      "mq135": 0.631,
+      "t": 11.4,
+      "h": 25.7,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.801,
+      "mq9": 0.493,
+      "mq135": 0.799,
+      "t": 20.4,
+      "h": 80.0,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.623,
+      "mq9": 0.606,
+      "mq135": 0.752,
+      "t": 18.3,
+      "h": 86.6,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.879,
+      "mq9": 0.66,
+      "mq135": 0.787,
+      "t": 33.8,
+      "h": 36.3,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.813,
+      "mq9": 0.683,
+      "mq135": 0.788,
+      "t": 38.1,
+      "h": 26.7,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.588,
+      "mq9": 0.675,
+      "mq135": 0.697,
+      "t": 26.6,
+      "h": 72.2,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.686,
+      "mq9": 0.703,
+      "mq135": 0.659,
+      "t": 24.9,
+      "h": 46.9,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.766,
+      "mq9": 0.502,
+      "mq135": 0.66,
+      "t": 41.6,
+      "h": 88.0,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.773,
+      "mq9": 0.521,
+      "mq135": 0.498,
+      "t": 37.1,
+      "h": 88.6,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.691,
+      "mq9": 0.54,
+      "mq135": 0.57,
+      "t": 11.3,
+      "h": 48.4,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.774,
+      "mq9": 0.608,
+      "mq135": 0.627,
+      "t": 37.4,
+      "h": 52.4,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.78,
+      "mq9": 0.811,
+      "mq135": 0.956,
+      "t": 24.9,
+      "h": 79.3,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.77,
+      "mq9": 0.692,
+      "mq135": 0.831,
+      "t": 29.1,
+      "h": 54.8,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.879,
+      "mq9": 0.635,
+      "mq135": 0.718,
+      "t": 39.0,
+      "h": 63.9,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.695,
+      "mq9": 0.817,
+      "mq135": 0.638,
+      "t": 26.2,
+      "h": 86.7,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.811,
+      "mq9": 0.618,
+      "mq135": 0.872,
+      "t": 36.0,
+      "h": 40.7,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.823,
+      "mq9": 0.844,
+      "mq135": 0.858,
+      "t": 17.0,
+      "h": 79.6,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.892,
+      "mq9": 0.804,
+      "mq135": 0.661,
+      "t": 12.9,
+      "h": 42.4,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.465,
+      "mq9": 0.627,
+      "mq135": 0.776,
+      "t": 16.2,
+      "h": 43.7,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.711,
+      "mq9": 0.519,
+      "mq135": 0.667,
+      "t": 27.1,
+      "h": 51.9,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.842,
+      "mq9": 0.777,
+      "mq135": 0.818,
+      "t": 28.4,
+      "h": 85.4,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.774,
+      "mq9": 0.673,
+      "mq135": 0.87,
+      "t": 26.7,
+      "h": 65.4,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.741,
+      "mq9": 0.82,
+      "mq135": 0.758,
+      "t": 25.4,
+      "h": 89.0,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.671,
+      "mq9": 0.799,
+      "mq135": 0.629,
+      "t": 30.6,
+      "h": 62.1,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.846,
+      "mq9": 0.885,
+      "mq135": 0.966,
+      "t": 8.5,
+      "h": 66.4,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.648,
+      "mq9": 0.57,
+      "mq135": 0.539,
+      "t": 30.8,
+      "h": 48.3,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.841,
+      "mq9": 0.627,
+      "mq135": 0.856,
+      "t": 12.7,
+      "h": 26.2,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.615,
+      "mq9": 0.658,
+      "mq135": 0.572,
+      "t": 32.8,
+      "h": 30.2,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.693,
+      "mq9": 0.521,
+      "mq135": 0.517,
+      "t": 23.1,
+      "h": 37.2,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.743,
+      "mq9": 0.669,
+      "mq135": 0.583,
+      "t": 31.9,
+      "h": 54.5,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.763,
+      "mq9": 0.689,
+      "mq135": 0.925,
+      "t": 28.1,
+      "h": 79.3,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.551,
+      "mq9": 0.576,
+      "mq135": 0.697,
+      "t": 23.5,
+      "h": 29.9,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.558,
+      "mq9": 0.497,
+      "mq135": 0.573,
+      "t": 40.0,
+      "h": 44.8,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.902,
+      "mq9": 0.655,
+      "mq135": 0.79,
+      "t": 35.0,
+      "h": 25.0,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.629,
+      "mq9": 0.639,
+      "mq135": 0.58,
+      "t": 34.7,
+      "h": 23.2,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.606,
+      "mq9": 0.615,
+      "mq135": 0.615,
+      "t": 14.5,
+      "h": 43.9,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.585,
+      "mq9": 0.678,
+      "mq135": 0.585,
+      "t": 28.7,
+      "h": 65.3,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.733,
+      "mq9": 0.627,
+      "mq135": 0.791,
+      "t": 10.5,
+      "h": 37.9,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.756,
+      "mq9": 0.769,
+      "mq135": 0.875,
+      "t": 25.6,
+      "h": 29.2,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.761,
+      "mq9": 0.749,
+      "mq135": 0.853,
+      "t": 37.4,
+      "h": 76.3,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.785,
+      "mq9": 0.591,
+      "mq135": 0.767,
+      "t": 13.6,
+      "h": 83.5,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.63,
+      "mq9": 0.687,
+      "mq135": 0.51,
+      "t": 30.9,
+      "h": 38.7,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.637,
+      "mq9": 0.75,
+      "mq135": 0.806,
+      "t": 22.1,
+      "h": 22.0,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.856,
+      "mq9": 0.719,
+      "mq135": 0.797,
+      "t": 9.4,
+      "h": 80.8,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.794,
+      "mq9": 0.71,
+      "mq135": 0.726,
+      "t": 28.7,
+      "h": 39.1,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.751,
+      "mq9": 0.73,
+      "mq135": 0.611,
+      "t": 36.8,
+      "h": 54.1,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.869,
+      "mq9": 0.56,
+      "mq135": 0.659,
+      "t": 33.3,
+      "h": 35.0,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.812,
+      "mq9": 0.772,
+      "mq135": 0.797,
+      "t": 39.7,
+      "h": 44.8,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.632,
+      "mq9": 0.4,
+      "mq135": 0.747,
+      "t": 23.7,
+      "h": 64.0,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.681,
+      "mq9": 0.673,
+      "mq135": 0.682,
+      "t": 25.5,
+      "h": 74.8,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.84,
+      "mq9": 0.789,
+      "mq135": 0.879,
+      "t": 35.1,
+      "h": 71.5,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "CleanAir",
+      "mq2": 0.735,
+      "mq9": 0.466,
+      "mq135": 0.804,
+      "t": 12.1,
+      "h": 42.6,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 3.572,
+      "mq9": 2.451,
+      "mq135": 1.004,
+      "t": 14.3,
+      "h": 50.3,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 3.39,
+      "mq9": 1.768,
+      "mq135": 0.704,
+      "t": 22.5,
+      "h": 59.8,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 2.895,
+      "mq9": 2.408,
+      "mq135": 0.922,
+      "t": 21.2,
+      "h": 70.1,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 3.537,
+      "mq9": 2.502,
+      "mq135": 0.932,
+      "t": 23.4,
+      "h": 60.2,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 2.31,
+      "mq9": 2.362,
+      "mq135": 1.225,
+      "t": 27.9,
+      "h": 29.8,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 2.688,
+      "mq9": 1.947,
+      "mq135": 0.998,
+      "t": 30.7,
+      "h": 76.3,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 3.452,
+      "mq9": 2.403,
+      "mq135": 0.797,
+      "t": 22.0,
+      "h": 61.3,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 2.632,
+      "mq9": 2.745,
+      "mq135": 0.785,
+      "t": 16.6,
+      "h": 64.3,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 2.779,
+      "mq9": 1.939,
+      "mq135": 0.877,
+      "t": 34.1,
+      "h": 85.1,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 3.102,
+      "mq9": 2.658,
+      "mq135": 0.998,
+      "t": 38.1,
+      "h": 46.5,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 3.174,
+      "mq9": 2.592,
+      "mq135": 1.064,
+      "t": 27.3,
+      "h": 79.4,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 3.433,
+      "mq9": 2.439,
+      "mq135": 0.813,
+      "t": 41.1,
+      "h": 92.0,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 3.115,
+      "mq9": 2.331,
+      "mq135": 1.2,
+      "t": 35.5,
+      "h": 82.8,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 3.606,
+      "mq9": 2.409,
+      "mq135": 1.216,
+      "t": 18.7,
+      "h": 79.3,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 2.895,
+      "mq9": 2.355,
+      "mq135": 1.144,
+      "t": 12.1,
+      "h": 39.7,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 2.796,
+      "mq9": 2.885,
+      "mq135": 1.272,
+      "t": 26.5,
+      "h": 75.3,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 3.047,
+      "mq9": 1.995,
+      "mq135": 0.969,
+      "t": 33.0,
+      "h": 75.0,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 3.313,
+      "mq9": 2.481,
+      "mq135": 0.973,
+      "t": 19.7,
+      "h": 55.3,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 2.489,
+      "mq9": 2.729,
+      "mq135": 1.17,
+      "t": 24.2,
+      "h": 65.4,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 2.841,
+      "mq9": 2.338,
+      "mq135": 0.991,
+      "t": 18.7,
+      "h": 77.1,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 2.342,
+      "mq9": 2.021,
+      "mq135": 1.102,
+      "t": 40.9,
+      "h": 56.4,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 3.332,
+      "mq9": 2.153,
+      "mq135": 0.98,
+      "t": 39.1,
+      "h": 35.4,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 2.318,
+      "mq9": 1.747,
+      "mq135": 1.087,
+      "t": 36.2,
+      "h": 51.7,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 3.102,
+      "mq9": 1.695,
+      "mq135": 0.677,
+      "t": 19.9,
+      "h": 81.1,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 2.39,
+      "mq9": 2.391,
+      "mq135": 0.853,
+      "t": 12.1,
+      "h": 48.1,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 3.022,
+      "mq9": 2.794,
+      "mq135": 1.091,
+      "t": 27.4,
+      "h": 36.9,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 2.465,
+      "mq9": 1.587,
+      "mq135": 0.681,
+      "t": 13.9,
+      "h": 77.0,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 2.653,
+      "mq9": 2.023,
+      "mq135": 0.994,
+      "t": 39.6,
+      "h": 84.3,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 2.418,
+      "mq9": 1.936,
+      "mq135": 1.106,
+      "t": 8.1,
+      "h": 72.5,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 2.561,
+      "mq9": 2.655,
+      "mq135": 0.765,
+      "t": 28.8,
+      "h": 24.8,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 3.394,
+      "mq9": 2.741,
+      "mq135": 1.043,
+      "t": 10.1,
+      "h": 47.0,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 2.511,
+      "mq9": 2.721,
+      "mq135": 0.848,
+      "t": 14.7,
+      "h": 59.0,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 2.657,
+      "mq9": 2.58,
+      "mq135": 0.917,
+      "t": 30.4,
+      "h": 76.2,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 2.56,
+      "mq9": 2.108,
+      "mq135": 0.789,
+      "t": 17.2,
+      "h": 78.2,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 2.82,
+      "mq9": 2.716,
+      "mq135": 0.937,
+      "t": 12.1,
+      "h": 54.3,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 2.433,
+      "mq9": 2.292,
+      "mq135": 0.727,
+      "t": 30.8,
+      "h": 33.3,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 2.637,
+      "mq9": 2.369,
+      "mq135": 0.906,
+      "t": 28.5,
+      "h": 60.1,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 3.579,
+      "mq9": 1.981,
+      "mq135": 0.972,
+      "t": 19.3,
+      "h": 68.8,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 2.765,
+      "mq9": 2.375,
+      "mq135": 0.788,
+      "t": 35.2,
+      "h": 47.5,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 3.455,
+      "mq9": 2.034,
+      "mq135": 0.823,
+      "t": 18.6,
+      "h": 40.6,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 3.031,
+      "mq9": 2.509,
+      "mq135": 0.758,
+      "t": 15.1,
+      "h": 40.2,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 3.184,
+      "mq9": 1.863,
+      "mq135": 0.823,
+      "t": 24.8,
+      "h": 60.4,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 2.603,
+      "mq9": 1.997,
+      "mq135": 1.011,
+      "t": 27.1,
+      "h": 80.1,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 3.307,
+      "mq9": 1.906,
+      "mq135": 1.116,
+      "t": 31.7,
+      "h": 26.3,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 2.43,
+      "mq9": 1.751,
+      "mq135": 1.246,
+      "t": 24.3,
+      "h": 39.9,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 2.627,
+      "mq9": 2.75,
+      "mq135": 0.773,
+      "t": 35.3,
+      "h": 32.1,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 3.427,
+      "mq9": 1.877,
+      "mq135": 1.019,
+      "t": 23.8,
+      "h": 69.7,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 3.176,
+      "mq9": 2.771,
+      "mq135": 1.242,
+      "t": 24.6,
+      "h": 78.4,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 3.329,
+      "mq9": 2.539,
+      "mq135": 0.789,
+      "t": 26.9,
+      "h": 77.1,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 2.258,
+      "mq9": 2.547,
+      "mq135": 1.158,
+      "t": 29.9,
+      "h": 40.5,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 2.312,
+      "mq9": 1.752,
+      "mq135": 1.129,
+      "t": 17.0,
+      "h": 88.6,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 3.141,
+      "mq9": 2.822,
+      "mq135": 0.96,
+      "t": 16.3,
+      "h": 68.8,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 3.193,
+      "mq9": 2.695,
+      "mq135": 0.795,
+      "t": 30.0,
+      "h": 67.9,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 3.002,
+      "mq9": 2.118,
+      "mq135": 0.848,
+      "t": 30.7,
+      "h": 62.6,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 2.749,
+      "mq9": 2.523,
+      "mq135": 1.06,
+      "t": 17.3,
+      "h": 39.3,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 2.339,
+      "mq9": 1.67,
+      "mq135": 1.053,
+      "t": 23.3,
+      "h": 63.3,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 3.372,
+      "mq9": 2.405,
+      "mq135": 0.969,
+      "t": 16.2,
+      "h": 65.3,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 3.352,
+      "mq9": 2.004,
+      "mq135": 0.803,
+      "t": 15.0,
+      "h": 27.0,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 3.479,
+      "mq9": 2.917,
+      "mq135": 0.903,
+      "t": 27.2,
+      "h": 36.9,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "LPG",
+      "mq2": 2.536,
+      "mq9": 2.423,
+      "mq135": 0.831,
+      "t": 39.7,
+      "h": 35.5,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 3.876,
+      "mq9": 1.712,
+      "mq135": 2.619,
+      "t": 15.1,
+      "h": 37.6,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 3.32,
+      "mq9": 1.847,
+      "mq135": 2.406,
+      "t": 39.3,
+      "h": 81.9,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 2.559,
+      "mq9": 1.742,
+      "mq135": 1.995,
+      "t": 32.9,
+      "h": 53.2,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 3.714,
+      "mq9": 1.743,
+      "mq135": 2.069,
+      "t": 17.5,
+      "h": 85.5,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 3.564,
+      "mq9": 2.307,
+      "mq135": 2.045,
+      "t": 25.9,
+      "h": 60.7,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 3.321,
+      "mq9": 1.464,
+      "mq135": 2.891,
+      "t": 8.0,
+      "h": 88.6,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 3.627,
+      "mq9": 1.374,
+      "mq135": 1.838,
+      "t": 30.9,
+      "h": 85.6,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 3.488,
+      "mq9": 2.579,
+      "mq135": 2.397,
+      "t": 35.1,
+      "h": 54.6,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 3.375,
+      "mq9": 2.042,
+      "mq135": 1.86,
+      "t": 40.7,
+      "h": 86.6,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 2.652,
+      "mq9": 1.629,
+      "mq135": 2.359,
+      "t": 25.3,
+      "h": 48.8,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 4.1,
+      "mq9": 1.867,
+      "mq135": 2.975,
+      "t": 15.2,
+      "h": 37.5,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 4.033,
+      "mq9": 2.5,
+      "mq135": 2.433,
+      "t": 33.2,
+      "h": 66.5,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 3.761,
+      "mq9": 2.284,
+      "mq135": 2.152,
+      "t": 31.6,
+      "h": 62.7,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 2.729,
+      "mq9": 1.827,
+      "mq135": 2.999,
+      "t": 13.7,
+      "h": 63.7,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 2.914,
+      "mq9": 2.393,
+      "mq135": 2.235,
+      "t": 40.6,
+      "h": 47.0,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 3.891,
+      "mq9": 2.024,
+      "mq135": 2.963,
+      "t": 34.7,
+      "h": 49.1,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 2.553,
+      "mq9": 1.597,
+      "mq135": 2.124,
+      "t": 13.8,
+      "h": 42.2,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 3.087,
+      "mq9": 2.389,
+      "mq135": 3.155,
+      "t": 29.8,
+      "h": 75.1,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 2.423,
+      "mq9": 1.388,
+      "mq135": 2.288,
+      "t": 36.8,
+      "h": 35.0,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 3.761,
+      "mq9": 2.352,
+      "mq135": 3.048,
+      "t": 26.4,
+      "h": 62.3,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 2.679,
+      "mq9": 2.409,
+      "mq135": 2.548,
+      "t": 41.0,
+      "h": 31.1,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 3.525,
+      "mq9": 1.871,
+      "mq135": 2.524,
+      "t": 17.0,
+      "h": 80.2,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 3.708,
+      "mq9": 2.073,
+      "mq135": 2.593,
+      "t": 9.5,
+      "h": 40.5,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 3.373,
+      "mq9": 1.326,
+      "mq135": 2.463,
+      "t": 27.1,
+      "h": 88.3,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 4.095,
+      "mq9": 1.808,
+      "mq135": 2.512,
+      "t": 10.8,
+      "h": 72.5,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 2.547,
+      "mq9": 1.991,
+      "mq135": 2.018,
+      "t": 31.7,
+      "h": 84.2,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 3.36,
+      "mq9": 1.443,
+      "mq135": 2.271,
+      "t": 34.8,
+      "h": 50.6,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 3.779,
+      "mq9": 1.904,
+      "mq135": 2.579,
+      "t": 23.1,
+      "h": 47.9,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 3.655,
+      "mq9": 2.126,
+      "mq135": 2.498,
+      "t": 28.5,
+      "h": 65.6,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 3.292,
+      "mq9": 2.55,
+      "mq135": 2.426,
+      "t": 36.9,
+      "h": 69.6,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 2.574,
+      "mq9": 2.145,
+      "mq135": 3.021,
+      "t": 38.8,
+      "h": 85.3,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 3.115,
+      "mq9": 2.175,
+      "mq135": 2.399,
+      "t": 18.4,
+      "h": 42.8,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 3.791,
+      "mq9": 1.89,
+      "mq135": 2.494,
+      "t": 21.6,
+      "h": 42.4,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 3.934,
+      "mq9": 1.906,
+      "mq135": 2.503,
+      "t": 17.0,
+      "h": 87.0,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 3.277,
+      "mq9": 2.314,
+      "mq135": 2.219,
+      "t": 23.1,
+      "h": 64.2,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 3.159,
+      "mq9": 1.679,
+      "mq135": 2.048,
+      "t": 9.2,
+      "h": 38.8,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 3.55,
+      "mq9": 1.269,
+      "mq135": 2.86,
+      "t": 18.1,
+      "h": 81.8,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 2.828,
+      "mq9": 1.943,
+      "mq135": 1.89,
+      "t": 30.8,
+      "h": 49.5,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 4.008,
+      "mq9": 2.235,
+      "mq135": 2.532,
+      "t": 32.8,
+      "h": 91.0,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 2.885,
+      "mq9": 2.46,
+      "mq135": 2.857,
+      "t": 34.2,
+      "h": 80.3,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 3.756,
+      "mq9": 2.254,
+      "mq135": 2.968,
+      "t": 23.8,
+      "h": 29.6,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 3.887,
+      "mq9": 2.359,
+      "mq135": 3.053,
+      "t": 22.6,
+      "h": 49.2,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 2.966,
+      "mq9": 1.97,
+      "mq135": 1.892,
+      "t": 35.4,
+      "h": 76.8,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 3.155,
+      "mq9": 2.439,
+      "mq135": 2.864,
+      "t": 35.7,
+      "h": 56.1,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 2.938,
+      "mq9": 1.801,
+      "mq135": 2.556,
+      "t": 19.7,
+      "h": 22.6,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 3.579,
+      "mq9": 1.983,
+      "mq135": 2.133,
+      "t": 8.1,
+      "h": 55.6,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 3.224,
+      "mq9": 2.121,
+      "mq135": 3.035,
+      "t": 14.6,
+      "h": 23.4,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 2.662,
+      "mq9": 1.706,
+      "mq135": 3.018,
+      "t": 9.5,
+      "h": 55.2,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 4.175,
+      "mq9": 2.287,
+      "mq135": 2.281,
+      "t": 26.4,
+      "h": 89.4,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 2.231,
+      "mq9": 2.239,
+      "mq135": 2.103,
+      "t": 19.7,
+      "h": 32.8,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 2.793,
+      "mq9": 1.739,
+      "mq135": 3.103,
+      "t": 41.9,
+      "h": 25.7,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 3.737,
+      "mq9": 2.424,
+      "mq135": 2.567,
+      "t": 31.8,
+      "h": 64.9,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 3.718,
+      "mq9": 2.39,
+      "mq135": 2.623,
+      "t": 18.7,
+      "h": 37.0,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 3.289,
+      "mq9": 2.28,
+      "mq135": 2.627,
+      "t": 41.0,
+      "h": 72.9,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 3.014,
+      "mq9": 2.491,
+      "mq135": 1.99,
+      "t": 17.4,
+      "h": 40.7,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 2.954,
+      "mq9": 1.651,
+      "mq135": 2.199,
+      "t": 39.0,
+      "h": 27.8,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 3.102,
+      "mq9": 1.838,
+      "mq135": 1.959,
+      "t": 32.5,
+      "h": 67.9,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 2.556,
+      "mq9": 2.085,
+      "mq135": 3.125,
+      "t": 19.2,
+      "h": 36.4,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 3.09,
+      "mq9": 1.944,
+      "mq135": 1.926,
+      "t": 21.5,
+      "h": 65.5,
+      "is_ambiguous": false
+    },
+    {
+      "category": "shifted_class",
+      "expected_gas": "Smoke",
+      "mq2": 3.771,
+      "mq9": 1.883,
+      "mq135": 2.537,
+      "t": 18.8,
+      "h": 32.6,
+      "is_ambiguous": false
+    },
+    {
+      "category": "temp_hum_stress",
+      "expected_gas": "CleanAir",
+      "mq2": 0.582,
+      "mq9": 0.515,
+      "mq135": 0.704,
+      "t": 4.6,
+      "h": 91.3,
+      "is_ambiguous": false
+    },
+    {
+      "category": "temp_hum_stress",
+      "expected_gas": "CleanAir",
+      "mq2": 0.623,
+      "mq9": 0.555,
+      "mq135": 0.557,
+      "t": 4.0,
+      "h": 93.3,
+      "is_ambiguous": false
+    },
+    {
+      "category": "temp_hum_stress",
+      "expected_gas": "CleanAir",
+      "mq2": 0.631,
+      "mq9": 0.56,
+      "mq135": 0.704,
+      "t": 4.1,
+      "h": 92.6,
+      "is_ambiguous": false
+    },
+    {
+      "category": "temp_hum_stress",
+      "expected_gas": "CleanAir",
+      "mq2": 0.655,
+      "mq9": 0.548,
+      "mq135": 0.624,
+      "t": 5.2,
+      "h": 92.9,
+      "is_ambiguous": false
+    },
+    {
+      "category": "temp_hum_stress",
+      "expected_gas": "Smoke",
+      "mq2": 2.756,
+      "mq9": 1.644,
+      "mq135": 2.463,
+      "t": 5.8,
+      "h": 87.9,
+      "is_ambiguous": false
+    },
+    {
+      "category": "temp_hum_stress",
+      "expected_gas": "Smoke",
+      "mq2": 2.727,
+      "mq9": 1.68,
+      "mq135": 2.442,
+      "t": 5.5,
+      "h": 88.3,
+      "is_ambiguous": false
+    },
+    {
+      "category": "temp_hum_stress",
+      "expected_gas": "Smoke",
+      "mq2": 2.708,
+      "mq9": 1.771,
+      "mq135": 2.411,
+      "t": 6.4,
+      "h": 87.5,
+      "is_ambiguous": false
+    },
+    {
+      "category": "temp_hum_stress",
+      "expected_gas": "Smoke",
+      "mq2": 2.739,
+      "mq9": 1.703,
+      "mq135": 2.473,
+      "t": 5.4,
+      "h": 89.9,
+      "is_ambiguous": false
+    },
+    {
+      "category": "temp_hum_stress",
+      "expected_gas": "CO",
+      "mq2": 1.153,
+      "mq9": 2.68,
+      "mq135": 1.079,
+      "t": 4.5,
+      "h": 91.1,
+      "is_ambiguous": false
+    },
+    {
+      "category": "temp_hum_stress",
+      "expected_gas": "CO",
+      "mq2": 1.138,
+      "mq9": 2.636,
+      "mq135": 1.146,
+      "t": 4.9,
+      "h": 90.7,
+      "is_ambiguous": false
+    },
+    {
+      "category": "temp_hum_stress",
+      "expected_gas": "CO",
+      "mq2": 1.196,
+      "mq9": 2.679,
+      "mq135": 1.067,
+      "t": 5.7,
+      "h": 90.5,
+      "is_ambiguous": false
+    },
+    {
+      "category": "temp_hum_stress",
+      "expected_gas": "CO",
+      "mq2": 1.214,
+      "mq9": 2.743,
+      "mq135": 1.123,
+      "t": 4.3,
+      "h": 91.0,
+      "is_ambiguous": false
+    },
+    {
+      "category": "temp_hum_stress",
+      "expected_gas": "CleanAir",
+      "mq2": 0.854,
+      "mq9": 0.716,
+      "mq135": 0.851,
+      "t": 46.4,
+      "h": 18.1,
+      "is_ambiguous": false
+    },
+    {
+      "category": "temp_hum_stress",
+      "expected_gas": "CleanAir",
+      "mq2": 0.83,
+      "mq9": 0.702,
+      "mq135": 0.844,
+      "t": 46.0,
+      "h": 18.0,
+      "is_ambiguous": false
+    },
+    {
+      "category": "temp_hum_stress",
+      "expected_gas": "CleanAir",
+      "mq2": 0.858,
+      "mq9": 0.726,
+      "mq135": 0.814,
+      "t": 46.7,
+      "h": 18.3,
+      "is_ambiguous": false
+    },
+    {
+      "category": "temp_hum_stress",
+      "expected_gas": "CleanAir",
+      "mq2": 0.847,
+      "mq9": 0.742,
+      "mq135": 0.843,
+      "t": 47.0,
+      "h": 16.3,
+      "is_ambiguous": false
+    },
+    {
+      "category": "temp_hum_stress",
+      "expected_gas": "LPG",
+      "mq2": 2.97,
+      "mq9": 2.252,
+      "mq135": 1.184,
+      "t": 43.8,
+      "h": 24.1,
+      "is_ambiguous": false
+    },
+    {
+      "category": "temp_hum_stress",
+      "expected_gas": "LPG",
+      "mq2": 2.853,
+      "mq9": 2.221,
+      "mq135": 1.137,
+      "t": 44.2,
+      "h": 20.6,
+      "is_ambiguous": false
+    },
+    {
+      "category": "temp_hum_stress",
+      "expected_gas": "LPG",
+      "mq2": 2.945,
+      "mq9": 2.237,
+      "mq135": 1.156,
+      "t": 43.6,
+      "h": 22.1,
+      "is_ambiguous": false
+    },
+    {
+      "category": "temp_hum_stress",
+      "expected_gas": "LPG",
+      "mq2": 2.942,
+      "mq9": 2.219,
+      "mq135": 1.134,
+      "t": 44.6,
+      "h": 22.3,
+      "is_ambiguous": false
+    },
+    {
+      "category": "temp_hum_stress",
+      "expected_gas": "Alcohol",
+      "mq2": 0.956,
+      "mq9": 0.83,
+      "mq135": 2.825,
+      "t": 45.6,
+      "h": 18.6,
+      "is_ambiguous": false
+    },
+    {
+      "category": "temp_hum_stress",
+      "expected_gas": "Alcohol",
+      "mq2": 0.895,
+      "mq9": 0.83,
+      "mq135": 2.827,
+      "t": 45.4,
+      "h": 20.0,
+      "is_ambiguous": false
+    },
+    {
+      "category": "temp_hum_stress",
+      "expected_gas": "Alcohol",
+      "mq2": 0.855,
+      "mq9": 0.824,
+      "mq135": 2.862,
+      "t": 45.0,
+      "h": 19.6,
+      "is_ambiguous": false
+    },
+    {
+      "category": "temp_hum_stress",
+      "expected_gas": "Alcohol",
+      "mq2": 0.894,
+      "mq9": 0.879,
+      "mq135": 2.865,
+      "t": 45.6,
+      "h": 19.4,
+      "is_ambiguous": false
+    },
+    {
+      "category": "temp_hum_stress",
+      "expected_gas": "CleanAir",
+      "mq2": 0.711,
+      "mq9": 0.633,
+      "mq135": 0.72,
+      "t": 29.5,
+      "h": 99.8,
+      "is_ambiguous": false
+    },
+    {
+      "category": "temp_hum_stress",
+      "expected_gas": "CleanAir",
+      "mq2": 0.743,
+      "mq9": 0.614,
+      "mq135": 0.626,
+      "t": 29.7,
+      "h": 97.2,
+      "is_ambiguous": false
+    },
+    {
+      "category": "temp_hum_stress",
+      "expected_gas": "CleanAir",
+      "mq2": 0.659,
+      "mq9": 0.633,
+      "mq135": 0.658,
+      "t": 29.9,
+      "h": 98.4,
+      "is_ambiguous": false
+    },
+    {
+      "category": "temp_hum_stress",
+      "expected_gas": "CleanAir",
+      "mq2": 0.71,
+      "mq9": 0.641,
+      "mq135": 0.626,
+      "t": 29.4,
+      "h": 99.3,
+      "is_ambiguous": false
+    },
+    {
+      "category": "temp_hum_stress",
+      "expected_gas": "Smoke",
+      "mq2": 2.794,
+      "mq9": 1.842,
+      "mq135": 2.589,
+      "t": 28.0,
+      "h": 97.7,
+      "is_ambiguous": false
+    },
+    {
+      "category": "temp_hum_stress",
+      "expected_gas": "Smoke",
+      "mq2": 2.816,
+      "mq9": 1.835,
+      "mq135": 2.606,
+      "t": 28.4,
+      "h": 96.5,
+      "is_ambiguous": false
+    },
+    {
+      "category": "temp_hum_stress",
+      "expected_gas": "Smoke",
+      "mq2": 2.708,
+      "mq9": 1.884,
+      "mq135": 2.527,
+      "t": 27.9,
+      "h": 96.2,
+      "is_ambiguous": false
+    },
+    {
+      "category": "temp_hum_stress",
+      "expected_gas": "Smoke",
+      "mq2": 2.782,
+      "mq9": 1.906,
+      "mq135": 2.579,
+      "t": 28.0,
+      "h": 96.4,
+      "is_ambiguous": false
+    },
+    {
+      "category": "ambiguous_mixture",
+      "expected_gas": "CleanAir",
+      "mq2": 1.215,
+      "mq9": 1.064,
+      "mq135": 1.293,
+      "t": 25.6,
+      "h": 49.4,
+      "is_ambiguous": true
+    },
+    {
+      "category": "ambiguous_mixture",
+      "expected_gas": "CleanAir",
+      "mq2": 1.383,
+      "mq9": 1.017,
+      "mq135": 1.338,
+      "t": 24.3,
+      "h": 48.1,
+      "is_ambiguous": true
+    },
+    {
+      "category": "ambiguous_mixture",
+      "expected_gas": "CleanAir",
+      "mq2": 1.274,
+      "mq9": 1.024,
+      "mq135": 1.239,
+      "t": 25.5,
+      "h": 51.0,
+      "is_ambiguous": true
+    },
+    {
+      "category": "ambiguous_mixture",
+      "expected_gas": "CleanAir",
+      "mq2": 1.383,
+      "mq9": 1.156,
+      "mq135": 1.234,
+      "t": 25.5,
+      "h": 50.8,
+      "is_ambiguous": true
+    },
+    {
+      "category": "ambiguous_mixture",
+      "expected_gas": "CleanAir",
+      "mq2": 1.284,
+      "mq9": 1.173,
+      "mq135": 1.363,
+      "t": 25.5,
+      "h": 48.5,
+      "is_ambiguous": true
+    },
+    {
+      "category": "ambiguous_mixture",
+      "expected_gas": "LPG",
+      "mq2": 2.493,
+      "mq9": 2.529,
+      "mq135": 1.202,
+      "t": 26.3,
+      "h": 44.3,
+      "is_ambiguous": true
+    },
+    {
+      "category": "ambiguous_mixture",
+      "expected_gas": "LPG",
+      "mq2": 2.452,
+      "mq9": 2.461,
+      "mq135": 1.178,
+      "t": 27.0,
+      "h": 44.1,
+      "is_ambiguous": true
+    },
+    {
+      "category": "ambiguous_mixture",
+      "expected_gas": "LPG",
+      "mq2": 2.513,
+      "mq9": 2.523,
+      "mq135": 1.183,
+      "t": 26.7,
+      "h": 44.2,
+      "is_ambiguous": true
+    },
+    {
+      "category": "ambiguous_mixture",
+      "expected_gas": "LPG",
+      "mq2": 2.473,
+      "mq9": 2.496,
+      "mq135": 1.228,
+      "t": 28.0,
+      "h": 44.4,
+      "is_ambiguous": true
+    },
+    {
+      "category": "ambiguous_mixture",
+      "expected_gas": "LPG",
+      "mq2": 2.523,
+      "mq9": 2.48,
+      "mq135": 1.182,
+      "t": 27.6,
+      "h": 47.4,
+      "is_ambiguous": true
+    },
+    {
+      "category": "ambiguous_mixture",
+      "expected_gas": "Smoke",
+      "mq2": 2.57,
+      "mq9": 1.318,
+      "mq135": 2.746,
+      "t": 25.5,
+      "h": 54.7,
+      "is_ambiguous": true
+    },
+    {
+      "category": "ambiguous_mixture",
+      "expected_gas": "Smoke",
+      "mq2": 2.527,
+      "mq9": 1.175,
+      "mq135": 2.648,
+      "t": 25.7,
+      "h": 54.9,
+      "is_ambiguous": true
+    },
+    {
+      "category": "ambiguous_mixture",
+      "expected_gas": "Smoke",
+      "mq2": 2.575,
+      "mq9": 1.223,
+      "mq135": 2.698,
+      "t": 26.3,
+      "h": 55.8,
+      "is_ambiguous": true
+    },
+    {
+      "category": "ambiguous_mixture",
+      "expected_gas": "Smoke",
+      "mq2": 2.535,
+      "mq9": 1.175,
+      "mq135": 2.729,
+      "t": 25.3,
+      "h": 56.7,
+      "is_ambiguous": true
+    },
+    {
+      "category": "ambiguous_mixture",
+      "expected_gas": "Smoke",
+      "mq2": 2.594,
+      "mq9": 1.189,
+      "mq135": 2.762,
+      "t": 25.8,
+      "h": 55.7,
+      "is_ambiguous": true
+    },
+    {
+      "category": "ambiguous_mixture",
+      "expected_gas": "CleanAir",
+      "mq2": 1.143,
+      "mq9": 0.941,
+      "mq135": 0.982,
+      "t": 24.4,
+      "h": 59.5,
+      "is_ambiguous": true
+    },
+    {
+      "category": "ambiguous_mixture",
+      "expected_gas": "CleanAir",
+      "mq2": 1.092,
+      "mq9": 1.037,
+      "mq135": 0.987,
+      "t": 24.3,
+      "h": 60.3,
+      "is_ambiguous": true
+    },
+    {
+      "category": "ambiguous_mixture",
+      "expected_gas": "CleanAir",
+      "mq2": 1.038,
+      "mq9": 1.162,
+      "mq135": 0.924,
+      "t": 24.2,
+      "h": 60.5,
+      "is_ambiguous": true
+    },
+    {
+      "category": "ambiguous_mixture",
+      "expected_gas": "CleanAir",
+      "mq2": 1.163,
+      "mq9": 0.937,
+      "mq135": 0.914,
+      "t": 24.6,
+      "h": 59.4,
+      "is_ambiguous": true
+    },
+    {
+      "category": "ambiguous_mixture",
+      "expected_gas": "CleanAir",
+      "mq2": 1.223,
+      "mq9": 1.015,
+      "mq135": 0.977,
+      "t": 22.7,
+      "h": 61.4,
+      "is_ambiguous": true
+    },
+    {
+      "category": "out_of_range_ood",
+      "expected_gas": "Smoke",
+      "mq2": 5.0,
+      "mq9": 5.0,
+      "mq135": 5.0,
+      "t": 25.0,
+      "h": 50.0,
+      "is_ambiguous": true,
+      "desc": "Supply rail short"
+    },
+    {
+      "category": "out_of_range_ood",
+      "expected_gas": "CleanAir",
+      "mq2": 0.0,
+      "mq9": 0.0,
+      "mq135": 0.0,
+      "t": 25.0,
+      "h": 50.0,
+      "is_ambiguous": true,
+      "desc": "Ground short"
+    },
+    {
+      "category": "out_of_range_ood",
+      "expected_gas": "CleanAir",
+      "mq2": 0.7,
+      "mq9": 0.65,
+      "mq135": 0.7,
+      "t": -25.0,
+      "h": 80.0,
+      "is_ambiguous": true,
+      "desc": "Sub-zero blizzard"
+    },
+    {
+      "category": "out_of_range_ood",
+      "expected_gas": "CleanAir",
+      "mq2": 0.85,
+      "mq9": 0.8,
+      "mq135": 0.85,
+      "t": 70.0,
+      "h": 15.0,
+      "is_ambiguous": true,
+      "desc": "Industrial furnace ceiling"
+    }
+  ]
+}

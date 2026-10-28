@@ -59,6 +59,11 @@ class SessionStats:
     succeeded: int = 0
     failed: int = 0
     saved: int = 0
+    elapsed_seconds: float = 0.0
+    replay_rate: float = 0.0
+    provenance_counts: dict[str, int] = field(default_factory=dict)
+    scenarios_seen: list[str] = field(default_factory=list)
+    checkpoint_index: int = 0
     errors: list[str] = field(default_factory=list)
     output_path: str | None = None
 
@@ -201,11 +206,41 @@ async def replay_dataset(
     *,
     accelerated: bool = True,
     interval_seconds: float = 0.0,
+    speed: float = 0.0,
     on_error: str = "continue",
     rebase_to_now: bool = False,
+    node_id: str | None = None,
+    start_offset: int = 0,
+    limit: int | None = None,
+    dry_run: bool = False,
+    batch_size: int = 1,
+    checkpoint_path: Path | None = None,
 ) -> SessionStats:
     """Replay payload JSONL through the normal complete-reading endpoint."""
     records = load_dataset(path)
+    
+    # Checkpoint resumption
+    effective_offset = start_offset
+    if checkpoint_path is not None and checkpoint_path.exists():
+        try:
+            cp_data = json.loads(checkpoint_path.read_text(encoding="utf-8"))
+            last_idx = cp_data.get("last_index", -1)
+            if last_idx >= 0:
+                effective_offset = max(effective_offset, last_idx + 1)
+                logger.info("Resuming replay from checkpoint index %d", effective_offset)
+        except Exception as exc:
+            logger.warning("Failed loading checkpoint %s: %s", checkpoint_path, exc)
+
+    if effective_offset > 0:
+        records = records[effective_offset:]
+    if limit is not None:
+        records = records[:limit]
+
+    # Node ID isolation
+    if node_id:
+        for r in records:
+            r["node_id"] = node_id
+
     if rebase_to_now and records:
         from datetime import datetime as _datetime
         newest = max(_datetime.fromisoformat(record["timestamp"]) for record in records)
@@ -219,30 +254,83 @@ async def replay_dataset(
             }
             for record in records
         ]
-    stats = SessionStats(session_id=uuid.uuid4().hex[:12], scenario="replay", started_at=datetime.now(timezone.utc).isoformat())
+
+    stats = SessionStats(
+        session_id=uuid.uuid4().hex[:12],
+        scenario="replay",
+        started_at=datetime.now(timezone.utc).isoformat(),
+        generated=len(records),
+    )
+
+    # Collect provenance and scenario breakdown
+    scenarios_set: set[str] = set()
+    for rec in records:
+        prov = rec.get("provenance", {})
+        mode = prov.get("source_mode", "SYNTHETIC")
+        stats.provenance_counts[mode] = stats.provenance_counts.get(mode, 0) + 1
+        sc = prov.get("scenario")
+        if sc:
+            scenarios_set.add(sc)
+    stats.scenarios_seen = sorted(scenarios_set)
+
+    if dry_run:
+        logger.info("Dry-run replay validated %d records", len(records))
+        stats.ended_at = datetime.now(timezone.utc).isoformat()
+        return stats
+
     previous: str | None = None
     try:
-        for payload in records:
-            if not accelerated and previous is not None:
-                current = payload["timestamp"]
-                from datetime import datetime as _datetime
-                delay = max(0.0, (_datetime.fromisoformat(current) - _datetime.fromisoformat(previous)).total_seconds())
-                await asyncio.sleep(delay)
+        from datetime import datetime as _datetime
+        batch_size = max(1, batch_size)
+        for batch_start in range(0, len(records), batch_size):
+            batch = records[batch_start : batch_start + batch_size]
+            current_idx = effective_offset + batch_start
+
+            # Speed / timing delay
+            if not accelerated and previous is not None and batch:
+                current = batch[0]["timestamp"]
+                gap = max(0.0, (_datetime.fromisoformat(current) - _datetime.fromisoformat(previous)).total_seconds())
+                delay = (gap / speed) if speed > 0.0 else gap
+                if delay > 0:
+                    await asyncio.sleep(delay)
             elif interval_seconds > 0:
                 await asyncio.sleep(interval_seconds)
-            previous = payload["timestamp"]
-            stats.generated += 1
-            result = await client.submit(payload)
-            stats.submitted += 1
-            if result.ok and result.status_code in {200, 201, 202}:
-                stats.succeeded += 1
+
+            if batch:
+                previous = batch[-1]["timestamp"]
+
+            # Submission (single or concurrent batch)
+            if len(batch) == 1:
+                result = await client.submit(batch[0])
+                results = [result]
             else:
-                stats.failed += 1
-                stats.errors.append(f"{payload.get('node_id')}: {result.error or result.status_code}")
-                if on_error == "stop":
-                    break
+                results = await asyncio.gather(*(client.submit(p) for p in batch))
+
+            stats.submitted += len(results)
+            for res, payload in zip(results, batch):
+                if res.ok and res.status_code in {200, 201, 202}:
+                    stats.succeeded += 1
+                else:
+                    stats.failed += 1
+                    stats.errors.append(f"{payload.get('node_id')}: {res.error or res.status_code}")
+
+            # Checkpoint tracking
+            stats.checkpoint_index = current_idx + len(batch) - 1
+            if checkpoint_path is not None and (batch_start % 200 == 0 or batch_start + batch_size >= len(records)):
+                checkpoint_path.write_text(
+                    json.dumps({"last_index": stats.checkpoint_index, "timestamp": previous}, indent=2),
+                    encoding="utf-8",
+                )
+
+            if on_error == "stop" and stats.failed > 0:
+                break
     finally:
         stats.ended_at = datetime.now(timezone.utc).isoformat()
+        start_dt = datetime.fromisoformat(stats.started_at)
+        end_dt = datetime.fromisoformat(stats.ended_at)
+        elapsed = max(0.001, (end_dt - start_dt).total_seconds())
+        stats.elapsed_seconds = round(elapsed, 3)
+        stats.replay_rate = round(stats.succeeded / elapsed, 1)
     return stats
 
 

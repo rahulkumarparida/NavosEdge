@@ -2,7 +2,7 @@ import logging
 from datetime import datetime, timezone
 from typing import Dict, Optional, Tuple
 from app.schemas.sensor import SensorPayload
-from app.schemas.inference import InferenceResult
+from app.schemas.inference import InferenceResult, InferenceStatus
 from app.schemas.pipeline import (
     SensorHealth,
     AnomalyResult,
@@ -40,27 +40,39 @@ class ModularPipeline:
         # 1. Stale check
         now = datetime.now(timezone.utc)
         payload_time = payload.timestamp.astimezone(timezone.utc) if payload.timestamp.tzinfo else payload.timestamp.replace(tzinfo=timezone.utc)
-        delta = (now - payload_time).total_seconds()
-        if delta > 3600:  # > 1 hour
-            issues.append("Reading is stale (> 1 hour old)")
-            status = "stale"
+        state = self._get_or_create_state(payload.node_id)
+        last_time = state.get("last_timestamp")
+        
+        # If payload is historical (>24 hours in past), check inter-reading gap in stream
+        if (now - payload_time).total_seconds() > 86400:
+            if last_time is not None and (payload_time - last_time).total_seconds() > 3600:
+                issues.append("Reading is stale (> 1 hour gap in stream)")
+                status = "stale"
+        else:
+            delta = (now - payload_time).total_seconds()
+            if delta > 3600:  # > 1 hour behind wall-clock in live mode
+                issues.append("Reading is stale (> 1 hour old)")
+                status = "stale"
+        state["last_timestamp"] = payload_time
 
         # 2. Out of bounds / Railed checks
-        # MQ sensors are typically 0-5V. Exactly 0 or exactly 5 often means disconnected/shorted.
+        # MQ sensors valid operating range is [0.10V, 4.90V]. < 0.10V is railed to GND / open circuit; > 4.90V is railed to VCC.
         for sensor_name in ["MQ2", "MQ9", "MQ135"]:
-            v = getattr(payload.gas_sensors, sensor_name).voltage_V
-            if v <= 0.01:
-                issues.append(f"{sensor_name} voltage suspiciously low (railed to GND)")
-            elif v >= 4.99:
-                issues.append(f"{sensor_name} voltage suspiciously high (railed to VCC)")
+            gas_sensor = getattr(payload.gas_sensors, sensor_name, None)
+            if gas_sensor is not None:
+                v = gas_sensor.voltage_V
+                if v < 0.10:
+                    issues.append(f"{sensor_name} voltage suspiciously low (railed to GND or open circuit: {v:.3f}V < 0.100V)")
+                elif v > 4.90:
+                    issues.append(f"{sensor_name} voltage suspiciously high (railed to VCC: {v:.3f}V > 4.900V)")
 
-        # Temperature / Humidity limits
+        # Temperature / Humidity sensor hardware limits (DHT22 specification: -40°C to 85°C)
         t = payload.environment.temperature_C
         h = payload.environment.humidity_pct
-        if t <= -35.0 or t >= 80.0:
-            issues.append("Temperature near extreme hardware limits")
-        if h <= 1.0 or h >= 99.0:
-            issues.append("Humidity near extreme hardware limits")
+        if t < -40.0 or t > 85.0:
+            issues.append(f"Temperature outside sensor hardware limits ({t:.1f}°C)")
+        if h < 0.0 or h > 100.0:
+            issues.append(f"Humidity outside physical limits ({h:.1f}%)")
 
         if issues and status == "ok":
             status = "degraded"
@@ -180,8 +192,30 @@ class ModularPipeline:
             if level == "NORMAL":
                 level = "CAUTION"
 
+        # Sensor hardware fault propagation
+        if inference.status == InferenceStatus.SENSOR_FAULT:
+            fault_msg = (
+                f"Sensor hardware fault: {inference.error_message}"
+                if inference.error_message
+                else "Sensor hardware fault detected. Gas classification abstained."
+            )
+            if fault_msg not in messages:
+                messages.append(fault_msg)
+            if level == "NORMAL":
+                level = "MAINTENANCE"
+        elif inference.status == InferenceStatus.ABSTAIN:
+            abstain_msg = (
+                f"Model inference abstained: {inference.error_message}"
+                if inference.error_message
+                else "Environmental conditions outside model operational envelope. Gas classification abstained."
+            )
+            if abstain_msg not in messages:
+                messages.append(abstain_msg)
+            if level == "NORMAL":
+                level = "CAUTION"
+
         # Model inference advisory
-        if inference.status == "success" and inference.safety_status == "unsafe":
+        if inference.status == InferenceStatus.SUCCESS and inference.safety_status == "unsafe":
             # Determine if we trust the inference based on uncertainty
             # A highly uncertain "unsafe" prediction should not trigger a full warning.
             if inference.uncertainty and inference.uncertainty > 0.6:

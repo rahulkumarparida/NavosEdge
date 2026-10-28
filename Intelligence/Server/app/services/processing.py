@@ -5,6 +5,8 @@ Processing pipeline — orchestrates validation, inference, storage and events.
 import asyncio
 import logging
 import uuid
+from datetime import datetime
+from typing import Optional
 
 from app.schemas.sensor import SensorPayload
 from app.schemas.intelligence import IntelligenceResult
@@ -21,6 +23,7 @@ from app.source_classifier.classifier import SourceClassifier
 from app.forecast.plugin import ForecastPlugin
 from app.schemas.forecast import ForecastReadingInput
 from app.services.aggregation import aggregate_intelligence
+from app.services.safety_gate import SensorSafetyGate
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +58,7 @@ class ProcessingService:
         # Track which nodes have been history-primed
         self._primed_nodes: set = set()
 
-    async def _ensure_history_loaded(self, node_id: str) -> None:
+    async def _ensure_history_loaded(self, node_id: str, reference_time: Optional[datetime] = None) -> None:
         """
         On first encounter with a node, load recent history from JSONL
         into the anomaly engine's rolling window.
@@ -64,7 +67,9 @@ class ProcessingService:
             return
 
         try:
-            history = await self.storage.get_recent_readings(node_id, hours=24)
+            history = await self.storage.get_recent_readings(
+                node_id, hours=24, reference_time=reference_time
+            )
             if history:
                 loop = asyncio.get_event_loop()
                 await loop.run_in_executor(
@@ -91,21 +96,48 @@ class ProcessingService:
         self.node_registry.register_reading(node_id, timestamp)
         print("[INTELLIGENCE] Reading processed", flush=True)
 
-        # Extract model input features
-        mq2_v = payload.gas_sensors.MQ2.voltage_V
-        mq9_v = payload.gas_sensors.MQ9.voltage_V
-        mq135_v = payload.gas_sensors.MQ135.voltage_V
-        temperature_c = payload.environment.temperature_C
-        humidity_pct = payload.environment.humidity_pct
+        # Extract model input features safely
+        try:
+            mq2_v = payload.gas_sensors.MQ2.voltage_V
+            mq9_v = payload.gas_sensors.MQ9.voltage_V
+            mq135_v = payload.gas_sensors.MQ135.voltage_V
+        except AttributeError:
+            mq2_v = getattr(getattr(payload, "gas_sensors", None), "MQ2", None)
+            mq9_v = getattr(getattr(payload, "gas_sensors", None), "MQ9", None)
+            mq135_v = getattr(getattr(payload, "gas_sensors", None), "MQ135", None)
 
-        # Run inference
-        inference_result = await self.inference_adapter.predict(
+        try:
+            temperature_c = payload.environment.temperature_C
+            humidity_pct = payload.environment.humidity_pct
+        except AttributeError:
+            temperature_c = getattr(getattr(payload, "environment", None), "temperature_C", None)
+            humidity_pct = getattr(getattr(payload, "environment", None), "humidity_pct", None)
+
+        # Pre-inference Sensor Safety Gate
+        gate_result = SensorSafetyGate.validate(
             mq2_v=mq2_v,
             mq9_v=mq9_v,
             mq135_v=mq135_v,
             temperature_c=temperature_c,
             humidity_pct=humidity_pct,
         )
+
+        if not gate_result.is_valid:
+            logger.warning(
+                "Pre-inference sensor safety gate tripped for node %s: %s. TinyGasNet inference abstained.",
+                node_id,
+                gate_result.reason,
+            )
+            inference_result = gate_result.to_inference_result()
+        else:
+            # Run inference only on physically and electrically validated telemetry
+            inference_result = await self.inference_adapter.predict(
+                mq2_v=mq2_v,
+                mq9_v=mq9_v,
+                mq135_v=mq135_v,
+                temperature_c=temperature_c,
+                humidity_pct=humidity_pct,
+            )
 
         # Run the modular extended pipeline
         pipeline_results = self.pipeline.process(payload, inference_result)
@@ -137,7 +169,7 @@ class ProcessingService:
                 logger.error("Local dataset logging error for node %s: %s", node_id, e)
 
         # --- Anomaly detection ---
-        await self._ensure_history_loaded(node_id)
+        await self._ensure_history_loaded(node_id, payload.timestamp)
 
         try:
             loop = asyncio.get_event_loop()
@@ -198,9 +230,10 @@ class ProcessingService:
         print("[INTELLIGENCE] Forecast processed", flush=True)
 
         # --- AQI calculation & persistence ---
+        aqi_result = None
         if self.aqi_service is not None:
             try:
-                self.aqi_service.process_reading(payload)
+                aqi_result = self.aqi_service.process_reading(payload)
             except Exception as e:
                 logger.error(
                     "AQI service error for node %s: %s", node_id, e, exc_info=True
@@ -216,6 +249,7 @@ class ProcessingService:
             "advisory_level": pipeline_results.advisory.level,
             "health_status": pipeline_results.health.status,
             "is_anomalous": pipeline_results.anomaly.is_anomalous,
+            "aqi": aqi_result.aqi if aqi_result is not None else None,
         }
 
         # Include anomaly report summary in SSE if available
@@ -243,6 +277,7 @@ class ProcessingService:
             pipeline=pipeline_results,
             inference=inference_result,
             forecast=forecast_result,
+            aqi_result=aqi_result,
         )
         print("[INTELLIGENCE] Advisory generated", flush=True)
         self._latest_results[node_id] = result

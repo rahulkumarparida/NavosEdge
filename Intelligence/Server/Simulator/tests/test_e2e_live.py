@@ -22,10 +22,12 @@ async def test_live_e2e_starts_server_and_completes_pipeline():
     with tempfile.TemporaryDirectory(prefix="navos_e2e_") as temp_dir:
         env = os.environ.copy()
         env.update({
+            "NAVOS_HOST": "127.0.0.1",
             "NAVOS_PORT": "8421",
             "NAVOS_DATA_DIR": str(Path(temp_dir) / "data"),
             "NAVOS_ARTIFACTS_DIR": str(artifact_dir),
             "NAVOS_FORECAST_STORAGE_DIR": str(Path(temp_dir) / "forecast"),
+            "NAVOS_AQI_STORAGE_FILE": str(Path(temp_dir) / "data" / "aqi_latest.json"),
             "NAVOS_LOG_LEVEL": "WARNING",
         })
         process = subprocess.Popen(
@@ -46,7 +48,8 @@ async def test_live_e2e_starts_server_and_completes_pipeline():
                     break
                 await asyncio.sleep(0.25)
             else:
-                output = process.stdout.read() if process.stdout else ""
+                process.terminate()
+                output, _ = process.communicate(timeout=5)
                 raise AssertionError(f"server did not become ready: {output[-2000:]}")
 
             class Args:

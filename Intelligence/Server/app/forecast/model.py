@@ -115,20 +115,25 @@ def _ar_predict(
     intercept: float,
     recent: List[float],
     steps: int,
+    damping: float = 0.98,
 ) -> List[float]:
     """
-    Generate multi-step AR predictions.
+    Generate multi-step AR predictions with optional rollout damping.
     `recent` must be in chronological order (oldest first),
     with length >= len(coefficients).
     """
     order = len(coefficients)
     buffer = list(recent[-order:])  # last `order` values
     predictions: list[float] = []
+    last_val = recent[-1] if recent else 0.0
 
-    for _ in range(steps):
+    for step_idx in range(steps):
         pred = intercept
         for lag in range(order):
             pred += coefficients[lag] * buffer[-(lag + 1)]
+        if damping < 1.0:
+            weight = damping ** (step_idx + 1)
+            pred = weight * pred + (1.0 - weight) * last_val
         # Clamp to non-negative (PM values can't be negative)
         pred = max(0.0, pred)
         predictions.append(round(pred, 2))
@@ -209,7 +214,9 @@ def generate_forecast(
     ForecastResponse
     """
     now = datetime.now(timezone.utc)
-    steps = max(1, horizon_minutes // sampling_interval_minutes)
+    horizon_minutes = max(1, int(horizon_minutes))
+    sampling_interval_minutes = max(1, int(sampling_interval_minutes))
+    steps = max(1, min(288, horizon_minutes // sampling_interval_minutes))
 
     if not records:
         return ForecastResponse(
@@ -230,7 +237,7 @@ def generate_forecast(
     for rec in records:
         for ch in channels:
             val = rec.get(ch)
-            if val is not None and isinstance(val, (int, float)) and math.isfinite(val):
+            if val is not None and isinstance(val, (int, float)) and math.isfinite(val) and val >= 0.0:
                 channel_series[ch].append(float(val))
 
     for ch in channels:

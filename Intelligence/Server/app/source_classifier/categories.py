@@ -132,10 +132,27 @@ class SourceClassifierConfig:
     min_score_threshold: float = 0.05
 
     # ---- MIXED_POLLUTION detection ----
-    # If the top N categories (excluding UNKNOWN) all have scores above this
-    # threshold, classify as MIXED_POLLUTION.
-    mixed_pollution_threshold: float = 0.40
+    # Tier 1 (Tri-source): If >= 3 categories have scores above this threshold, classify as MIXED_POLLUTION.
+    mixed_pollution_threshold: float = 0.35
     mixed_pollution_min_sources: int = 3
+    # Tier 2 (Dual-source): Both top candidates from distinct archetypes above this threshold with narrow gap
+    mixed_pollution_dual_threshold: float = 0.35
+    mixed_pollution_dual_gap: float = 0.15
+    # Tier 3 (Asymmetric weaker secondary): Weaker secondary threshold when orthogonal physical features are present
+    mixed_pollution_weak_secondary_threshold: float = 0.28
+    # Score boost for MIXED_POLLUTION when multi-source pollution is detected to ensure it tops predictions
+    mixed_pollution_boost: float = 0.05
+
+    # ---- Ambiguity & Domain-Specific Uncertainty (Phase 2B) ----
+    # Threshold gap below which fuel combustion sources (Traffic vs Industrial/Generator)
+    # cannot be physically resolved by low-cost MOS/PM sensors.
+    traffic_generator_ambiguity_gap: float = 0.18
+    # Baseline threshold gap for indoor activity vs ambient background air.
+    indoor_background_ambiguity_gap: float = 0.15
+    # Cap confidence on physically ambiguous sources (MOS array cannot claim high certainty)
+    ambiguous_confidence_cap: float = 0.40
+    # Near-tie abstention gap: when two competing ambiguous sources are virtually tied (within 0.5% match score), mark UNKNOWN
+    ambiguity_abstain_gap: float = 0.005
 
     # ---- Model paths (relative to artifacts dir) ----
     model_filename: str = "source_classifier_model.pkl"
@@ -143,4 +160,4 @@ class SourceClassifierConfig:
     metadata_filename: str = "source_classifier_metadata.json"
 
     # Model version label
-    model_version: str = "0.1.0-synthetic"
+    model_version: str = "0.2.0-phase2b-ambiguity"

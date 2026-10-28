@@ -186,7 +186,7 @@ async def test_manager_sse_broadcasting():
 
 
 def test_normalize_telemetry_flexible_pm_and_calculated_aqi():
-    """Validates that various PM naming formats and missing AQI calculate EPA AQI correctly."""
+    """Validates that various PM naming formats and missing AQI calculate CPCB AQI by default and EPA when specified."""
     # Compact format with pm25 and pm10
     data = {
         "node_id": "compact-pm-node",
@@ -196,9 +196,14 @@ def test_normalize_telemetry_flexible_pm_and_calculated_aqi():
     norm = normalize_telemetry(data)
     assert norm["pm"]["PM2_5"] == 55.4
     assert norm["pm"]["PM10"] == 100.0
-    # AQI calculated via EPA formula (55.4 PM2.5 maps to AQI ~150)
+    # AQI calculated via CPCB formula by default (PM2.5 55.4 -> ~92.5, PM10 100 -> 100.0)
     assert norm["aqi"] is not None
-    assert 140.0 <= norm["aqi"] <= 160.0
+    assert norm["aqi"] == 100.0
+
+    # Explicit EPA standard calculation
+    norm_epa = normalize_telemetry(data, standard="EPA")
+    assert norm_epa["aqi"] is not None
+    assert 140.0 <= norm_epa["aqi"] <= 160.0
 
     # particulate_matter dict with dotted keys
     data2 = {

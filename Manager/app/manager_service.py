@@ -9,7 +9,7 @@ import math
 import os
 from typing import Any, Dict, List, Optional, Set, Union
 
-from app.config import DEFAULT_LOCATIONS, INACTIVE_TIMEOUT_SECONDS
+from app.config import DEFAULT_LOCATIONS, INACTIVE_TIMEOUT_SECONDS, AQI_STANDARD
 from app.models import NodeState, NodeTelemetryPayload, OverallData, OverviewResponse
 from app.storage import ManagerStorage
 
@@ -56,9 +56,34 @@ BREAKPOINTS_EPA_PM10 = [
     (505.0, 604.0, 401.0, 500.0),
 ]
 
+BREAKPOINTS_CPCB_PM25 = [
+    (0.0, 30.0, 0.0, 50.0),
+    (30.1, 60.0, 51.0, 100.0),
+    (60.1, 90.0, 101.0, 200.0),
+    (90.1, 120.0, 201.0, 300.0),
+    (120.1, 250.0, 301.0, 400.0),
+    (250.1, 500.0, 401.0, 500.0),
+]
+BREAKPOINTS_CPCB_PM10 = [
+    (0.0, 50.0, 0.0, 50.0),
+    (50.1, 100.0, 51.0, 100.0),
+    (100.1, 250.0, 101.0, 200.0),
+    (251.0, 350.0, 201.0, 300.0),
+    (351.0, 430.0, 301.0, 400.0),
+    (430.1, 500.0, 401.0, 500.0),
+]
 
-def calculate_epa_aqi(pm2_5: float, pm10: float) -> Optional[float]:
-    """Calculates overall regulatory EPA AQI based on PM2.5 and PM10 sub-indices."""
+
+def calculate_aqi(pm2_5: float, pm10: float, standard: Optional[str] = None) -> Optional[float]:
+    """Calculates overall regulatory AQI based on PM2.5 and PM10 sub-indices."""
+    std = (standard or AQI_STANDARD).upper()
+    if std == "EPA":
+        table_pm25 = BREAKPOINTS_EPA_PM25
+        table_pm10 = BREAKPOINTS_EPA_PM10
+    else:
+        table_pm25 = BREAKPOINTS_CPCB_PM25
+        table_pm10 = BREAKPOINTS_CPCB_PM10
+
     def _sub_index(conc: float, table) -> float:
         if conc <= 0.0:
             return 0.0
@@ -70,9 +95,14 @@ def calculate_epa_aqi(pm2_5: float, pm10: float) -> Optional[float]:
         slope = (i_high - i_low) / (c_high - c_low)
         return round(slope * (conc - c_low) + i_low, 2)
 
-    si_pm25 = _sub_index(pm2_5, BREAKPOINTS_EPA_PM25)
-    si_pm10 = _sub_index(pm10, BREAKPOINTS_EPA_PM10)
+    si_pm25 = _sub_index(pm2_5, table_pm25)
+    si_pm10 = _sub_index(pm10, table_pm10)
     return max(si_pm25, si_pm10)
+
+
+def calculate_epa_aqi(pm2_5: float, pm10: float) -> Optional[float]:
+    """Calculates overall regulatory EPA AQI based on PM2.5 and PM10 sub-indices."""
+    return calculate_aqi(pm2_5, pm10, standard="EPA")
 
 
 def normalize_telemetry(
@@ -81,6 +111,7 @@ def normalize_telemetry(
     default_location: Optional[str] = None,
     ip: Optional[str] = None,
     port: Optional[int] = None,
+    standard: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Unified normalization for telemetry from both Push (HTTP POST)
@@ -165,9 +196,9 @@ def normalize_telemetry(
     pm10 = safe_float(_find_pm_val(["PM10", "pm10", "PM_10", "pm_10", "PM.10"]), default=0.0)
     pm = {"PM1_0": pm1_0, "PM2_5": pm2_5, "PM10": pm10}
 
-    # If AQI was omitted/None but valid PM readings exist, auto-calculate EPA AQI
+    # If AQI was omitted/None but valid PM readings exist, auto-calculate AQI using configured standard
     if aqi_val is None and (pm2_5 > 0.0 or pm10 > 0.0):
-        aqi_val = calculate_epa_aqi(pm2_5, pm10)
+        aqi_val = calculate_aqi(pm2_5, pm10, standard=standard)
 
     # Predictions
     predictions_raw = raw.get("predictions")

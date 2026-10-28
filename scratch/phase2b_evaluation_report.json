@@ -1,0 +1,219 @@
+{
+  "metadata": {
+    "evaluation_timestamp": "2026-10-27T14:15:26.347908+00:00",
+    "seeds": [
+      42,
+      101,
+      777
+    ],
+    "samples_per_seed": 400,
+    "total_samples": 1200,
+    "note": "ALL EVALUATION DATA IS SYNTHETIC (generated with independent scenario generator, voltage drift, sensor noise, PM scaling variation)"
+  },
+  "aggregate_metrics": {
+    "baseline": {
+      "mean_accuracy": 0.6292,
+      "mean_macro_f1": 0.616,
+      "mixture_detection_rate": 0.0,
+      "traffic_ind_uncertainty_rate": 0.0875,
+      "indoor_clean_uncertainty_rate": 0.0083,
+      "abstention_rate": 0.0
+    },
+    "candidate": {
+      "mean_accuracy": 0.6177083333333333,
+      "mean_macro_f1": 0.49452625195975336,
+      "mixture_detection_rate": 0.9125,
+      "traffic_ind_uncertainty_rate": 1.0,
+      "indoor_clean_uncertainty_rate": 0.9916666666666667,
+      "abstention_rate": 0.025833333333333337,
+      "calibration": {
+        "mean_confidence_ambiguous_cases": 0.42576128098012417,
+        "mean_confidence_unambiguous_cases": 0.9562233157894734
+      }
+    }
+  },
+  "per_class": {
+    "baseline": {
+      "BIOMASS_OR_WASTE_BURNING": {
+        "precision": 0.915,
+        "recall": 0.617,
+        "f1-score": 0.737
+      },
+      "CLEAN_OR_BACKGROUND": {
+        "precision": 0.57,
+        "recall": 1.0,
+        "f1-score": 0.726
+      },
+      "CONSTRUCTION_ACTIVITY": {
+        "precision": 0.854,
+        "recall": 0.825,
+        "f1-score": 0.839
+      },
+      "COOKING_OR_FUEL_COMBUSTION": {
+        "precision": 0.476,
+        "recall": 0.608,
+        "f1-score": 0.534
+      },
+      "HEAVY_DUST": {
+        "precision": 0.934,
+        "recall": 0.933,
+        "f1-score": 0.933
+      },
+      "INDOOR_ACTIVITY": {
+        "precision": 0.71,
+        "recall": 0.308,
+        "f1-score": 0.429
+      },
+      "INDUSTRIAL_OR_GENERATOR_EMISSIONS": {
+        "precision": 0.537,
+        "recall": 0.225,
+        "f1-score": 0.315
+      },
+      "TRAFFIC": {
+        "precision": 0.347,
+        "recall": 0.517,
+        "f1-score": 0.414
+      }
+    },
+    "candidate": {
+      "BIOMASS_OR_WASTE_BURNING": {
+        "precision": 0.7873744189533664,
+        "recall": 0.7416666666666666,
+        "f1-score": 0.763627667025402
+      },
+      "CLEAN_OR_BACKGROUND": {
+        "precision": 0.5172605172605172,
+        "recall": 1.0,
+        "f1-score": 0.6818291564054276
+      },
+      "CONSTRUCTION_ACTIVITY": {
+        "precision": 1.0,
+        "recall": 0.7583333333333333,
+        "f1-score": 0.8610093469428507
+      },
+      "COOKING_OR_FUEL_COMBUSTION": {
+        "precision": 0.6697860962566846,
+        "recall": 0.7083333333333334,
+        "f1-score": 0.6831836352384298
+      },
+      "HEAVY_DUST": {
+        "precision": 1.0,
+        "recall": 0.9500000000000001,
+        "f1-score": 0.9739091318038686
+      },
+      "INDOOR_ACTIVITY": {
+        "precision": 0.6666666666666666,
+        "recall": 0.016666666666666666,
+        "f1-score": 0.032520325203252036
+      },
+      "INDUSTRIAL_OR_GENERATOR_EMISSIONS": {
+        "precision": 0.7295285359801489,
+        "recall": 0.5333333333333333,
+        "f1-score": 0.6151657419263054
+      },
+      "TRAFFIC": {
+        "precision": 0.5916005291005292,
+        "recall": 0.23333333333333336,
+        "f1-score": 0.3340175150519978
+      }
+    }
+  },
+  "mixture_breakdown_candidate": {
+    "traffic_plus_construction": 1.0,
+    "combustion_plus_traffic": 0.9333333333333332,
+    "industrial_plus_pm": 0.7166666666666667,
+    "tri_source_mixture": 1.0
+  },
+  "candidate_confusion_matrix_sum": [
+    [
+      89,
+      0,
+      0,
+      12,
+      0,
+      0,
+      4,
+      0
+    ],
+    [
+      0,
+      120,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      91,
+      0,
+      0,
+      0,
+      0,
+      20
+    ],
+    [
+      12,
+      0,
+      0,
+      85,
+      0,
+      0,
+      1,
+      0
+    ],
+    [
+      0,
+      6,
+      0,
+      0,
+      114,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      106,
+      0,
+      0,
+      0,
+      2,
+      0,
+      0
+    ],
+    [
+      12,
+      0,
+      0,
+      5,
+      0,
+      0,
+      64,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      26,
+      0,
+      0,
+      19,
+      28
+    ]
+  ],
+  "classes": [
+    "BIOMASS_OR_WASTE_BURNING",
+    "CLEAN_OR_BACKGROUND",
+    "CONSTRUCTION_ACTIVITY",
+    "COOKING_OR_FUEL_COMBUSTION",
+    "HEAVY_DUST",
+    "INDOOR_ACTIVITY",
+    "INDUSTRIAL_OR_GENERATOR_EMISSIONS",
+    "TRAFFIC"
+  ]
+}

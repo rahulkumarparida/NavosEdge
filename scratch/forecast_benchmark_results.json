@@ -1,0 +1,363 @@
+{
+  "historical": {
+    "summary": {
+      "PM1_0": {
+        "15m": {
+          "ar_mae": 1.689,
+          "pers_mae": 1.851,
+          "mae_gain_pct": 8.75,
+          "ar_rmse": 3.429,
+          "pers_rmse": 3.7105,
+          "ar_dir_acc_pct": 54.37,
+          "pers_dir_acc_pct": 40.48
+        },
+        "30m": {
+          "ar_mae": 1.6449,
+          "pers_mae": 1.8126,
+          "mae_gain_pct": 9.25,
+          "ar_rmse": 3.2435,
+          "pers_rmse": 3.5222,
+          "ar_dir_acc_pct": 55.45,
+          "pers_dir_acc_pct": 40.36
+        },
+        "45m": {
+          "ar_mae": 1.7541,
+          "pers_mae": 1.9744,
+          "mae_gain_pct": 11.16,
+          "ar_rmse": 3.3561,
+          "pers_rmse": 3.8371,
+          "ar_dir_acc_pct": 53.29,
+          "pers_dir_acc_pct": 39.52
+        },
+        "60m": {
+          "ar_mae": 1.8665,
+          "pers_mae": 2.1017,
+          "mae_gain_pct": 11.19,
+          "ar_rmse": 3.4678,
+          "pers_rmse": 4.1192,
+          "ar_dir_acc_pct": 51.38,
+          "pers_dir_acc_pct": 39.04
+        }
+      },
+      "PM2_5": {
+        "15m": {
+          "ar_mae": 6.5011,
+          "pers_mae": 7.2531,
+          "mae_gain_pct": 10.37,
+          "ar_rmse": 14.4908,
+          "pers_rmse": 16.397,
+          "ar_dir_acc_pct": 49.94,
+          "pers_dir_acc_pct": 13.29
+        },
+        "30m": {
+          "ar_mae": 6.4277,
+          "pers_mae": 6.8341,
+          "mae_gain_pct": 5.95,
+          "ar_rmse": 13.6291,
+          "pers_rmse": 14.7458,
+          "ar_dir_acc_pct": 47.66,
+          "pers_dir_acc_pct": 12.34
+        },
+        "45m": {
+          "ar_mae": 6.4666,
+          "pers_mae": 7.1262,
+          "mae_gain_pct": 9.26,
+          "ar_rmse": 13.8667,
+          "pers_rmse": 15.5521,
+          "ar_dir_acc_pct": 50.66,
+          "pers_dir_acc_pct": 13.65
+        },
+        "60m": {
+          "ar_mae": 6.7157,
+          "pers_mae": 7.6154,
+          "mae_gain_pct": 11.81,
+          "ar_rmse": 14.2408,
+          "pers_rmse": 16.4479,
+          "ar_dir_acc_pct": 48.02,
+          "pers_dir_acc_pct": 13.77
+        }
+      },
+      "PM10": {
+        "15m": {
+          "ar_mae": 9.9551,
+          "pers_mae": 10.8066,
+          "mae_gain_pct": 7.88,
+          "ar_rmse": 21.4628,
+          "pers_rmse": 23.5092,
+          "ar_dir_acc_pct": 47.9,
+          "pers_dir_acc_pct": 10.3
+        },
+        "30m": {
+          "ar_mae": 9.7159,
+          "pers_mae": 10.3657,
+          "mae_gain_pct": 6.27,
+          "ar_rmse": 20.2857,
+          "pers_rmse": 21.6935,
+          "ar_dir_acc_pct": 48.26,
+          "pers_dir_acc_pct": 9.82
+        },
+        "45m": {
+          "ar_mae": 9.6734,
+          "pers_mae": 10.4555,
+          "mae_gain_pct": 7.48,
+          "ar_rmse": 20.0936,
+          "pers_rmse": 21.9188,
+          "ar_dir_acc_pct": 48.98,
+          "pers_dir_acc_pct": 8.98
+        },
+        "60m": {
+          "ar_mae": 10.0908,
+          "pers_mae": 11.3692,
+          "mae_gain_pct": 11.24,
+          "ar_rmse": 20.8824,
+          "pers_rmse": 23.4809,
+          "ar_dir_acc_pct": 48.62,
+          "pers_dir_acc_pct": 13.29
+        }
+      }
+    },
+    "max_drift_observed": 183.69,
+    "nan_inf_count": 0,
+    "eval_windows_count": 835
+  },
+  "synthetic": {
+    "1_stable_flat": {
+      "name": "Stable / Flat Baseline (Synthetic)",
+      "horizons": {
+        "15m": {
+          "ar_mae": 0.08,
+          "pers_mae": 0.11,
+          "ar_pred": 14.62,
+          "pers_pred": 14.43,
+          "true_val": 14.54
+        },
+        "30m": {
+          "ar_mae": 0.343,
+          "pers_mae": 0.453,
+          "ar_pred": 14.54,
+          "pers_pred": 14.43,
+          "true_val": 14.88
+        },
+        "45m": {
+          "ar_mae": 0.725,
+          "pers_mae": 0.565,
+          "ar_pred": 14.27,
+          "pers_pred": 14.43,
+          "true_val": 14.99
+        },
+        "60m": {
+          "ar_mae": 0.148,
+          "pers_mae": 0.082,
+          "ar_pred": 14.66,
+          "pers_pred": 14.43,
+          "true_val": 14.51
+        }
+      }
+    },
+    "2_gradual_rise": {
+      "name": "Gradual Rise / Traffic Buildup (Synthetic)",
+      "horizons": {
+        "15m": {
+          "ar_mae": 0.573,
+          "pers_mae": 2.557,
+          "ar_pred": 46.22,
+          "pers_pred": 43.09,
+          "true_val": 45.65
+        },
+        "30m": {
+          "ar_mae": 1.058,
+          "pers_mae": 7.388,
+          "ar_pred": 49.42,
+          "pers_pred": 43.09,
+          "true_val": 50.48
+        },
+        "45m": {
+          "ar_mae": 2.101,
+          "pers_mae": 10.491,
+          "ar_pred": 51.48,
+          "pers_pred": 43.09,
+          "true_val": 53.58
+        },
+        "60m": {
+          "ar_mae": 4.859,
+          "pers_mae": 14.679,
+          "ar_pred": 52.91,
+          "pers_pred": 43.09,
+          "true_val": 57.77
+        }
+      }
+    },
+    "3_gradual_fall": {
+      "name": "Gradual Fall / Dispersion (Synthetic)",
+      "horizons": {
+        "15m": {
+          "ar_mae": 0.403,
+          "pers_mae": 2.267,
+          "ar_pred": 38.6,
+          "pers_pred": 41.27,
+          "true_val": 39.0
+        },
+        "30m": {
+          "ar_mae": 0.06,
+          "pers_mae": 5.48,
+          "ar_pred": 35.85,
+          "pers_pred": 41.27,
+          "true_val": 35.79
+        },
+        "45m": {
+          "ar_mae": 0.921,
+          "pers_mae": 8.351,
+          "ar_pred": 33.84,
+          "pers_pred": 41.27,
+          "true_val": 32.92
+        },
+        "60m": {
+          "ar_mae": 2.633,
+          "pers_mae": 11.183,
+          "ar_pred": 32.72,
+          "pers_pred": 41.27,
+          "true_val": 30.09
+        }
+      }
+    },
+    "4_abrupt_spike": {
+      "name": "Abrupt Spike & Decay (Synthetic)",
+      "horizons": {
+        "15m": {
+          "ar_mae": 54.356,
+          "pers_mae": 54.356,
+          "ar_pred": 170.0,
+          "pers_pred": 170.0,
+          "true_val": 115.64
+        },
+        "30m": {
+          "ar_mae": 89.015,
+          "pers_mae": 89.015,
+          "ar_pred": 170.0,
+          "pers_pred": 170.0,
+          "true_val": 80.99
+        },
+        "45m": {
+          "ar_mae": 111.114,
+          "pers_mae": 111.114,
+          "ar_pred": 170.0,
+          "pers_pred": 170.0,
+          "true_val": 58.89
+        },
+        "60m": {
+          "ar_mae": 125.205,
+          "pers_mae": 125.205,
+          "ar_pred": 170.0,
+          "pers_pred": 170.0,
+          "true_val": 44.79
+        }
+      }
+    },
+    "5_diurnal_cycle": {
+      "name": "Diurnal Periodic Cycle (Synthetic)",
+      "horizons": {
+        "15m": {
+          "ar_mae": 1.56,
+          "pers_mae": 14.68,
+          "ar_pred": 47.98,
+          "pers_pred": 34.86,
+          "true_val": 49.54
+        },
+        "30m": {
+          "ar_mae": 6.867,
+          "pers_mae": 24.297,
+          "ar_pred": 52.29,
+          "pers_pred": 34.86,
+          "true_val": 59.16
+        },
+        "45m": {
+          "ar_mae": 12.334,
+          "pers_mae": 22.574,
+          "ar_pred": 45.1,
+          "pers_pred": 34.86,
+          "true_val": 57.43
+        },
+        "60m": {
+          "ar_mae": 10.859,
+          "pers_mae": 10.409,
+          "ar_pred": 34.41,
+          "pers_pred": 34.86,
+          "true_val": 45.27
+        }
+      }
+    },
+    "6_missing_readings": {
+      "name": "Missing Readings / 25% Dropped (Synthetic)",
+      "horizons": {
+        "15m": {
+          "ar_mae": 0.0,
+          "pers_mae": 1.86,
+          "ar_pred": 42.0,
+          "pers_pred": 40.14,
+          "true_val": 42.0
+        },
+        "30m": {
+          "ar_mae": 0.22,
+          "pers_mae": 3.36,
+          "ar_pred": 43.72,
+          "pers_pred": 40.14,
+          "true_val": 43.5
+        },
+        "45m": {
+          "ar_mae": 0.38,
+          "pers_mae": 4.86,
+          "ar_pred": 44.62,
+          "pers_pred": 40.14,
+          "true_val": 45.0
+        },
+        "60m": {
+          "ar_mae": 1.78,
+          "pers_mae": 6.36,
+          "ar_pred": 44.72,
+          "pers_pred": 40.14,
+          "true_val": 46.5
+        }
+      }
+    },
+    "7_noisy_readings": {
+      "name": "High Noise Telemetry (Synthetic)",
+      "horizons": {
+        "15m": {
+          "ar_mae": 13.821,
+          "pers_mae": 16.781,
+          "ar_pred": 39.16,
+          "pers_pred": 36.2,
+          "true_val": 52.98
+        },
+        "30m": {
+          "ar_mae": 0.405,
+          "pers_mae": 3.835,
+          "ar_pred": 39.63,
+          "pers_pred": 36.2,
+          "true_val": 40.04
+        },
+        "45m": {
+          "ar_mae": 11.835,
+          "pers_mae": 15.205,
+          "ar_pred": 39.57,
+          "pers_pred": 36.2,
+          "true_val": 51.41
+        },
+        "60m": {
+          "ar_mae": 17.649,
+          "pers_mae": 20.749,
+          "ar_pred": 39.3,
+          "pers_pred": 36.2,
+          "true_val": 56.95
+        }
+      }
+    },
+    "8_short_history": {
+      "name": "Short History / 6 Points (Synthetic)",
+      "status": "insufficient_data",
+      "reliability": "unavailable",
+      "history_points": 6,
+      "note": "Correctly rejected due to insufficient points (< 12)."
+    }
+  }
+}

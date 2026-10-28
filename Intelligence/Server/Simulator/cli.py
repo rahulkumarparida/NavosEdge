@@ -56,9 +56,28 @@ def build_parser() -> argparse.ArgumentParser:
     replay.add_argument("--server-url", default="http://127.0.0.1:8420")
     replay.add_argument("--timeout", type=float, default=10.0)
     replay.add_argument("--real-time", action="store_true", help="honor timestamp gaps instead of accelerated replay")
+    replay.add_argument("--speed", type=float, default=0.0, help="replay speed multiplier (e.g. 10.0 for 10x); 0 for full accelerated")
     replay.add_argument("--interval", type=float, default=0.0, help="delay between requests in accelerated mode")
+    replay.add_argument("--batch-size", type=int, default=1, help="concurrent batch size for high-throughput replay")
+    replay.add_argument("--node-id", help="override node ID to prevent mixing with live telemetry")
+    replay.add_argument("--start-offset", type=int, default=0, help="skip first N records")
+    replay.add_argument("--limit", type=int, help="maximum records to replay")
+    replay.add_argument("--dry-run", action="store_true", help="validate and summarize without sending requests")
+    replay.add_argument("--checkpoint", type=Path, help="checkpoint file path for restartable replays")
     replay.add_argument("--rebase-to-now", action="store_true", help="shift all timestamps together so the newest record is now")
     replay.add_argument("--on-error", choices=("continue", "stop"), default="continue")
+
+    gen_hist = sub.add_parser("generate-historical", help="generate >= 35 days of contextual historical sensor data")
+    gen_hist.add_argument("--output", type=Path, required=True, help="destination JSONL filepath")
+    gen_hist.add_argument("--node-id", default="hist-node-01", help="simulated node ID")
+    gen_hist.add_argument("--days", type=int, default=35, help="number of days to simulate (>= 35)")
+    gen_hist.add_argument("--interval", type=float, default=300.0, help="sampling interval in seconds (default 300 = 5 min)")
+    gen_hist.add_argument("--seed", type=int, default=42, help="random seed for reproducibility")
+    gen_hist.add_argument("--start-date", default="2024-09-01", help="start date (YYYY-MM-DD)")
+    gen_hist.add_argument("--location", default="bhubaneswar", help="location name (e.g. bhubaneswar, dhenkanal)")
+    gen_hist.add_argument("--station-csv", type=Path, help="optional CPCB station CSV file")
+    gen_hist.add_argument("--no-faults", action="store_true", help="disable diagnostic sensor fault injection")
+    gen_hist.add_argument("--noise", type=float, default=1.0, help="noise scaling factor")
 
     datasets = sub.add_parser("generate-datasets", help="create the checked-in reproducible fixture datasets")
     datasets.add_argument("--output-dir", type=Path, default=Path("test_data"))
@@ -203,11 +222,36 @@ async def _run(args: argparse.Namespace) -> int:
             client,
             accelerated=not args.real_time,
             interval_seconds=args.interval,
+            speed=args.speed,
             on_error=args.on_error,
             rebase_to_now=args.rebase_to_now,
+            node_id=args.node_id,
+            start_offset=args.start_offset,
+            limit=args.limit,
+            dry_run=args.dry_run,
+            batch_size=args.batch_size,
+            checkpoint_path=args.checkpoint,
         )
         print(json.dumps(stats.__dict__, indent=2, default=str))
         return 0 if stats.failed == 0 else 1
+    if args.command == "generate-historical":
+        from .historical_generator import GenerationConfig, HistoricalDatasetGenerator
+        config = GenerationConfig(
+            node_id=args.node_id,
+            days=args.days,
+            sampling_interval_seconds=args.interval,
+            seed=args.seed,
+            start_date=args.start_date,
+            location=args.location,
+            station_csv=str(args.station_csv) if args.station_csv else None,
+            inject_faults=not args.no_faults,
+            noise_scale=args.noise,
+        )
+        generator = HistoricalDatasetGenerator(config)
+        records = generator.generate_all()
+        save_dataset(args.output, records)
+        print(f"Generated {len(records)} records for {args.days} days ({args.start_date}) in {args.output}")
+        return 0
     if args.command == "generate-datasets":
         generate_fixtures(args.output_dir)
         print(f"Generated synthetic fixtures in {args.output_dir}")
@@ -269,3 +313,8 @@ def main() -> int:
     args = build_parser().parse_args()
     logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     return asyncio.run(_run(args))
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+

@@ -1,0 +1,497 @@
+[
+  {
+    "base_name": "clean_room",
+    "perturbation_idx": 0,
+    "expected_source": "CLEAN_OR_BACKGROUND",
+    "expected_gas": "CleanAir",
+    "payload": {
+      "node_id": "eval-perturb-01",
+      "timestamp": "2024-09-24T10:00:00Z",
+      "environment": {
+        "temperature_C": 24.08,
+        "humidity_pct": 48.8
+      },
+      "particulate_matter": {
+        "PM1_0": 4.8,
+        "PM2_5": 12.0,
+        "PM10": 20.0
+      },
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 150,
+          "voltage_V": 0.736
+        },
+        "MQ9": {
+          "raw_adc": 125,
+          "voltage_V": 0.612
+        },
+        "MQ135": {
+          "raw_adc": 149,
+          "voltage_V": 0.729
+        }
+      }
+    }
+  },
+  {
+    "base_name": "clean_room",
+    "perturbation_idx": 1,
+    "expected_source": "CLEAN_OR_BACKGROUND",
+    "expected_gas": "CleanAir",
+    "payload": {
+      "node_id": "eval-perturb-01",
+      "timestamp": "2024-09-24T10:05:00Z",
+      "environment": {
+        "temperature_C": 24.03,
+        "humidity_pct": 50.79
+      },
+      "particulate_matter": {
+        "PM1_0": 4.8,
+        "PM2_5": 12.0,
+        "PM10": 20.0
+      },
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 136,
+          "voltage_V": 0.667
+        },
+        "MQ9": {
+          "raw_adc": 137,
+          "voltage_V": 0.671
+        },
+        "MQ135": {
+          "raw_adc": 138,
+          "voltage_V": 0.676
+        }
+      }
+    }
+  },
+  {
+    "base_name": "clean_room",
+    "perturbation_idx": 2,
+    "expected_source": "CLEAN_OR_BACKGROUND",
+    "expected_gas": "CleanAir",
+    "payload": {
+      "node_id": "eval-perturb-01",
+      "timestamp": "2024-09-24T10:10:00Z",
+      "environment": {
+        "temperature_C": 26.63,
+        "humidity_pct": 55.55
+      },
+      "particulate_matter": {
+        "PM1_0": 4.8,
+        "PM2_5": 12.0,
+        "PM10": 20.0
+      },
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 145,
+          "voltage_V": 0.712
+        },
+        "MQ9": {
+          "raw_adc": 138,
+          "voltage_V": 0.679
+        },
+        "MQ135": {
+          "raw_adc": 141,
+          "voltage_V": 0.694
+        }
+      }
+    }
+  },
+  {
+    "base_name": "clean_room",
+    "perturbation_idx": 3,
+    "expected_source": "CLEAN_OR_BACKGROUND",
+    "expected_gas": "CleanAir",
+    "payload": {
+      "node_id": "eval-perturb-01",
+      "timestamp": "2024-09-24T10:15:00Z",
+      "environment": {
+        "temperature_C": 23.33,
+        "humidity_pct": 49.86
+      },
+      "particulate_matter": {
+        "PM1_0": 4.8,
+        "PM2_5": 12.0,
+        "PM10": 20.0
+      },
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 160,
+          "voltage_V": 0.782
+        },
+        "MQ9": {
+          "raw_adc": 138,
+          "voltage_V": 0.679
+        },
+        "MQ135": {
+          "raw_adc": 152,
+          "voltage_V": 0.747
+        }
+      }
+    }
+  },
+  {
+    "base_name": "clean_room",
+    "perturbation_idx": 4,
+    "expected_source": "CLEAN_OR_BACKGROUND",
+    "expected_gas": "CleanAir",
+    "payload": {
+      "node_id": "eval-perturb-01",
+      "timestamp": "2024-09-24T10:20:00Z",
+      "environment": {
+        "temperature_C": 23.73,
+        "humidity_pct": 49.13
+      },
+      "particulate_matter": {
+        "PM1_0": 4.8,
+        "PM2_5": 12.0,
+        "PM10": 20.0
+      },
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 148,
+          "voltage_V": 0.726
+        },
+        "MQ9": {
+          "raw_adc": 133,
+          "voltage_V": 0.654
+        },
+        "MQ135": {
+          "raw_adc": 162,
+          "voltage_V": 0.796
+        }
+      }
+    }
+  },
+  {
+    "base_name": "traffic_rush",
+    "perturbation_idx": 0,
+    "expected_source": "TRAFFIC",
+    "expected_gas": "Smoke",
+    "payload": {
+      "node_id": "eval-perturb-01",
+      "timestamp": "2024-09-24T10:00:00Z",
+      "environment": {
+        "temperature_C": 29.78,
+        "humidity_pct": 56.75
+      },
+      "particulate_matter": {
+        "PM1_0": 26.0,
+        "PM2_5": 65.0,
+        "PM10": 110.0
+      },
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 348,
+          "voltage_V": 1.705
+        },
+        "MQ9": {
+          "raw_adc": 407,
+          "voltage_V": 1.992
+        },
+        "MQ135": {
+          "raw_adc": 372,
+          "voltage_V": 1.822
+        }
+      }
+    }
+  },
+  {
+    "base_name": "traffic_rush",
+    "perturbation_idx": 1,
+    "expected_source": "TRAFFIC",
+    "expected_gas": "Smoke",
+    "payload": {
+      "node_id": "eval-perturb-01",
+      "timestamp": "2024-09-24T10:05:00Z",
+      "environment": {
+        "temperature_C": 27.85,
+        "humidity_pct": 52.83
+      },
+      "particulate_matter": {
+        "PM1_0": 26.0,
+        "PM2_5": 65.0,
+        "PM10": 110.0
+      },
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 325,
+          "voltage_V": 1.59
+        },
+        "MQ9": {
+          "raw_adc": 401,
+          "voltage_V": 1.963
+        },
+        "MQ135": {
+          "raw_adc": 357,
+          "voltage_V": 1.749
+        }
+      }
+    }
+  },
+  {
+    "base_name": "traffic_rush",
+    "perturbation_idx": 2,
+    "expected_source": "TRAFFIC",
+    "expected_gas": "Smoke",
+    "payload": {
+      "node_id": "eval-perturb-01",
+      "timestamp": "2024-09-24T10:10:00Z",
+      "environment": {
+        "temperature_C": 29.47,
+        "humidity_pct": 53.09
+      },
+      "particulate_matter": {
+        "PM1_0": 26.0,
+        "PM2_5": 65.0,
+        "PM10": 110.0
+      },
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 330,
+          "voltage_V": 1.613
+        },
+        "MQ9": {
+          "raw_adc": 398,
+          "voltage_V": 1.95
+        },
+        "MQ135": {
+          "raw_adc": 351,
+          "voltage_V": 1.72
+        }
+      }
+    }
+  },
+  {
+    "base_name": "traffic_rush",
+    "perturbation_idx": 3,
+    "expected_source": "TRAFFIC",
+    "expected_gas": "Smoke",
+    "payload": {
+      "node_id": "eval-perturb-01",
+      "timestamp": "2024-09-24T10:15:00Z",
+      "environment": {
+        "temperature_C": 31.47,
+        "humidity_pct": 58.72
+      },
+      "particulate_matter": {
+        "PM1_0": 26.0,
+        "PM2_5": 65.0,
+        "PM10": 110.0
+      },
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 339,
+          "voltage_V": 1.658
+        },
+        "MQ9": {
+          "raw_adc": 413,
+          "voltage_V": 2.021
+        },
+        "MQ135": {
+          "raw_adc": 356,
+          "voltage_V": 1.743
+        }
+      }
+    }
+  },
+  {
+    "base_name": "traffic_rush",
+    "perturbation_idx": 4,
+    "expected_source": "TRAFFIC",
+    "expected_gas": "Smoke",
+    "payload": {
+      "node_id": "eval-perturb-01",
+      "timestamp": "2024-09-24T10:20:00Z",
+      "environment": {
+        "temperature_C": 31.17,
+        "humidity_pct": 59.99
+      },
+      "particulate_matter": {
+        "PM1_0": 26.0,
+        "PM2_5": 65.0,
+        "PM10": 110.0
+      },
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 341,
+          "voltage_V": 1.668
+        },
+        "MQ9": {
+          "raw_adc": 395,
+          "voltage_V": 1.932
+        },
+        "MQ135": {
+          "raw_adc": 359,
+          "voltage_V": 1.756
+        }
+      }
+    }
+  },
+  {
+    "base_name": "smoke_plume",
+    "perturbation_idx": 0,
+    "expected_source": "BIOMASS_OR_WASTE_BURNING",
+    "expected_gas": "Smoke",
+    "payload": {
+      "node_id": "eval-perturb-01",
+      "timestamp": "2024-09-24T10:00:00Z",
+      "environment": {
+        "temperature_C": 29.09,
+        "humidity_pct": 58.03
+      },
+      "particulate_matter": {
+        "PM1_0": 60.0,
+        "PM2_5": 150.0,
+        "PM10": 190.0
+      },
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 575,
+          "voltage_V": 2.814
+        },
+        "MQ9": {
+          "raw_adc": 393,
+          "voltage_V": 1.925
+        },
+        "MQ135": {
+          "raw_adc": 492,
+          "voltage_V": 2.408
+        }
+      }
+    }
+  },
+  {
+    "base_name": "smoke_plume",
+    "perturbation_idx": 1,
+    "expected_source": "BIOMASS_OR_WASTE_BURNING",
+    "expected_gas": "Smoke",
+    "payload": {
+      "node_id": "eval-perturb-01",
+      "timestamp": "2024-09-24T10:05:00Z",
+      "environment": {
+        "temperature_C": 27.35,
+        "humidity_pct": 57.57
+      },
+      "particulate_matter": {
+        "PM1_0": 60.0,
+        "PM2_5": 150.0,
+        "PM10": 190.0
+      },
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 572,
+          "voltage_V": 2.796
+        },
+        "MQ9": {
+          "raw_adc": 389,
+          "voltage_V": 1.901
+        },
+        "MQ135": {
+          "raw_adc": 501,
+          "voltage_V": 2.453
+        }
+      }
+    }
+  },
+  {
+    "base_name": "smoke_plume",
+    "perturbation_idx": 2,
+    "expected_source": "BIOMASS_OR_WASTE_BURNING",
+    "expected_gas": "Smoke",
+    "payload": {
+      "node_id": "eval-perturb-01",
+      "timestamp": "2024-09-24T10:10:00Z",
+      "environment": {
+        "temperature_C": 29.34,
+        "humidity_pct": 55.1
+      },
+      "particulate_matter": {
+        "PM1_0": 60.0,
+        "PM2_5": 150.0,
+        "PM10": 190.0
+      },
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 575,
+          "voltage_V": 2.811
+        },
+        "MQ9": {
+          "raw_adc": 388,
+          "voltage_V": 1.9
+        },
+        "MQ135": {
+          "raw_adc": 477,
+          "voltage_V": 2.332
+        }
+      }
+    }
+  },
+  {
+    "base_name": "smoke_plume",
+    "perturbation_idx": 3,
+    "expected_source": "BIOMASS_OR_WASTE_BURNING",
+    "expected_gas": "Smoke",
+    "payload": {
+      "node_id": "eval-perturb-01",
+      "timestamp": "2024-09-24T10:15:00Z",
+      "environment": {
+        "temperature_C": 27.75,
+        "humidity_pct": 54.62
+      },
+      "particulate_matter": {
+        "PM1_0": 60.0,
+        "PM2_5": 150.0,
+        "PM10": 190.0
+      },
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 566,
+          "voltage_V": 2.767
+        },
+        "MQ9": {
+          "raw_adc": 391,
+          "voltage_V": 1.914
+        },
+        "MQ135": {
+          "raw_adc": 490,
+          "voltage_V": 2.398
+        }
+      }
+    }
+  },
+  {
+    "base_name": "smoke_plume",
+    "perturbation_idx": 4,
+    "expected_source": "BIOMASS_OR_WASTE_BURNING",
+    "expected_gas": "Smoke",
+    "payload": {
+      "node_id": "eval-perturb-01",
+      "timestamp": "2024-09-24T10:20:00Z",
+      "environment": {
+        "temperature_C": 27.37,
+        "humidity_pct": 61.77
+      },
+      "particulate_matter": {
+        "PM1_0": 60.0,
+        "PM2_5": 150.0,
+        "PM10": 190.0
+      },
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 573,
+          "voltage_V": 2.802
+        },
+        "MQ9": {
+          "raw_adc": 386,
+          "voltage_V": 1.887
+        },
+        "MQ135": {
+          "raw_adc": 477,
+          "voltage_V": 2.334
+        }
+      }
+    }
+  }
+]

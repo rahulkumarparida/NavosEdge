@@ -1,0 +1,5848 @@
+{
+  "false_negatives": [
+    {
+      "idx": 8928,
+      "timestamp": "2024-12-02T00:00:00+00:00",
+      "scenario": "sensor_health_and_faults",
+      "fault": "sensor_drift",
+      "is_hw_fault": true,
+      "is_hw_alert": false,
+      "is_env_alert": true,
+      "detected": true,
+      "severity": "MEDIUM",
+      "score": 2.757,
+      "anomaly_source": "ENVIRONMENTAL",
+      "anomaly_source_detail": "Environmental surge corroborated across PMS",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 171,
+          "voltage_V": 0.838
+        },
+        "MQ9": {
+          "raw_adc": 150,
+          "voltage_V": 0.734
+        },
+        "MQ135": {
+          "raw_adc": 168,
+          "voltage_V": 0.82
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 23.7,
+        "PM2_5": 48.82,
+        "PM10": 48.92
+      },
+      "environment": {
+        "temperature_C": 21.43,
+        "humidity_pct": 86.01
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 48.92,
+          "expected": 34.0237,
+          "residual": 14.8963,
+          "score": 2.979,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 48.82,
+          "expected": 33.8609,
+          "residual": 14.9591,
+          "score": 4.986,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 23.7,
+          "expected": 16.7305,
+          "residual": 6.9695,
+          "score": 2.323,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 171.0,
+          "expected": 155.9105,
+          "residual": 15.0895,
+          "score": 0.482,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.838,
+          "expected": 0.7621,
+          "residual": 0.0759,
+          "score": 0.498,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 150.0,
+          "expected": 147.1546,
+          "residual": 2.8454,
+          "score": 0.569,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.734,
+          "expected": 0.7189,
+          "residual": 0.0151,
+          "score": 0.302,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 168.0,
+          "expected": 164.4279,
+          "residual": 3.5721,
+          "score": 0.714,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 0.82,
+          "expected": 0.8045,
+          "residual": 0.0155,
+          "score": 0.309,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 21.43,
+          "expected": 21.5229,
+          "residual": -0.0929,
+          "score": 0.081,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 86.01,
+          "expected": 82.8776,
+          "residual": 3.1324,
+          "score": 1.566,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 8929,
+      "timestamp": "2024-12-02T00:05:00+00:00",
+      "scenario": "sensor_health_and_faults",
+      "fault": "sensor_drift",
+      "is_hw_fault": true,
+      "is_hw_alert": false,
+      "is_env_alert": true,
+      "detected": true,
+      "severity": "MEDIUM",
+      "score": 2.759,
+      "anomaly_source": "ENVIRONMENTAL",
+      "anomaly_source_detail": "Environmental surge corroborated across PMS",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 177,
+          "voltage_V": 0.864
+        },
+        "MQ9": {
+          "raw_adc": 150,
+          "voltage_V": 0.735
+        },
+        "MQ135": {
+          "raw_adc": 176,
+          "voltage_V": 0.862
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 23.7,
+        "PM2_5": 47.32,
+        "PM10": 47.42
+      },
+      "environment": {
+        "temperature_C": 21.43,
+        "humidity_pct": 85.62
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 47.42,
+          "expected": 34.3923,
+          "residual": 13.0277,
+          "score": 2.606,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 47.32,
+          "expected": 34.229,
+          "residual": 13.091,
+          "score": 4.364,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 23.7,
+          "expected": 16.9674,
+          "residual": 6.7326,
+          "score": 2.244,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 177.0,
+          "expected": 158.956,
+          "residual": 18.044,
+          "score": 0.58,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.864,
+          "expected": 0.7768,
+          "residual": 0.0872,
+          "score": 0.569,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 150.0,
+          "expected": 146.4413,
+          "residual": 3.5587,
+          "score": 0.712,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.735,
+          "expected": 0.7154,
+          "residual": 0.0196,
+          "score": 0.392,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 176.0,
+          "expected": 168.426,
+          "residual": 7.574,
+          "score": 1.515,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 0.862,
+          "expected": 0.8237,
+          "residual": 0.0383,
+          "score": 0.765,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 21.43,
+          "expected": 21.5991,
+          "residual": -0.1691,
+          "score": 0.148,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 85.62,
+          "expected": 82.543,
+          "residual": 3.077,
+          "score": 1.539,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 8930,
+      "timestamp": "2024-12-02T00:10:00+00:00",
+      "scenario": "sensor_health_and_faults",
+      "fault": "sensor_drift",
+      "is_hw_fault": true,
+      "is_hw_alert": false,
+      "is_env_alert": true,
+      "detected": true,
+      "severity": "MEDIUM",
+      "score": 2.558,
+      "anomaly_source": "ENVIRONMENTAL",
+      "anomaly_source_detail": "Environmental surge corroborated across PMS",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 174,
+          "voltage_V": 0.853
+        },
+        "MQ9": {
+          "raw_adc": 149,
+          "voltage_V": 0.729
+        },
+        "MQ135": {
+          "raw_adc": 173,
+          "voltage_V": 0.843
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 23.7,
+        "PM2_5": 46.82,
+        "PM10": 46.92
+      },
+      "environment": {
+        "temperature_C": 21.84,
+        "humidity_pct": 86.02
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 46.92,
+          "expected": 34.6217,
+          "residual": 12.2983,
+          "score": 2.46,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 46.82,
+          "expected": 34.4579,
+          "residual": 12.3621,
+          "score": 4.121,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 23.7,
+          "expected": 17.1043,
+          "residual": 6.5957,
+          "score": 2.199,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 174.0,
+          "expected": 157.2438,
+          "residual": 16.7562,
+          "score": 0.539,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.853,
+          "expected": 0.7689,
+          "residual": 0.0841,
+          "score": 0.552,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 149.0,
+          "expected": 146.8671,
+          "residual": 2.1329,
+          "score": 0.427,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.729,
+          "expected": 0.718,
+          "residual": 0.011,
+          "score": 0.219,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 173.0,
+          "expected": 167.988,
+          "residual": 5.012,
+          "score": 1.002,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 0.843,
+          "expected": 0.8208,
+          "residual": 0.0222,
+          "score": 0.444,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 21.84,
+          "expected": 21.7418,
+          "residual": 0.0982,
+          "score": 0.086,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 86.02,
+          "expected": 82.1743,
+          "residual": 3.8457,
+          "score": 1.923,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 8931,
+      "timestamp": "2024-12-02T00:15:00+00:00",
+      "scenario": "sensor_health_and_faults",
+      "fault": "sensor_drift",
+      "is_hw_fault": true,
+      "is_hw_alert": false,
+      "is_env_alert": true,
+      "detected": true,
+      "severity": "HIGH",
+      "score": 3.036,
+      "anomaly_source": "ENVIRONMENTAL",
+      "anomaly_source_detail": "Environmental surge corroborated across HUM, PMS",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 171,
+          "voltage_V": 0.835
+        },
+        "MQ9": {
+          "raw_adc": 154,
+          "voltage_V": 0.751
+        },
+        "MQ135": {
+          "raw_adc": 182,
+          "voltage_V": 0.888
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 23.7,
+        "PM2_5": 49.07,
+        "PM10": 49.17
+      },
+      "environment": {
+        "temperature_C": 21.76,
+        "humidity_pct": 85.97
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 49.17,
+          "expected": 35.8187,
+          "residual": 13.3513,
+          "score": 2.67,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 49.07,
+          "expected": 35.6544,
+          "residual": 13.4156,
+          "score": 4.472,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 23.7,
+          "expected": 17.5683,
+          "residual": 6.1317,
+          "score": 2.044,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 171.0,
+          "expected": 156.2659,
+          "residual": 14.7341,
+          "score": 0.469,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.835,
+          "expected": 0.7642,
+          "residual": 0.0708,
+          "score": 0.462,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 154.0,
+          "expected": 147.4761,
+          "residual": 6.5239,
+          "score": 1.305,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.751,
+          "expected": 0.721,
+          "residual": 0.03,
+          "score": 0.6,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 182.0,
+          "expected": 172.5738,
+          "residual": 9.4262,
+          "score": 1.885,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 0.888,
+          "expected": 0.8428,
+          "residual": 0.0452,
+          "score": 0.904,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 21.76,
+          "expected": 21.8705,
+          "residual": -0.1105,
+          "score": 0.097,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 85.97,
+          "expected": 81.9552,
+          "residual": 4.0148,
+          "score": 2.007,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 8932,
+      "timestamp": "2024-12-02T00:20:00+00:00",
+      "scenario": "sensor_health_and_faults",
+      "fault": "sensor_drift",
+      "is_hw_fault": true,
+      "is_hw_alert": false,
+      "is_env_alert": true,
+      "detected": true,
+      "severity": "HIGH",
+      "score": 3.118,
+      "anomaly_source": "ENVIRONMENTAL",
+      "anomaly_source_detail": "Environmental surge corroborated across HUM, PMS",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 171,
+          "voltage_V": 0.836
+        },
+        "MQ9": {
+          "raw_adc": 148,
+          "voltage_V": 0.725
+        },
+        "MQ135": {
+          "raw_adc": 187,
+          "voltage_V": 0.916
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 23.7,
+        "PM2_5": 48.91,
+        "PM10": 49.01
+      },
+      "environment": {
+        "temperature_C": 21.66,
+        "humidity_pct": 86.11
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 49.01,
+          "expected": 35.3029,
+          "residual": 13.7071,
+          "score": 2.741,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 48.91,
+          "expected": 35.1379,
+          "residual": 13.7721,
+          "score": 4.591,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 23.7,
+          "expected": 17.5053,
+          "residual": 6.1947,
+          "score": 2.065,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 171.0,
+          "expected": 155.0507,
+          "residual": 15.9493,
+          "score": 0.509,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.836,
+          "expected": 0.7583,
+          "residual": 0.0777,
+          "score": 0.507,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 148.0,
+          "expected": 147.1742,
+          "residual": 0.8258,
+          "score": 0.165,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.725,
+          "expected": 0.7205,
+          "residual": 0.0045,
+          "score": 0.091,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 187.0,
+          "expected": 177.6874,
+          "residual": 9.3126,
+          "score": 1.863,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 0.916,
+          "expected": 0.8681,
+          "residual": 0.0479,
+          "score": 0.959,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 21.66,
+          "expected": 21.9688,
+          "residual": -0.3088,
+          "score": 0.273,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 86.11,
+          "expected": 81.7482,
+          "residual": 4.3618,
+          "score": 2.181,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 8933,
+      "timestamp": "2024-12-02T00:25:00+00:00",
+      "scenario": "sensor_health_and_faults",
+      "fault": "sensor_drift",
+      "is_hw_fault": true,
+      "is_hw_alert": false,
+      "is_env_alert": true,
+      "detected": true,
+      "severity": "MEDIUM",
+      "score": 2.822,
+      "anomaly_source": "ENVIRONMENTAL",
+      "anomaly_source_detail": "Environmental surge corroborated across HUM, PMS",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 171,
+          "voltage_V": 0.836
+        },
+        "MQ9": {
+          "raw_adc": 152,
+          "voltage_V": 0.742
+        },
+        "MQ135": {
+          "raw_adc": 187,
+          "voltage_V": 0.914
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 23.7,
+        "PM2_5": 46.45,
+        "PM10": 46.55
+      },
+      "environment": {
+        "temperature_C": 21.57,
+        "humidity_pct": 85.92
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 46.55,
+          "expected": 34.1562,
+          "residual": 12.3938,
+          "score": 2.479,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 46.45,
+          "expected": 33.9906,
+          "residual": 12.4594,
+          "score": 4.153,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 23.7,
+          "expected": 17.3424,
+          "residual": 6.3576,
+          "score": 2.119,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 171.0,
+          "expected": 155.1383,
+          "residual": 15.8617,
+          "score": 0.508,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.836,
+          "expected": 0.7582,
+          "residual": 0.0778,
+          "score": 0.507,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 152.0,
+          "expected": 149.4417,
+          "residual": 2.5583,
+          "score": 0.512,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.742,
+          "expected": 0.7308,
+          "residual": 0.0112,
+          "score": 0.225,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 187.0,
+          "expected": 179.5042,
+          "residual": 7.4958,
+          "score": 1.499,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 0.914,
+          "expected": 0.8769,
+          "residual": 0.0371,
+          "score": 0.742,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 21.57,
+          "expected": 22.0139,
+          "residual": -0.4439,
+          "score": 0.393,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 85.92,
+          "expected": 81.3696,
+          "residual": 4.5504,
+          "score": 2.275,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 8934,
+      "timestamp": "2024-12-02T00:30:00+00:00",
+      "scenario": "sensor_health_and_faults",
+      "fault": "sensor_drift",
+      "is_hw_fault": true,
+      "is_hw_alert": false,
+      "is_env_alert": true,
+      "detected": true,
+      "severity": "MEDIUM",
+      "score": 2.821,
+      "anomaly_source": "ENVIRONMENTAL",
+      "anomaly_source_detail": "Environmental surge corroborated across HUM, PMS",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 175,
+          "voltage_V": 0.857
+        },
+        "MQ9": {
+          "raw_adc": 141,
+          "voltage_V": 0.69
+        },
+        "MQ135": {
+          "raw_adc": 187,
+          "voltage_V": 0.912
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 23.7,
+        "PM2_5": 48.19,
+        "PM10": 48.29
+      },
+      "environment": {
+        "temperature_C": 21.37,
+        "humidity_pct": 85.58
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 48.29,
+          "expected": 35.3061,
+          "residual": 12.9839,
+          "score": 2.597,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 48.19,
+          "expected": 35.1397,
+          "residual": 13.0503,
+          "score": 4.35,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 23.7,
+          "expected": 17.5066,
+          "residual": 6.1934,
+          "score": 2.064,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 175.0,
+          "expected": 155.3949,
+          "residual": 19.6051,
+          "score": 0.628,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.857,
+          "expected": 0.7602,
+          "residual": 0.0968,
+          "score": 0.634,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 141.0,
+          "expected": 147.5747,
+          "residual": -6.5747,
+          "score": 1.315,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.69,
+          "expected": 0.7221,
+          "residual": -0.0321,
+          "score": 0.642,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 187.0,
+          "expected": 181.3781,
+          "residual": 5.6219,
+          "score": 1.124,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 0.912,
+          "expected": 0.8853,
+          "residual": 0.0267,
+          "score": 0.533,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 21.37,
+          "expected": 22.0667,
+          "residual": -0.6967,
+          "score": 0.623,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 85.58,
+          "expected": 81.2037,
+          "residual": 4.3763,
+          "score": 2.173,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 8935,
+      "timestamp": "2024-12-02T00:35:00+00:00",
+      "scenario": "sensor_health_and_faults",
+      "fault": "sensor_drift",
+      "is_hw_fault": true,
+      "is_hw_alert": false,
+      "is_env_alert": true,
+      "detected": true,
+      "severity": "MEDIUM",
+      "score": 2.797,
+      "anomaly_source": "ENVIRONMENTAL",
+      "anomaly_source_detail": "Environmental surge corroborated across HUM, PMS",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 180,
+          "voltage_V": 0.879
+        },
+        "MQ9": {
+          "raw_adc": 148,
+          "voltage_V": 0.725
+        },
+        "MQ135": {
+          "raw_adc": 190,
+          "voltage_V": 0.93
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 23.7,
+        "PM2_5": 45.57,
+        "PM10": 45.67
+      },
+      "environment": {
+        "temperature_C": 21.62,
+        "humidity_pct": 85.6
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 45.67,
+          "expected": 33.9566,
+          "residual": 11.7134,
+          "score": 2.343,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 45.57,
+          "expected": 33.7895,
+          "residual": 11.7805,
+          "score": 3.927,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 23.7,
+          "expected": 17.1438,
+          "residual": 6.5562,
+          "score": 2.185,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 180.0,
+          "expected": 156.7308,
+          "residual": 23.2692,
+          "score": 0.741,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.879,
+          "expected": 0.7664,
+          "residual": 0.1126,
+          "score": 0.733,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 148.0,
+          "expected": 147.9508,
+          "residual": 0.0492,
+          "score": 0.01,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.725,
+          "expected": 0.7237,
+          "residual": 0.0013,
+          "score": 0.025,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 190.0,
+          "expected": 181.7159,
+          "residual": 8.2841,
+          "score": 1.657,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 0.93,
+          "expected": 0.8876,
+          "residual": 0.0424,
+          "score": 0.848,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 21.62,
+          "expected": 22.1669,
+          "residual": -0.5469,
+          "score": 0.489,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 85.6,
+          "expected": 80.829,
+          "residual": 4.771,
+          "score": 2.36,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 8936,
+      "timestamp": "2024-12-02T00:40:00+00:00",
+      "scenario": "sensor_health_and_faults",
+      "fault": "sensor_drift",
+      "is_hw_fault": true,
+      "is_hw_alert": false,
+      "is_env_alert": true,
+      "detected": true,
+      "severity": "HIGH",
+      "score": 4.472,
+      "anomaly_source": "ENVIRONMENTAL",
+      "anomaly_source_detail": "Environmental surge corroborated across HUM, MQ135, PMS",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 175,
+          "voltage_V": 0.854
+        },
+        "MQ9": {
+          "raw_adc": 149,
+          "voltage_V": 0.729
+        },
+        "MQ135": {
+          "raw_adc": 196,
+          "voltage_V": 0.957
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 23.7,
+        "PM2_5": 47.51,
+        "PM10": 47.61
+      },
+      "environment": {
+        "temperature_C": 21.28,
+        "humidity_pct": 85.85
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 47.61,
+          "expected": 32.9614,
+          "residual": 14.6486,
+          "score": 2.93,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 47.51,
+          "expected": 32.7935,
+          "residual": 14.7165,
+          "score": 4.906,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 23.7,
+          "expected": 16.6811,
+          "residual": 7.0189,
+          "score": 2.34,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 175.0,
+          "expected": 156.8726,
+          "residual": 18.1274,
+          "score": 0.579,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.854,
+          "expected": 0.7661,
+          "residual": 0.0879,
+          "score": 0.572,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 149.0,
+          "expected": 147.5752,
+          "residual": 1.4248,
+          "score": 0.285,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.729,
+          "expected": 0.722,
+          "residual": 0.007,
+          "score": 0.14,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 196.0,
+          "expected": 182.3686,
+          "residual": 13.6314,
+          "score": 2.726,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 0.957,
+          "expected": 0.8912,
+          "residual": 0.0658,
+          "score": 1.317,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 21.28,
+          "expected": 22.0584,
+          "residual": -0.7784,
+          "score": 0.695,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 85.85,
+          "expected": 80.4907,
+          "residual": 5.3593,
+          "score": 2.638,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 8937,
+      "timestamp": "2024-12-02T00:45:00+00:00",
+      "scenario": "sensor_health_and_faults",
+      "fault": "sensor_drift",
+      "is_hw_fault": true,
+      "is_hw_alert": false,
+      "is_env_alert": true,
+      "detected": true,
+      "severity": "HIGH",
+      "score": 5.058,
+      "anomaly_source": "ENVIRONMENTAL",
+      "anomaly_source_detail": "Environmental surge corroborated across HUM, MQ135, PMS",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 179,
+          "voltage_V": 0.876
+        },
+        "MQ9": {
+          "raw_adc": 148,
+          "voltage_V": 0.724
+        },
+        "MQ135": {
+          "raw_adc": 198,
+          "voltage_V": 0.967
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 23.7,
+        "PM2_5": 48.62,
+        "PM10": 48.72
+      },
+      "environment": {
+        "temperature_C": 21.44,
+        "humidity_pct": 86.62
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 48.72,
+          "expected": 32.949,
+          "residual": 15.771,
+          "score": 3.154,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 48.62,
+          "expected": 32.7803,
+          "residual": 15.8397,
+          "score": 5.28,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 23.7,
+          "expected": 16.5457,
+          "residual": 7.1543,
+          "score": 2.385,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 179.0,
+          "expected": 158.7996,
+          "residual": 20.2004,
+          "score": 0.642,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.876,
+          "expected": 0.7754,
+          "residual": 0.1006,
+          "score": 0.653,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 148.0,
+          "expected": 146.0156,
+          "residual": 1.9844,
+          "score": 0.397,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.724,
+          "expected": 0.7138,
+          "residual": 0.0102,
+          "score": 0.203,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 198.0,
+          "expected": 181.6713,
+          "residual": 16.3287,
+          "score": 3.266,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 0.967,
+          "expected": 0.888,
+          "residual": 0.079,
+          "score": 1.58,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 21.44,
+          "expected": 22.0781,
+          "residual": -0.6381,
+          "score": 0.577,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 86.62,
+          "expected": 80.6118,
+          "residual": 6.0082,
+          "score": 2.975,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 9039,
+      "timestamp": "2024-12-02T09:15:00+00:00",
+      "scenario": "sensor_health_and_faults",
+      "fault": "sensor_drift",
+      "is_hw_fault": true,
+      "is_hw_alert": false,
+      "is_env_alert": false,
+      "detected": false,
+      "severity": "LOW",
+      "score": 1.399,
+      "anomaly_source": "UNKNOWN",
+      "anomaly_source_detail": "Uncorroborated single device elevation (MQ135); ambiguous cause",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 173,
+          "voltage_V": 0.843
+        },
+        "MQ9": {
+          "raw_adc": 152,
+          "voltage_V": 0.741
+        },
+        "MQ135": {
+          "raw_adc": 506,
+          "voltage_V": 2.472
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 13.8,
+        "PM2_5": 28.59,
+        "PM10": 29.19
+      },
+      "environment": {
+        "temperature_C": 28.3,
+        "humidity_pct": 61.69
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 29.19,
+          "expected": 27.2247,
+          "residual": 1.9653,
+          "score": 0.393,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 28.59,
+          "expected": 26.7745,
+          "residual": 1.8155,
+          "score": 0.477,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 13.8,
+          "expected": 13.577,
+          "residual": 0.223,
+          "score": 0.074,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 173.0,
+          "expected": 221.19,
+          "residual": -48.19,
+          "score": 1.483,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.843,
+          "expected": 1.0807,
+          "residual": -0.2377,
+          "score": 1.473,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 152.0,
+          "expected": 148.0083,
+          "residual": 3.9917,
+          "score": 0.798,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.741,
+          "expected": 0.7236,
+          "residual": 0.0174,
+          "score": 0.347,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 506.0,
+          "expected": 324.1929,
+          "residual": 181.8071,
+          "score": 2.993,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 2.472,
+          "expected": 1.5835,
+          "residual": 0.8885,
+          "score": 2.994,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 28.3,
+          "expected": 27.6915,
+          "residual": 0.6085,
+          "score": 0.691,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 61.69,
+          "expected": 62.4716,
+          "residual": -0.7816,
+          "score": 0.255,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 9042,
+      "timestamp": "2024-12-02T09:30:00+00:00",
+      "scenario": "sensor_health_and_faults",
+      "fault": "sensor_drift",
+      "is_hw_fault": true,
+      "is_hw_alert": false,
+      "is_env_alert": false,
+      "detected": false,
+      "severity": "LOW",
+      "score": 1.2,
+      "anomaly_source": "UNKNOWN",
+      "anomaly_source_detail": "Uncorroborated single device elevation (MQ135); ambiguous cause",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 173,
+          "voltage_V": 0.843
+        },
+        "MQ9": {
+          "raw_adc": 145,
+          "voltage_V": 0.708
+        },
+        "MQ135": {
+          "raw_adc": 518,
+          "voltage_V": 2.53
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 13.8,
+        "PM2_5": 27.35,
+        "PM10": 27.95
+      },
+      "environment": {
+        "temperature_C": 28.15,
+        "humidity_pct": 63.09
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 27.95,
+          "expected": 27.7502,
+          "residual": 0.1998,
+          "score": 0.04,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 27.35,
+          "expected": 27.2918,
+          "residual": 0.0582,
+          "score": 0.016,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 13.8,
+          "expected": 13.5158,
+          "residual": 0.2842,
+          "score": 0.095,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 173.0,
+          "expected": 222.126,
+          "residual": -49.126,
+          "score": 1.513,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.843,
+          "expected": 1.0846,
+          "residual": -0.2416,
+          "score": 1.5,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 145.0,
+          "expected": 148.7315,
+          "residual": -3.7315,
+          "score": 0.746,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.708,
+          "expected": 0.7264,
+          "residual": -0.0184,
+          "score": 0.368,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 518.0,
+          "expected": 332.7583,
+          "residual": 185.2417,
+          "score": 2.898,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 2.53,
+          "expected": 1.625,
+          "residual": 0.905,
+          "score": 2.894,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 28.15,
+          "expected": 27.5347,
+          "residual": 0.6153,
+          "score": 0.695,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 63.09,
+          "expected": 62.8944,
+          "residual": 0.1956,
+          "score": 0.063,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 9043,
+      "timestamp": "2024-12-02T09:35:00+00:00",
+      "scenario": "sensor_health_and_faults",
+      "fault": "sensor_drift",
+      "is_hw_fault": true,
+      "is_hw_alert": false,
+      "is_env_alert": false,
+      "detected": false,
+      "severity": "LOW",
+      "score": 1.327,
+      "anomaly_source": "UNKNOWN",
+      "anomaly_source_detail": "Uncorroborated single device elevation (MQ135); ambiguous cause",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 169,
+          "voltage_V": 0.828
+        },
+        "MQ9": {
+          "raw_adc": 143,
+          "voltage_V": 0.699
+        },
+        "MQ135": {
+          "raw_adc": 525,
+          "voltage_V": 2.564
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 13.8,
+        "PM2_5": 27.62,
+        "PM10": 28.22
+      },
+      "environment": {
+        "temperature_C": 28.58,
+        "humidity_pct": 63.11
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 28.22,
+          "expected": 27.6601,
+          "residual": 0.5599,
+          "score": 0.112,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 27.62,
+          "expected": 27.2012,
+          "residual": 0.4188,
+          "score": 0.114,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 13.8,
+          "expected": 13.4472,
+          "residual": 0.3528,
+          "score": 0.118,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 169.0,
+          "expected": 221.1595,
+          "residual": -52.1595,
+          "score": 1.601,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.828,
+          "expected": 1.0803,
+          "residual": -0.2523,
+          "score": 1.563,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 143.0,
+          "expected": 147.0023,
+          "residual": -4.0023,
+          "score": 0.8,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.699,
+          "expected": 0.7175,
+          "residual": -0.0185,
+          "score": 0.37,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 525.0,
+          "expected": 331.8448,
+          "residual": 193.1552,
+          "score": 2.999,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 2.564,
+          "expected": 1.6206,
+          "residual": 0.9434,
+          "score": 2.987,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 28.58,
+          "expected": 27.6385,
+          "residual": 0.9415,
+          "score": 1.069,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 63.11,
+          "expected": 62.8477,
+          "residual": 0.2623,
+          "score": 0.085,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 9046,
+      "timestamp": "2024-12-02T09:50:00+00:00",
+      "scenario": "sensor_health_and_faults",
+      "fault": "sensor_drift",
+      "is_hw_fault": true,
+      "is_hw_alert": false,
+      "is_env_alert": false,
+      "detected": false,
+      "severity": "LOW",
+      "score": 1.451,
+      "anomaly_source": "UNKNOWN",
+      "anomaly_source_detail": "Uncorroborated single device elevation (MQ135); ambiguous cause",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 168,
+          "voltage_V": 0.823
+        },
+        "MQ9": {
+          "raw_adc": 153,
+          "voltage_V": 0.747
+        },
+        "MQ135": {
+          "raw_adc": 528,
+          "voltage_V": 2.58
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 13.8,
+        "PM2_5": 29.44,
+        "PM10": 30.04
+      },
+      "environment": {
+        "temperature_C": 28.42,
+        "humidity_pct": 62.61
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 30.04,
+          "expected": 27.9672,
+          "residual": 2.0728,
+          "score": 0.415,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 29.44,
+          "expected": 27.5011,
+          "residual": 1.9389,
+          "score": 0.527,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 13.8,
+          "expected": 13.3177,
+          "residual": 0.4823,
+          "score": 0.161,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 168.0,
+          "expected": 223.9596,
+          "residual": -55.9596,
+          "score": 1.719,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.823,
+          "expected": 1.0959,
+          "residual": -0.2729,
+          "score": 1.692,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 153.0,
+          "expected": 148.7866,
+          "residual": 4.2134,
+          "score": 0.843,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.747,
+          "expected": 0.7267,
+          "residual": 0.0203,
+          "score": 0.406,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 528.0,
+          "expected": 335.2593,
+          "residual": 192.7407,
+          "score": 2.968,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 2.58,
+          "expected": 1.6388,
+          "residual": 0.9412,
+          "score": 2.971,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 28.42,
+          "expected": 27.6718,
+          "residual": 0.7482,
+          "score": 0.867,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 62.61,
+          "expected": 63.0535,
+          "residual": -0.4435,
+          "score": 0.146,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 9049,
+      "timestamp": "2024-12-02T10:05:00+00:00",
+      "scenario": "sensor_health_and_faults",
+      "fault": "sensor_drift",
+      "is_hw_fault": true,
+      "is_hw_alert": false,
+      "is_env_alert": false,
+      "detected": false,
+      "severity": "LOW",
+      "score": 1.541,
+      "anomaly_source": "UNKNOWN",
+      "anomaly_source_detail": "Uncorroborated single device elevation (MQ135); ambiguous cause",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 172,
+          "voltage_V": 0.839
+        },
+        "MQ9": {
+          "raw_adc": 152,
+          "voltage_V": 0.742
+        },
+        "MQ135": {
+          "raw_adc": 534,
+          "voltage_V": 2.612
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 14.85,
+        "PM2_5": 31.52,
+        "PM10": 32.12
+      },
+      "environment": {
+        "temperature_C": 27.61,
+        "humidity_pct": 65.47
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 32.12,
+          "expected": 28.4898,
+          "residual": 3.6302,
+          "score": 0.726,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 31.52,
+          "expected": 28.0173,
+          "residual": 3.5027,
+          "score": 0.949,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 14.85,
+          "expected": 13.7424,
+          "residual": 1.1076,
+          "score": 0.369,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 172.0,
+          "expected": 226.2343,
+          "residual": -54.2343,
+          "score": 1.669,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.839,
+          "expected": 1.1063,
+          "residual": -0.2673,
+          "score": 1.662,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 152.0,
+          "expected": 148.1345,
+          "residual": 3.8655,
+          "score": 0.773,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.742,
+          "expected": 0.7235,
+          "residual": 0.0185,
+          "score": 0.37,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 534.0,
+          "expected": 339.9665,
+          "residual": 194.0335,
+          "score": 2.991,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 2.612,
+          "expected": 1.6623,
+          "residual": 0.9497,
+          "score": 2.982,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 27.61,
+          "expected": 27.3267,
+          "residual": 0.2833,
+          "score": 0.337,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 65.47,
+          "expected": 64.2589,
+          "residual": 1.2111,
+          "score": 0.406,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 9081,
+      "timestamp": "2024-12-02T12:45:00+00:00",
+      "scenario": "sensor_health_and_faults",
+      "fault": "sensor_drift",
+      "is_hw_fault": true,
+      "is_hw_alert": false,
+      "is_env_alert": true,
+      "detected": true,
+      "severity": "HIGH",
+      "score": 5.519,
+      "anomaly_source": "ENVIRONMENTAL",
+      "anomaly_source_detail": "Environmental surge corroborated across MQ135, MQ2, PMS",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 164,
+          "voltage_V": 0.801
+        },
+        "MQ9": {
+          "raw_adc": 152,
+          "voltage_V": 0.743
+        },
+        "MQ135": {
+          "raw_adc": 639,
+          "voltage_V": 3.125
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 26.15,
+        "PM2_5": 52.67,
+        "PM10": 53.57
+      },
+      "environment": {
+        "temperature_C": 26.07,
+        "humidity_pct": 69.31
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 53.57,
+          "expected": 33.2919,
+          "residual": 20.2781,
+          "score": 4.056,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 52.67,
+          "expected": 32.7529,
+          "residual": 19.9171,
+          "score": 6.057,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 26.15,
+          "expected": 16.0607,
+          "residual": 10.0893,
+          "score": 3.363,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 164.0,
+          "expected": 192.2007,
+          "residual": -28.2007,
+          "score": 2.367,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.801,
+          "expected": 0.94,
+          "residual": -0.139,
+          "score": 2.406,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 152.0,
+          "expected": 146.2391,
+          "residual": 5.7609,
+          "score": 1.152,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.743,
+          "expected": 0.7151,
+          "residual": 0.0279,
+          "score": 0.559,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 639.0,
+          "expected": 395.2657,
+          "residual": 243.7343,
+          "score": 4.24,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 3.125,
+          "expected": 1.9309,
+          "residual": 1.1941,
+          "score": 4.245,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 26.07,
+          "expected": 26.0287,
+          "residual": 0.0413,
+          "score": 0.046,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 69.31,
+          "expected": 70.7183,
+          "residual": -1.4083,
+          "score": 0.622,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 9084,
+      "timestamp": "2024-12-02T13:00:00+00:00",
+      "scenario": "sensor_health_and_faults",
+      "fault": "sensor_drift",
+      "is_hw_fault": true,
+      "is_hw_alert": false,
+      "is_env_alert": true,
+      "detected": true,
+      "severity": "HIGH",
+      "score": 6.005,
+      "anomaly_source": "ENVIRONMENTAL",
+      "anomaly_source_detail": "Environmental surge corroborated across MQ135, MQ2, PMS",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 165,
+          "voltage_V": 0.805
+        },
+        "MQ9": {
+          "raw_adc": 144,
+          "voltage_V": 0.703
+        },
+        "MQ135": {
+          "raw_adc": 648,
+          "voltage_V": 3.168
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 28.15,
+        "PM2_5": 55.28,
+        "PM10": 56.18
+      },
+      "environment": {
+        "temperature_C": 24.01,
+        "humidity_pct": 72.65
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 56.18,
+          "expected": 34.7226,
+          "residual": 21.4574,
+          "score": 4.291,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 55.28,
+          "expected": 34.1771,
+          "residual": 21.1029,
+          "score": 6.733,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 28.15,
+          "expected": 17.0224,
+          "residual": 11.1276,
+          "score": 3.709,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 165.0,
+          "expected": 188.4878,
+          "residual": -23.4878,
+          "score": 2.492,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.805,
+          "expected": 0.9199,
+          "residual": -0.1149,
+          "score": 2.298,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 144.0,
+          "expected": 148.3773,
+          "residual": -4.3773,
+          "score": 0.875,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.703,
+          "expected": 0.7253,
+          "residual": -0.0223,
+          "score": 0.446,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 648.0,
+          "expected": 397.1693,
+          "residual": 250.8307,
+          "score": 4.255,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 3.168,
+          "expected": 1.9417,
+          "residual": 1.2263,
+          "score": 4.264,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 24.01,
+          "expected": 25.3129,
+          "residual": -1.3029,
+          "score": 1.448,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 72.65,
+          "expected": 72.0706,
+          "residual": 0.5794,
+          "score": 0.258,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 9088,
+      "timestamp": "2024-12-02T13:20:00+00:00",
+      "scenario": "sensor_health_and_faults",
+      "fault": "sensor_drift",
+      "is_hw_fault": true,
+      "is_hw_alert": false,
+      "is_env_alert": true,
+      "detected": true,
+      "severity": "HIGH",
+      "score": 5.457,
+      "anomaly_source": "ENVIRONMENTAL",
+      "anomaly_source_detail": "Environmental surge corroborated across MQ135, MQ2, PMS",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 169,
+          "voltage_V": 0.827
+        },
+        "MQ9": {
+          "raw_adc": 152,
+          "voltage_V": 0.742
+        },
+        "MQ135": {
+          "raw_adc": 660,
+          "voltage_V": 3.227
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 28.15,
+        "PM2_5": 54.22,
+        "PM10": 55.12
+      },
+      "environment": {
+        "temperature_C": 24.2,
+        "humidity_pct": 71.35
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 55.12,
+          "expected": 36.6324,
+          "residual": 18.4876,
+          "score": 3.698,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 54.22,
+          "expected": 36.0786,
+          "residual": 18.1414,
+          "score": 5.621,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 28.15,
+          "expected": 18.3843,
+          "residual": 9.7657,
+          "score": 3.255,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 169.0,
+          "expected": 184.2608,
+          "residual": -15.2608,
+          "score": 2.053,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.827,
+          "expected": 0.9009,
+          "residual": -0.0739,
+          "score": 1.478,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 152.0,
+          "expected": 146.9834,
+          "residual": 5.0166,
+          "score": 1.003,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.742,
+          "expected": 0.7173,
+          "residual": 0.0247,
+          "score": 0.494,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 660.0,
+          "expected": 399.6101,
+          "residual": 260.3899,
+          "score": 4.231,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 3.227,
+          "expected": 1.9533,
+          "residual": 1.2737,
+          "score": 4.236,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 24.2,
+          "expected": 24.2949,
+          "residual": -0.0949,
+          "score": 0.103,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 71.35,
+          "expected": 74.0293,
+          "residual": -2.6793,
+          "score": 1.238,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 9107,
+      "timestamp": "2024-12-02T14:55:00+00:00",
+      "scenario": "sensor_health_and_faults",
+      "fault": "sensor_drift",
+      "is_hw_fault": true,
+      "is_hw_alert": false,
+      "is_env_alert": true,
+      "detected": true,
+      "severity": "HIGH",
+      "score": 4.615,
+      "anomaly_source": "ENVIRONMENTAL",
+      "anomaly_source_detail": "Environmental surge corroborated across MQ135, MQ2, PMS",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 162,
+          "voltage_V": 0.793
+        },
+        "MQ9": {
+          "raw_adc": 143,
+          "voltage_V": 0.701
+        },
+        "MQ135": {
+          "raw_adc": 718,
+          "voltage_V": 3.509
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 30.05,
+        "PM2_5": 59.94,
+        "PM10": 60.84
+      },
+      "environment": {
+        "temperature_C": 23.51,
+        "humidity_pct": 73.51
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 60.84,
+          "expected": 42.834,
+          "residual": 18.006,
+          "score": 3.601,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 59.94,
+          "expected": 42.2446,
+          "residual": 17.6954,
+          "score": 3.674,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 30.05,
+          "expected": 20.618,
+          "residual": 9.432,
+          "score": 3.144,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 162.0,
+          "expected": 173.3619,
+          "residual": -11.3619,
+          "score": 2.272,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.793,
+          "expected": 0.8465,
+          "residual": -0.0535,
+          "score": 1.071,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 143.0,
+          "expected": 146.1081,
+          "residual": -3.1081,
+          "score": 0.622,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.701,
+          "expected": 0.7137,
+          "residual": -0.0127,
+          "score": 0.254,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 718.0,
+          "expected": 417.2451,
+          "residual": 300.7549,
+          "score": 4.627,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 3.509,
+          "expected": 2.0394,
+          "residual": 1.4696,
+          "score": 4.641,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 23.51,
+          "expected": 24.2246,
+          "residual": -0.7146,
+          "score": 0.787,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 73.51,
+          "expected": 76.4533,
+          "residual": -2.9433,
+          "score": 1.385,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 9157,
+      "timestamp": "2024-12-02T19:05:00+00:00",
+      "scenario": "sensor_health_and_faults",
+      "fault": "sensor_drift",
+      "is_hw_fault": true,
+      "is_hw_alert": false,
+      "is_env_alert": true,
+      "detected": true,
+      "severity": "MEDIUM",
+      "score": 2.196,
+      "anomaly_source": "ENVIRONMENTAL",
+      "anomaly_source_detail": "Environmental surge corroborated across MQ135, MQ2",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 184,
+          "voltage_V": 0.898
+        },
+        "MQ9": {
+          "raw_adc": 144,
+          "voltage_V": 0.703
+        },
+        "MQ135": {
+          "raw_adc": 879,
+          "voltage_V": 4.294
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 33.75,
+        "PM2_5": 67.59,
+        "PM10": 68.79
+      },
+      "environment": {
+        "temperature_C": 21.84,
+        "humidity_pct": 80.58
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 68.79,
+          "expected": 57.7319,
+          "residual": 11.0581,
+          "score": 1.156,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 67.59,
+          "expected": 57.0686,
+          "residual": 10.5214,
+          "score": 1.11,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 33.75,
+          "expected": 28.7863,
+          "residual": 4.9637,
+          "score": 1.119,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 184.0,
+          "expected": 173.8929,
+          "residual": 10.1071,
+          "score": 2.021,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.898,
+          "expected": 0.8497,
+          "residual": 0.0483,
+          "score": 0.965,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 144.0,
+          "expected": 146.1447,
+          "residual": -2.1447,
+          "score": 0.429,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.703,
+          "expected": 0.7146,
+          "residual": -0.0116,
+          "score": 0.232,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 879.0,
+          "expected": 487.3617,
+          "residual": 391.6383,
+          "score": 3.635,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 4.294,
+          "expected": 2.3818,
+          "residual": 1.9122,
+          "score": 3.618,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 21.84,
+          "expected": 21.0852,
+          "residual": 0.7548,
+          "score": 0.932,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 80.58,
+          "expected": 85.4781,
+          "residual": -4.8981,
+          "score": 1.972,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        }
+      }
+    }
+  ],
+  "false_positives": [
+    {
+      "idx": 1517,
+      "timestamp": "2024-11-06T06:25:00+00:00",
+      "scenario": "traffic",
+      "fault": null,
+      "is_hw_fault": false,
+      "is_hw_alert": true,
+      "is_env_alert": false,
+      "detected": true,
+      "severity": "HIGH",
+      "score": 2.059,
+      "anomaly_source": "SENSOR_FAULT",
+      "anomaly_source_detail": "Sensor hardware fault on MQ9",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 189,
+          "voltage_V": 0.925
+        },
+        "MQ9": {
+          "raw_adc": 173,
+          "voltage_V": 0.846
+        },
+        "MQ135": {
+          "raw_adc": 175,
+          "voltage_V": 0.856
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 22.71,
+        "PM2_5": 46.07,
+        "PM10": 72.55
+      },
+      "environment": {
+        "temperature_C": 28.0,
+        "humidity_pct": 72.65
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 72.55,
+          "expected": 61.3601,
+          "residual": 11.1899,
+          "score": 0.982,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 46.07,
+          "expected": 37.3459,
+          "residual": 8.7241,
+          "score": 1.34,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 22.71,
+          "expected": 17.8616,
+          "residual": 4.8484,
+          "score": 1.322,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 189.0,
+          "expected": 181.0526,
+          "residual": 7.9474,
+          "score": 1.589,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.925,
+          "expected": 0.885,
+          "residual": 0.04,
+          "score": 0.799,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 173.0,
+          "expected": 154.253,
+          "residual": 18.747,
+          "score": 3.749,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.846,
+          "expected": 0.7542,
+          "residual": 0.0918,
+          "score": 1.835,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 175.0,
+          "expected": 169.3894,
+          "residual": 5.6106,
+          "score": 1.122,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 0.856,
+          "expected": 0.8289,
+          "residual": 0.0271,
+          "score": 0.543,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 28.0,
+          "expected": 27.9466,
+          "residual": 0.0534,
+          "score": 0.055,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 72.65,
+          "expected": 76.6452,
+          "residual": -3.9952,
+          "score": 0.79,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 2487,
+      "timestamp": "2024-11-09T15:15:00+00:00",
+      "scenario": "traffic",
+      "fault": null,
+      "is_hw_fault": false,
+      "is_hw_alert": true,
+      "is_env_alert": false,
+      "detected": true,
+      "severity": "HIGH",
+      "score": 1.697,
+      "anomaly_source": "SENSOR_FAULT",
+      "anomaly_source_detail": "Sensor hardware fault on MQ135",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 177,
+          "voltage_V": 0.867
+        },
+        "MQ9": {
+          "raw_adc": 158,
+          "voltage_V": 0.774
+        },
+        "MQ135": {
+          "raw_adc": 164,
+          "voltage_V": 0.803
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 18.23,
+        "PM2_5": 37.32,
+        "PM10": 53.13
+      },
+      "environment": {
+        "temperature_C": 24.11,
+        "humidity_pct": 79.59
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 53.13,
+          "expected": 81.4497,
+          "residual": -28.3197,
+          "score": 1.422,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 37.32,
+          "expected": 55.851,
+          "residual": -18.531,
+          "score": 1.477,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 18.23,
+          "expected": 28.3606,
+          "residual": -10.1306,
+          "score": 1.433,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 177.0,
+          "expected": 227.9474,
+          "residual": -50.9474,
+          "score": 1.673,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.867,
+          "expected": 1.1139,
+          "residual": -0.2469,
+          "score": 1.656,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 158.0,
+          "expected": 230.8016,
+          "residual": -72.8016,
+          "score": 1.727,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.774,
+          "expected": 1.1286,
+          "residual": -0.3546,
+          "score": 1.711,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 164.0,
+          "expected": 224.2868,
+          "residual": -60.2868,
+          "score": 2.045,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 0.803,
+          "expected": 1.0968,
+          "residual": -0.2938,
+          "score": 2.048,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 24.11,
+          "expected": 24.0898,
+          "residual": 0.0202,
+          "score": 0.026,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 79.59,
+          "expected": 84.8204,
+          "residual": -5.2304,
+          "score": 1.575,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 4431,
+      "timestamp": "2024-11-16T09:15:00+00:00",
+      "scenario": "combustion_smoke",
+      "fault": null,
+      "is_hw_fault": false,
+      "is_hw_alert": true,
+      "is_env_alert": false,
+      "detected": true,
+      "severity": "HIGH",
+      "score": 1.194,
+      "anomaly_source": "SENSOR_FAULT",
+      "anomaly_source_detail": "Sensor hardware fault on MQ2",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 545,
+          "voltage_V": 2.662
+        },
+        "MQ9": {
+          "raw_adc": 146,
+          "voltage_V": 0.715
+        },
+        "MQ135": {
+          "raw_adc": 453,
+          "voltage_V": 2.216
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 81.26,
+        "PM2_5": 198.5,
+        "PM10": 248.48
+      },
+      "environment": {
+        "temperature_C": 29.27,
+        "humidity_pct": 38.17
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 248.48,
+          "expected": 232.9598,
+          "residual": 15.5202,
+          "score": 0.25,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 198.5,
+          "expected": 164.6452,
+          "residual": 33.8548,
+          "score": 0.66,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 81.26,
+          "expected": 65.3101,
+          "residual": 15.9499,
+          "score": 0.76,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 545.0,
+          "expected": 396.0295,
+          "residual": 148.9705,
+          "score": 2.129,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 2.662,
+          "expected": 1.9352,
+          "residual": 0.7268,
+          "score": 2.112,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 146.0,
+          "expected": 150.0235,
+          "residual": -4.0235,
+          "score": 0.805,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.715,
+          "expected": 0.7325,
+          "residual": -0.0175,
+          "score": 0.35,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 453.0,
+          "expected": 346.3344,
+          "residual": 106.6656,
+          "score": 1.971,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 2.216,
+          "expected": 1.6933,
+          "residual": 0.5227,
+          "score": 1.975,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 29.27,
+          "expected": 29.1883,
+          "residual": 0.0817,
+          "score": 0.098,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 38.17,
+          "expected": 41.6092,
+          "residual": -3.4392,
+          "score": 0.563,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 5569,
+      "timestamp": "2024-11-20T08:05:00+00:00",
+      "scenario": "mixed_pollution",
+      "fault": null,
+      "is_hw_fault": false,
+      "is_hw_alert": true,
+      "is_env_alert": false,
+      "detected": true,
+      "severity": "HIGH",
+      "score": 1.454,
+      "anomaly_source": "SENSOR_FAULT",
+      "anomaly_source_detail": "Sensor hardware fault on MQ2",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 252,
+          "voltage_V": 1.233
+        },
+        "MQ9": {
+          "raw_adc": 209,
+          "voltage_V": 1.02
+        },
+        "MQ135": {
+          "raw_adc": 256,
+          "voltage_V": 1.253
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 23.2,
+        "PM2_5": 66.7,
+        "PM10": 82.6
+      },
+      "environment": {
+        "temperature_C": 29.13,
+        "humidity_pct": 39.12
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 82.6,
+          "expected": 158.2795,
+          "residual": -75.6795,
+          "score": 1.137,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 66.7,
+          "expected": 127.9941,
+          "residual": -61.2941,
+          "score": 1.184,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 23.2,
+          "expected": 42.2797,
+          "residual": -19.0797,
+          "score": 0.872,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 252.0,
+          "expected": 371.0864,
+          "residual": -119.0864,
+          "score": 2.354,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 1.233,
+          "expected": 1.8144,
+          "residual": -0.5814,
+          "score": 2.351,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 209.0,
+          "expected": 184.1144,
+          "residual": 24.8856,
+          "score": 1.939,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 1.02,
+          "expected": 0.8987,
+          "residual": 0.1213,
+          "score": 1.888,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 256.0,
+          "expected": 330.7229,
+          "residual": -74.7229,
+          "score": 1.999,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 1.253,
+          "expected": 1.617,
+          "residual": -0.364,
+          "score": 1.991,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 29.13,
+          "expected": 28.5106,
+          "residual": 0.6194,
+          "score": 0.552,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 39.12,
+          "expected": 40.8816,
+          "residual": -1.7616,
+          "score": 0.465,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 7188,
+      "timestamp": "2024-11-25T23:00:00+00:00",
+      "scenario": "seasonal_drift",
+      "fault": null,
+      "is_hw_fault": false,
+      "is_hw_alert": true,
+      "is_env_alert": false,
+      "detected": true,
+      "severity": "HIGH",
+      "score": 1.271,
+      "anomaly_source": "SENSOR_FAULT",
+      "anomaly_source_detail": "Sensor hardware fault on MQ9",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 174,
+          "voltage_V": 0.85
+        },
+        "MQ9": {
+          "raw_adc": 135,
+          "voltage_V": 0.66
+        },
+        "MQ135": {
+          "raw_adc": 168,
+          "voltage_V": 0.821
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 65.2,
+        "PM2_5": 131.59,
+        "PM10": 139.99
+      },
+      "environment": {
+        "temperature_C": 17.96,
+        "humidity_pct": 85.59
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 139.99,
+          "expected": 139.2137,
+          "residual": 0.7763,
+          "score": 0.155,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 131.59,
+          "expected": 130.234,
+          "residual": 1.356,
+          "score": 0.344,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 65.2,
+          "expected": 63.9385,
+          "residual": 1.2615,
+          "score": 0.42,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 174.0,
+          "expected": 182.2361,
+          "residual": -8.2361,
+          "score": 1.214,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.85,
+          "expected": 0.8913,
+          "residual": -0.0413,
+          "score": 0.826,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 135.0,
+          "expected": 150.3197,
+          "residual": -15.3197,
+          "score": 3.064,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.66,
+          "expected": 0.7341,
+          "residual": -0.0741,
+          "score": 1.481,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 168.0,
+          "expected": 176.6605,
+          "residual": -8.6605,
+          "score": 1.258,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 0.821,
+          "expected": 0.8639,
+          "residual": -0.0429,
+          "score": 0.859,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 17.96,
+          "expected": 17.865,
+          "residual": 0.095,
+          "score": 0.095,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 85.59,
+          "expected": 85.2131,
+          "residual": 0.3769,
+          "score": 0.103,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 9216,
+      "timestamp": "2024-12-03T00:00:00+00:00",
+      "scenario": "sensor_health_and_faults",
+      "fault": null,
+      "is_hw_fault": false,
+      "is_hw_alert": true,
+      "is_env_alert": false,
+      "detected": true,
+      "severity": "HIGH",
+      "score": 1.691,
+      "anomaly_source": "SENSOR_FAULT",
+      "anomaly_source_detail": "Sensor hardware fault on MQ135",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 177,
+          "voltage_V": 0.866
+        },
+        "MQ9": {
+          "raw_adc": 157,
+          "voltage_V": 0.766
+        },
+        "MQ135": {
+          "raw_adc": 166,
+          "voltage_V": 0.81
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 32.25,
+        "PM2_5": 64.4,
+        "PM10": 66.3
+      },
+      "environment": {
+        "temperature_C": 20.93,
+        "humidity_pct": 79.37
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 66.3,
+          "expected": 57.8152,
+          "residual": 8.4848,
+          "score": 1.697,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 64.4,
+          "expected": 56.9906,
+          "residual": 7.4094,
+          "score": 1.746,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 32.25,
+          "expected": 28.508,
+          "residual": 3.742,
+          "score": 1.247,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 177.0,
+          "expected": 174.063,
+          "residual": 2.937,
+          "score": 0.587,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.866,
+          "expected": 0.8513,
+          "residual": 0.0147,
+          "score": 0.294,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 157.0,
+          "expected": 150.756,
+          "residual": 6.244,
+          "score": 1.249,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.766,
+          "expected": 0.7363,
+          "residual": 0.0297,
+          "score": 0.594,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 166.0,
+          "expected": 416.9426,
+          "residual": -250.9426,
+          "score": 2.07,
+          "status": "ELEVATED",
+          "sensor_health": "DEGRADED"
+        },
+        "MQ135_voltage_V": {
+          "actual": 0.81,
+          "expected": 2.0375,
+          "residual": -1.2275,
+          "score": 2.067,
+          "status": "ELEVATED",
+          "sensor_health": "DEGRADED"
+        },
+        "temperature_C": {
+          "actual": 20.93,
+          "expected": 21.6029,
+          "residual": -0.6729,
+          "score": 0.746,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 79.37,
+          "expected": 82.5111,
+          "residual": -3.1411,
+          "score": 0.977,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 9372,
+      "timestamp": "2024-12-03T13:00:00+00:00",
+      "scenario": "sensor_health_and_faults",
+      "fault": null,
+      "is_hw_fault": false,
+      "is_hw_alert": true,
+      "is_env_alert": false,
+      "detected": true,
+      "severity": "HIGH",
+      "score": 11.8,
+      "anomaly_source": "SENSOR_FAULT",
+      "anomaly_source_detail": "Sensor hardware fault on MQ9",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 163,
+          "voltage_V": 0.798
+        },
+        "MQ9": {
+          "raw_adc": 149,
+          "voltage_V": 0.727
+        },
+        "MQ135": {
+          "raw_adc": 169,
+          "voltage_V": 0.826
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 35.4,
+        "PM2_5": 70.13,
+        "PM10": 73.13
+      },
+      "environment": {
+        "temperature_C": 25.31,
+        "humidity_pct": 74.48
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 73.13,
+          "expected": 69.168,
+          "residual": 3.962,
+          "score": 0.792,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 70.13,
+          "expected": 66.6844,
+          "residual": 3.4456,
+          "score": 0.842,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 35.4,
+          "expected": 33.2862,
+          "residual": 2.1138,
+          "score": 0.705,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 163.0,
+          "expected": 171.7781,
+          "residual": -8.7781,
+          "score": 1.756,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.798,
+          "expected": 0.8405,
+          "residual": -0.0425,
+          "score": 0.851,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 149.0,
+          "expected": 520.5826,
+          "residual": -371.5826,
+          "score": 12.381,
+          "status": "ANOMALOUS",
+          "sensor_health": "DEGRADED"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.727,
+          "expected": 2.3231,
+          "residual": -1.5961,
+          "score": 31.922,
+          "status": "ANOMALOUS",
+          "sensor_health": "DEGRADED"
+        },
+        "MQ135_raw_adc": {
+          "actual": 169.0,
+          "expected": 466.486,
+          "residual": -297.486,
+          "score": 2.207,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 0.826,
+          "expected": 2.2795,
+          "residual": -1.4535,
+          "score": 2.211,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 25.31,
+          "expected": 26.1223,
+          "residual": -0.8123,
+          "score": 0.67,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 74.48,
+          "expected": 67.0994,
+          "residual": 7.3806,
+          "score": 1.522,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 9381,
+      "timestamp": "2024-12-03T13:45:00+00:00",
+      "scenario": "sensor_health_and_faults",
+      "fault": null,
+      "is_hw_fault": false,
+      "is_hw_alert": true,
+      "is_env_alert": false,
+      "detected": true,
+      "severity": "HIGH",
+      "score": 1.629,
+      "anomaly_source": "SENSOR_FAULT",
+      "anomaly_source_detail": "Sensor hardware fault on MQ135",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 176,
+          "voltage_V": 0.86
+        },
+        "MQ9": {
+          "raw_adc": 151,
+          "voltage_V": 0.739
+        },
+        "MQ135": {
+          "raw_adc": 167,
+          "voltage_V": 0.816
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 35.4,
+        "PM2_5": 71.48,
+        "PM10": 74.48
+      },
+      "environment": {
+        "temperature_C": 25.17,
+        "humidity_pct": 74.47
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 74.48,
+          "expected": 68.7446,
+          "residual": 5.7354,
+          "score": 1.147,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 71.48,
+          "expected": 66.4521,
+          "residual": 5.0279,
+          "score": 1.245,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 35.4,
+          "expected": 33.1858,
+          "residual": 2.2142,
+          "score": 0.738,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 176.0,
+          "expected": 176.7505,
+          "residual": -0.7505,
+          "score": 0.15,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.86,
+          "expected": 0.8637,
+          "residual": -0.0037,
+          "score": 0.075,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 151.0,
+          "expected": 189.1772,
+          "residual": -38.1772,
+          "score": 1.268,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.739,
+          "expected": 0.7087,
+          "residual": 0.0303,
+          "score": 0.606,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 167.0,
+          "expected": 505.8721,
+          "residual": -338.8721,
+          "score": 2.416,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 0.816,
+          "expected": 2.4715,
+          "residual": -1.6555,
+          "score": 2.406,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 25.17,
+          "expected": 25.6649,
+          "residual": -0.4949,
+          "score": 0.419,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 74.47,
+          "expected": 69.0127,
+          "residual": 5.4573,
+          "score": 1.135,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 9401,
+      "timestamp": "2024-12-03T15:25:00+00:00",
+      "scenario": "sensor_health_and_faults",
+      "fault": null,
+      "is_hw_fault": false,
+      "is_hw_alert": true,
+      "is_env_alert": false,
+      "detected": true,
+      "severity": "HIGH",
+      "score": 1.754,
+      "anomaly_source": "SENSOR_FAULT",
+      "anomaly_source_detail": "Sensor hardware fault on MQ135",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 169,
+          "voltage_V": 0.828
+        },
+        "MQ9": {
+          "raw_adc": 143,
+          "voltage_V": 0.697
+        },
+        "MQ135": {
+          "raw_adc": 167,
+          "voltage_V": 0.818
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 37.15,
+        "PM2_5": 73.62,
+        "PM10": 76.62
+      },
+      "environment": {
+        "temperature_C": 23.62,
+        "humidity_pct": 78.45
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 76.62,
+          "expected": 70.2664,
+          "residual": 6.3536,
+          "score": 1.271,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 73.62,
+          "expected": 68.2983,
+          "residual": 5.3217,
+          "score": 1.458,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 37.15,
+          "expected": 34.3118,
+          "residual": 2.8382,
+          "score": 0.946,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 169.0,
+          "expected": 171.155,
+          "residual": -2.155,
+          "score": 0.431,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.828,
+          "expected": 0.8372,
+          "residual": -0.0092,
+          "score": 0.185,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 143.0,
+          "expected": 183.7008,
+          "residual": -40.7008,
+          "score": 1.327,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.697,
+          "expected": 0.7097,
+          "residual": -0.0127,
+          "score": 0.253,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 167.0,
+          "expected": 587.3955,
+          "residual": -420.3955,
+          "score": 3.02,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 0.818,
+          "expected": 2.8713,
+          "residual": -2.0533,
+          "score": 3.025,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 23.62,
+          "expected": 23.7645,
+          "residual": -0.1445,
+          "score": 0.127,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 78.45,
+          "expected": 76.8451,
+          "residual": 1.6049,
+          "score": 0.312,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 9402,
+      "timestamp": "2024-12-03T15:30:00+00:00",
+      "scenario": "sensor_health_and_faults",
+      "fault": null,
+      "is_hw_fault": false,
+      "is_hw_alert": true,
+      "is_env_alert": false,
+      "detected": true,
+      "severity": "HIGH",
+      "score": 1.676,
+      "anomaly_source": "SENSOR_FAULT",
+      "anomaly_source_detail": "Sensor hardware fault on MQ135",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 179,
+          "voltage_V": 0.876
+        },
+        "MQ9": {
+          "raw_adc": 143,
+          "voltage_V": 0.697
+        },
+        "MQ135": {
+          "raw_adc": 171,
+          "voltage_V": 0.835
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 37.15,
+        "PM2_5": 72.71,
+        "PM10": 75.71
+      },
+      "environment": {
+        "temperature_C": 23.65,
+        "humidity_pct": 79.38
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 75.71,
+          "expected": 70.4718,
+          "residual": 5.2382,
+          "score": 1.048,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 72.71,
+          "expected": 68.4895,
+          "residual": 4.2205,
+          "score": 1.199,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 37.15,
+          "expected": 34.4199,
+          "residual": 2.7301,
+          "score": 0.91,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 179.0,
+          "expected": 172.3735,
+          "residual": 6.6265,
+          "score": 1.325,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.876,
+          "expected": 0.8437,
+          "residual": 0.0323,
+          "score": 0.646,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 143.0,
+          "expected": 183.9191,
+          "residual": -40.9191,
+          "score": 1.346,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.697,
+          "expected": 0.7123,
+          "residual": -0.0153,
+          "score": 0.307,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 171.0,
+          "expected": 579.2814,
+          "residual": -408.2814,
+          "score": 3.038,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 0.835,
+          "expected": 2.8314,
+          "residual": -1.9964,
+          "score": 3.031,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 23.65,
+          "expected": 23.7636,
+          "residual": -0.1136,
+          "score": 0.1,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 79.38,
+          "expected": 77.0258,
+          "residual": 2.3542,
+          "score": 0.447,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 9403,
+      "timestamp": "2024-12-03T15:35:00+00:00",
+      "scenario": "sensor_health_and_faults",
+      "fault": null,
+      "is_hw_fault": false,
+      "is_hw_alert": true,
+      "is_env_alert": false,
+      "detected": true,
+      "severity": "HIGH",
+      "score": 1.859,
+      "anomaly_source": "SENSOR_FAULT",
+      "anomaly_source_detail": "Sensor hardware fault on MQ135",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 173,
+          "voltage_V": 0.848
+        },
+        "MQ9": {
+          "raw_adc": 147,
+          "voltage_V": 0.717
+        },
+        "MQ135": {
+          "raw_adc": 168,
+          "voltage_V": 0.823
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 37.15,
+        "PM2_5": 74.01,
+        "PM10": 77.01
+      },
+      "environment": {
+        "temperature_C": 23.64,
+        "humidity_pct": 78.29
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 77.01,
+          "expected": 70.1894,
+          "residual": 6.8206,
+          "score": 1.364,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 74.01,
+          "expected": 68.2683,
+          "residual": 5.7417,
+          "score": 1.625,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 37.15,
+          "expected": 34.3251,
+          "residual": 2.8249,
+          "score": 0.942,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 173.0,
+          "expected": 172.9126,
+          "residual": 0.0874,
+          "score": 0.017,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.848,
+          "expected": 0.8466,
+          "residual": 0.0014,
+          "score": 0.029,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 147.0,
+          "expected": 183.4133,
+          "residual": -36.4133,
+          "score": 1.19,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.717,
+          "expected": 0.7122,
+          "residual": 0.0048,
+          "score": 0.097,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 168.0,
+          "expected": 586.7149,
+          "residual": -418.7149,
+          "score": 3.106,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 0.823,
+          "expected": 2.8684,
+          "residual": -2.0454,
+          "score": 3.099,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 23.64,
+          "expected": 23.778,
+          "residual": -0.138,
+          "score": 0.122,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 78.29,
+          "expected": 76.5315,
+          "residual": 1.7585,
+          "score": 0.333,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 9404,
+      "timestamp": "2024-12-03T15:40:00+00:00",
+      "scenario": "sensor_health_and_faults",
+      "fault": null,
+      "is_hw_fault": false,
+      "is_hw_alert": true,
+      "is_env_alert": false,
+      "detected": true,
+      "severity": "HIGH",
+      "score": 1.91,
+      "anomaly_source": "SENSOR_FAULT",
+      "anomaly_source_detail": "Sensor hardware fault on MQ135",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 175,
+          "voltage_V": 0.857
+        },
+        "MQ9": {
+          "raw_adc": 150,
+          "voltage_V": 0.734
+        },
+        "MQ135": {
+          "raw_adc": 169,
+          "voltage_V": 0.828
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 37.15,
+        "PM2_5": 73.39,
+        "PM10": 76.39
+      },
+      "environment": {
+        "temperature_C": 23.58,
+        "humidity_pct": 79.05
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 76.39,
+          "expected": 69.4996,
+          "residual": 6.8904,
+          "score": 1.378,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 73.39,
+          "expected": 67.649,
+          "residual": 5.741,
+          "score": 1.613,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 37.15,
+          "expected": 34.2012,
+          "residual": 2.9488,
+          "score": 0.983,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 175.0,
+          "expected": 175.1486,
+          "residual": -0.1486,
+          "score": 0.03,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.857,
+          "expected": 0.8573,
+          "residual": -0.0003,
+          "score": 0.005,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 150.0,
+          "expected": 184.206,
+          "residual": -34.206,
+          "score": 1.119,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.734,
+          "expected": 0.718,
+          "residual": 0.016,
+          "score": 0.319,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 169.0,
+          "expected": 593.3917,
+          "residual": -424.3917,
+          "score": 3.122,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 0.828,
+          "expected": 2.9014,
+          "residual": -2.0734,
+          "score": 3.121,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 23.58,
+          "expected": 23.8593,
+          "residual": -0.2793,
+          "score": 0.246,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 79.05,
+          "expected": 76.0857,
+          "residual": 2.9643,
+          "score": 0.562,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 9405,
+      "timestamp": "2024-12-03T15:45:00+00:00",
+      "scenario": "sensor_health_and_faults",
+      "fault": null,
+      "is_hw_fault": false,
+      "is_hw_alert": true,
+      "is_env_alert": false,
+      "detected": true,
+      "severity": "HIGH",
+      "score": 1.918,
+      "anomaly_source": "SENSOR_FAULT",
+      "anomaly_source_detail": "Sensor hardware fault on MQ135",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 172,
+          "voltage_V": 0.84
+        },
+        "MQ9": {
+          "raw_adc": 152,
+          "voltage_V": 0.744
+        },
+        "MQ135": {
+          "raw_adc": 163,
+          "voltage_V": 0.796
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 37.15,
+        "PM2_5": 72.71,
+        "PM10": 75.71
+      },
+      "environment": {
+        "temperature_C": 23.31,
+        "humidity_pct": 79.04
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 75.71,
+          "expected": 69.5791,
+          "residual": 6.1309,
+          "score": 1.226,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 72.71,
+          "expected": 67.7422,
+          "residual": 4.9678,
+          "score": 1.418,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 37.15,
+          "expected": 34.222,
+          "residual": 2.928,
+          "score": 0.976,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 172.0,
+          "expected": 175.0819,
+          "residual": -3.0819,
+          "score": 0.616,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.84,
+          "expected": 0.8564,
+          "residual": -0.0164,
+          "score": 0.328,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 152.0,
+          "expected": 185.3952,
+          "residual": -33.3952,
+          "score": 1.106,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.744,
+          "expected": 0.7269,
+          "residual": 0.0171,
+          "score": 0.342,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 163.0,
+          "expected": 583.5662,
+          "residual": -420.5662,
+          "score": 3.341,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 0.796,
+          "expected": 2.8528,
+          "residual": -2.0568,
+          "score": 3.344,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 23.31,
+          "expected": 23.9309,
+          "residual": -0.6209,
+          "score": 0.555,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 79.04,
+          "expected": 75.6392,
+          "residual": 3.4008,
+          "score": 0.636,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 9406,
+      "timestamp": "2024-12-03T15:50:00+00:00",
+      "scenario": "sensor_health_and_faults",
+      "fault": null,
+      "is_hw_fault": false,
+      "is_hw_alert": true,
+      "is_env_alert": false,
+      "detected": true,
+      "severity": "HIGH",
+      "score": 2.163,
+      "anomaly_source": "SENSOR_FAULT",
+      "anomaly_source_detail": "Sensor hardware fault on MQ135",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 172,
+          "voltage_V": 0.841
+        },
+        "MQ9": {
+          "raw_adc": 146,
+          "voltage_V": 0.713
+        },
+        "MQ135": {
+          "raw_adc": 167,
+          "voltage_V": 0.814
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 37.15,
+        "PM2_5": 74.67,
+        "PM10": 77.67
+      },
+      "environment": {
+        "temperature_C": 23.56,
+        "humidity_pct": 80.54
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 77.67,
+          "expected": 69.839,
+          "residual": 7.831,
+          "score": 1.566,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 74.67,
+          "expected": 68.0379,
+          "residual": 6.6321,
+          "score": 1.884,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 37.15,
+          "expected": 34.1998,
+          "residual": 2.9502,
+          "score": 0.983,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 172.0,
+          "expected": 174.9177,
+          "residual": -2.9177,
+          "score": 0.584,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.841,
+          "expected": 0.8549,
+          "residual": -0.0139,
+          "score": 0.279,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 146.0,
+          "expected": 185.7059,
+          "residual": -39.7059,
+          "score": 1.308,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.713,
+          "expected": 0.7309,
+          "residual": -0.0179,
+          "score": 0.359,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 167.0,
+          "expected": 589.9402,
+          "residual": -422.9402,
+          "score": 3.357,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 0.814,
+          "expected": 2.8829,
+          "residual": -2.0689,
+          "score": 3.358,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 23.56,
+          "expected": 23.8967,
+          "residual": -0.3367,
+          "score": 0.299,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 80.54,
+          "expected": 76.1704,
+          "residual": 4.3696,
+          "score": 0.811,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 9407,
+      "timestamp": "2024-12-03T15:55:00+00:00",
+      "scenario": "sensor_health_and_faults",
+      "fault": null,
+      "is_hw_fault": false,
+      "is_hw_alert": true,
+      "is_env_alert": false,
+      "detected": true,
+      "severity": "HIGH",
+      "score": 1.986,
+      "anomaly_source": "SENSOR_FAULT",
+      "anomaly_source_detail": "Sensor hardware fault on MQ135",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 176,
+          "voltage_V": 0.862
+        },
+        "MQ9": {
+          "raw_adc": 138,
+          "voltage_V": 0.676
+        },
+        "MQ135": {
+          "raw_adc": 172,
+          "voltage_V": 0.84
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 37.15,
+        "PM2_5": 74.19,
+        "PM10": 77.19
+      },
+      "environment": {
+        "temperature_C": 23.53,
+        "humidity_pct": 78.82
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 77.19,
+          "expected": 70.104,
+          "residual": 7.086,
+          "score": 1.417,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 74.19,
+          "expected": 68.3381,
+          "residual": 5.8519,
+          "score": 1.648,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 37.15,
+          "expected": 34.1775,
+          "residual": 2.9725,
+          "score": 0.991,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 176.0,
+          "expected": 175.4079,
+          "residual": 0.5921,
+          "score": 0.118,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.862,
+          "expected": 0.8577,
+          "residual": 0.0043,
+          "score": 0.087,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 138.0,
+          "expected": 183.1216,
+          "residual": -45.1216,
+          "score": 1.486,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.676,
+          "expected": 0.7218,
+          "residual": -0.0458,
+          "score": 0.916,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 172.0,
+          "expected": 598.7275,
+          "residual": -426.7275,
+          "score": 3.375,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 0.84,
+          "expected": 2.9256,
+          "residual": -2.0856,
+          "score": 3.379,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 23.53,
+          "expected": 23.7796,
+          "residual": -0.2496,
+          "score": 0.221,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 78.82,
+          "expected": 76.4752,
+          "residual": 2.3448,
+          "score": 0.435,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 9408,
+      "timestamp": "2024-12-03T16:00:00+00:00",
+      "scenario": "sensor_health_and_faults",
+      "fault": null,
+      "is_hw_fault": false,
+      "is_hw_alert": true,
+      "is_env_alert": false,
+      "detected": true,
+      "severity": "HIGH",
+      "score": 2.358,
+      "anomaly_source": "SENSOR_FAULT",
+      "anomaly_source_detail": "Sensor hardware fault on MQ135",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 174,
+          "voltage_V": 0.852
+        },
+        "MQ9": {
+          "raw_adc": 155,
+          "voltage_V": 0.758
+        },
+        "MQ135": {
+          "raw_adc": 168,
+          "voltage_V": 0.82
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 38.4,
+        "PM2_5": 76.49,
+        "PM10": 79.99
+      },
+      "environment": {
+        "temperature_C": 22.5,
+        "humidity_pct": 84.99
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 79.99,
+          "expected": 71.388,
+          "residual": 8.602,
+          "score": 1.72,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 76.49,
+          "expected": 69.4766,
+          "residual": 7.0134,
+          "score": 1.989,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 38.4,
+          "expected": 34.6146,
+          "residual": 3.7854,
+          "score": 1.262,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 174.0,
+          "expected": 175.0524,
+          "residual": -1.0524,
+          "score": 0.21,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.852,
+          "expected": 0.8559,
+          "residual": -0.0039,
+          "score": 0.078,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 155.0,
+          "expected": 184.8053,
+          "residual": -29.8053,
+          "score": 0.988,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.758,
+          "expected": 0.732,
+          "residual": 0.026,
+          "score": 0.519,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 168.0,
+          "expected": 587.0819,
+          "residual": -419.0819,
+          "score": 3.513,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 0.82,
+          "expected": 2.8683,
+          "residual": -2.0483,
+          "score": 3.528,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 22.5,
+          "expected": 23.4779,
+          "residual": -0.9779,
+          "score": 0.859,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 84.99,
+          "expected": 78.3455,
+          "residual": 6.6445,
+          "score": 1.227,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 9409,
+      "timestamp": "2024-12-03T16:05:00+00:00",
+      "scenario": "sensor_health_and_faults",
+      "fault": null,
+      "is_hw_fault": false,
+      "is_hw_alert": true,
+      "is_env_alert": false,
+      "detected": true,
+      "severity": "HIGH",
+      "score": 2.219,
+      "anomaly_source": "SENSOR_FAULT",
+      "anomaly_source_detail": "Sensor hardware fault on MQ135",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 172,
+          "voltage_V": 0.842
+        },
+        "MQ9": {
+          "raw_adc": 147,
+          "voltage_V": 0.719
+        },
+        "MQ135": {
+          "raw_adc": 166,
+          "voltage_V": 0.809
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 38.4,
+        "PM2_5": 75.44,
+        "PM10": 78.94
+      },
+      "environment": {
+        "temperature_C": 22.71,
+        "humidity_pct": 84.81
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 78.94,
+          "expected": 71.1889,
+          "residual": 7.7511,
+          "score": 1.55,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 75.44,
+          "expected": 69.227,
+          "residual": 6.213,
+          "score": 1.763,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 38.4,
+          "expected": 34.8042,
+          "residual": 3.5958,
+          "score": 1.199,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 172.0,
+          "expected": 173.2635,
+          "residual": -1.2635,
+          "score": 0.253,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.842,
+          "expected": 0.8475,
+          "residual": -0.0055,
+          "score": 0.11,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 147.0,
+          "expected": 184.0678,
+          "residual": -37.0678,
+          "score": 1.22,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.719,
+          "expected": 0.7304,
+          "residual": -0.0114,
+          "score": 0.227,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 166.0,
+          "expected": 594.3672,
+          "residual": -428.3672,
+          "score": 3.583,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 0.809,
+          "expected": 2.9039,
+          "residual": -2.0949,
+          "score": 3.586,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 22.71,
+          "expected": 23.2957,
+          "residual": -0.5857,
+          "score": 0.518,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 84.81,
+          "expected": 79.7029,
+          "residual": 5.1071,
+          "score": 0.943,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 9410,
+      "timestamp": "2024-12-03T16:10:00+00:00",
+      "scenario": "sensor_health_and_faults",
+      "fault": null,
+      "is_hw_fault": false,
+      "is_hw_alert": true,
+      "is_env_alert": false,
+      "detected": true,
+      "severity": "HIGH",
+      "score": 3.166,
+      "anomaly_source": "SENSOR_FAULT",
+      "anomaly_source_detail": "Sensor hardware fault on MQ135",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 182,
+          "voltage_V": 0.889
+        },
+        "MQ9": {
+          "raw_adc": 149,
+          "voltage_V": 0.729
+        },
+        "MQ135": {
+          "raw_adc": 161,
+          "voltage_V": 0.787
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 38.4,
+        "PM2_5": 78.53,
+        "PM10": 82.03
+      },
+      "environment": {
+        "temperature_C": 22.49,
+        "humidity_pct": 85.17
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 82.03,
+          "expected": 72.3949,
+          "residual": 9.6351,
+          "score": 1.927,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 78.53,
+          "expected": 70.4063,
+          "residual": 8.1237,
+          "score": 2.322,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 38.4,
+          "expected": 34.9332,
+          "residual": 3.4668,
+          "score": 1.156,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 182.0,
+          "expected": 175.8624,
+          "residual": 6.1376,
+          "score": 1.228,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.889,
+          "expected": 0.859,
+          "residual": 0.03,
+          "score": 0.599,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 149.0,
+          "expected": 183.6603,
+          "residual": -34.6603,
+          "score": 1.141,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.729,
+          "expected": 0.7316,
+          "residual": -0.0026,
+          "score": 0.052,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 161.0,
+          "expected": 602.7996,
+          "residual": -441.7996,
+          "score": 3.666,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 0.787,
+          "expected": 2.9448,
+          "residual": -2.1578,
+          "score": 3.665,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 22.49,
+          "expected": 23.0282,
+          "residual": -0.5382,
+          "score": 0.473,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 85.17,
+          "expected": 80.5299,
+          "residual": 4.6401,
+          "score": 0.851,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 9411,
+      "timestamp": "2024-12-03T16:15:00+00:00",
+      "scenario": "sensor_health_and_faults",
+      "fault": null,
+      "is_hw_fault": false,
+      "is_hw_alert": true,
+      "is_env_alert": false,
+      "detected": true,
+      "severity": "HIGH",
+      "score": 1.983,
+      "anomaly_source": "SENSOR_FAULT",
+      "anomaly_source_detail": "Sensor hardware fault on MQ135",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 178,
+          "voltage_V": 0.871
+        },
+        "MQ9": {
+          "raw_adc": 157,
+          "voltage_V": 0.766
+        },
+        "MQ135": {
+          "raw_adc": 171,
+          "voltage_V": 0.834
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 38.4,
+        "PM2_5": 75.39,
+        "PM10": 78.89
+      },
+      "environment": {
+        "temperature_C": 22.88,
+        "humidity_pct": 85.54
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 78.89,
+          "expected": 72.6905,
+          "residual": 6.1995,
+          "score": 1.24,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 75.39,
+          "expected": 70.6175,
+          "residual": 4.7725,
+          "score": 1.343,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 38.4,
+          "expected": 35.1707,
+          "residual": 3.2293,
+          "score": 1.076,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 178.0,
+          "expected": 175.3363,
+          "residual": 2.6637,
+          "score": 0.533,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.871,
+          "expected": 0.8567,
+          "residual": 0.0143,
+          "score": 0.286,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 157.0,
+          "expected": 184.3388,
+          "residual": -27.3388,
+          "score": 0.904,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.766,
+          "expected": 0.7366,
+          "residual": 0.0294,
+          "score": 0.587,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 171.0,
+          "expected": 592.4545,
+          "residual": -421.4545,
+          "score": 3.535,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 0.834,
+          "expected": 2.8944,
+          "residual": -2.0604,
+          "score": 3.546,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 22.88,
+          "expected": 22.9598,
+          "residual": -0.0798,
+          "score": 0.07,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 85.54,
+          "expected": 81.3643,
+          "residual": 4.1757,
+          "score": 0.761,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 9412,
+      "timestamp": "2024-12-03T16:20:00+00:00",
+      "scenario": "sensor_health_and_faults",
+      "fault": null,
+      "is_hw_fault": false,
+      "is_hw_alert": true,
+      "is_env_alert": false,
+      "detected": true,
+      "severity": "HIGH",
+      "score": 2.131,
+      "anomaly_source": "SENSOR_FAULT",
+      "anomaly_source_detail": "Sensor hardware fault on MQ135",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 178,
+          "voltage_V": 0.87
+        },
+        "MQ9": {
+          "raw_adc": 142,
+          "voltage_V": 0.695
+        },
+        "MQ135": {
+          "raw_adc": 166,
+          "voltage_V": 0.809
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 38.4,
+        "PM2_5": 76.51,
+        "PM10": 80.01
+      },
+      "environment": {
+        "temperature_C": 22.68,
+        "humidity_pct": 84.7
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 80.01,
+          "expected": 72.464,
+          "residual": 7.546,
+          "score": 1.509,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 76.51,
+          "expected": 70.4117,
+          "residual": 6.0983,
+          "score": 1.713,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 38.4,
+          "expected": 35.1783,
+          "residual": 3.2217,
+          "score": 1.074,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 178.0,
+          "expected": 176.9167,
+          "residual": 1.0833,
+          "score": 0.217,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.87,
+          "expected": 0.8642,
+          "residual": 0.0058,
+          "score": 0.115,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 142.0,
+          "expected": 180.9794,
+          "residual": -38.9794,
+          "score": 1.283,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.695,
+          "expected": 0.7225,
+          "residual": -0.0275,
+          "score": 0.55,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 166.0,
+          "expected": 600.5625,
+          "residual": -434.5625,
+          "score": 3.607,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 0.809,
+          "expected": 2.9336,
+          "residual": -2.1246,
+          "score": 3.643,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 22.68,
+          "expected": 22.8963,
+          "residual": -0.2163,
+          "score": 0.192,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 84.7,
+          "expected": 81.711,
+          "residual": 2.989,
+          "score": 0.545,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 9413,
+      "timestamp": "2024-12-03T16:25:00+00:00",
+      "scenario": "sensor_health_and_faults",
+      "fault": null,
+      "is_hw_fault": false,
+      "is_hw_alert": true,
+      "is_env_alert": false,
+      "detected": true,
+      "severity": "HIGH",
+      "score": 2.1,
+      "anomaly_source": "SENSOR_FAULT",
+      "anomaly_source_detail": "Sensor hardware fault on MQ135",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 175,
+          "voltage_V": 0.855
+        },
+        "MQ9": {
+          "raw_adc": 155,
+          "voltage_V": 0.757
+        },
+        "MQ135": {
+          "raw_adc": 176,
+          "voltage_V": 0.859
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 38.4,
+        "PM2_5": 76.18,
+        "PM10": 79.68
+      },
+      "environment": {
+        "temperature_C": 22.53,
+        "humidity_pct": 85.29
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 79.68,
+          "expected": 72.3039,
+          "residual": 7.3761,
+          "score": 1.475,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 76.18,
+          "expected": 70.2962,
+          "residual": 5.8838,
+          "score": 1.646,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 38.4,
+          "expected": 35.1251,
+          "residual": 3.2749,
+          "score": 1.092,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 175.0,
+          "expected": 176.2909,
+          "residual": -1.2909,
+          "score": 0.258,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.855,
+          "expected": 0.8613,
+          "residual": -0.0063,
+          "score": 0.126,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 155.0,
+          "expected": 181.5629,
+          "residual": -26.5629,
+          "score": 0.878,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.757,
+          "expected": 0.7273,
+          "residual": 0.0297,
+          "score": 0.594,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 176.0,
+          "expected": 610.2006,
+          "residual": -434.2006,
+          "score": 3.558,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 0.859,
+          "expected": 2.9813,
+          "residual": -2.1223,
+          "score": 3.565,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 22.53,
+          "expected": 22.8447,
+          "residual": -0.3147,
+          "score": 0.277,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 85.29,
+          "expected": 81.6355,
+          "residual": 3.6545,
+          "score": 0.663,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 9414,
+      "timestamp": "2024-12-03T16:30:00+00:00",
+      "scenario": "sensor_health_and_faults",
+      "fault": null,
+      "is_hw_fault": false,
+      "is_hw_alert": true,
+      "is_env_alert": false,
+      "detected": true,
+      "severity": "HIGH",
+      "score": 2.815,
+      "anomaly_source": "SENSOR_FAULT",
+      "anomaly_source_detail": "Sensor hardware fault on MQ135",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 172,
+          "voltage_V": 0.84
+        },
+        "MQ9": {
+          "raw_adc": 145,
+          "voltage_V": 0.71
+        },
+        "MQ135": {
+          "raw_adc": 165,
+          "voltage_V": 0.805
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 38.4,
+        "PM2_5": 77.99,
+        "PM10": 81.49
+      },
+      "environment": {
+        "temperature_C": 22.48,
+        "humidity_pct": 85.09
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 81.49,
+          "expected": 72.6527,
+          "residual": 8.8373,
+          "score": 1.767,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 77.99,
+          "expected": 70.6319,
+          "residual": 7.3581,
+          "score": 2.101,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 38.4,
+          "expected": 35.1805,
+          "residual": 3.2195,
+          "score": 1.073,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 172.0,
+          "expected": 175.4775,
+          "residual": -3.4775,
+          "score": 0.696,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.84,
+          "expected": 0.8573,
+          "residual": -0.0173,
+          "score": 0.346,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 145.0,
+          "expected": 180.4357,
+          "residual": -35.4357,
+          "score": 1.169,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.71,
+          "expected": 0.7247,
+          "residual": -0.0147,
+          "score": 0.294,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 165.0,
+          "expected": 598.3368,
+          "residual": -433.3368,
+          "score": 3.26,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 0.805,
+          "expected": 2.924,
+          "residual": -2.119,
+          "score": 3.248,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 22.48,
+          "expected": 22.8184,
+          "residual": -0.3384,
+          "score": 0.295,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 85.09,
+          "expected": 81.5959,
+          "residual": 3.4941,
+          "score": 0.635,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 9415,
+      "timestamp": "2024-12-03T16:35:00+00:00",
+      "scenario": "sensor_health_and_faults",
+      "fault": null,
+      "is_hw_fault": false,
+      "is_hw_alert": true,
+      "is_env_alert": false,
+      "detected": true,
+      "severity": "HIGH",
+      "score": 1.999,
+      "anomaly_source": "SENSOR_FAULT",
+      "anomaly_source_detail": "Sensor hardware fault on MQ135",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 179,
+          "voltage_V": 0.873
+        },
+        "MQ9": {
+          "raw_adc": 150,
+          "voltage_V": 0.733
+        },
+        "MQ135": {
+          "raw_adc": 166,
+          "voltage_V": 0.81
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 38.4,
+        "PM2_5": 75.41,
+        "PM10": 78.91
+      },
+      "environment": {
+        "temperature_C": 22.57,
+        "humidity_pct": 84.53
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 78.91,
+          "expected": 71.6018,
+          "residual": 7.3082,
+          "score": 1.462,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 75.41,
+          "expected": 69.673,
+          "residual": 5.737,
+          "score": 1.63,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 38.4,
+          "expected": 35.0058,
+          "residual": 3.3942,
+          "score": 1.131,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 179.0,
+          "expected": 175.5058,
+          "residual": 3.4942,
+          "score": 0.699,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.873,
+          "expected": 0.8567,
+          "residual": 0.0163,
+          "score": 0.326,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 150.0,
+          "expected": 181.099,
+          "residual": -31.099,
+          "score": 1.024,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.733,
+          "expected": 0.7307,
+          "residual": 0.0023,
+          "score": 0.046,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 166.0,
+          "expected": 604.0775,
+          "residual": -438.0775,
+          "score": 3.287,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 0.81,
+          "expected": 2.9522,
+          "residual": -2.1422,
+          "score": 3.302,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 22.57,
+          "expected": 22.7955,
+          "residual": -0.2255,
+          "score": 0.199,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 84.53,
+          "expected": 80.9173,
+          "residual": 3.6127,
+          "score": 0.654,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 9416,
+      "timestamp": "2024-12-03T16:40:00+00:00",
+      "scenario": "sensor_health_and_faults",
+      "fault": null,
+      "is_hw_fault": false,
+      "is_hw_alert": true,
+      "is_env_alert": false,
+      "detected": true,
+      "severity": "HIGH",
+      "score": 2.086,
+      "anomaly_source": "SENSOR_FAULT",
+      "anomaly_source_detail": "Sensor hardware fault on MQ135",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 171,
+          "voltage_V": 0.836
+        },
+        "MQ9": {
+          "raw_adc": 143,
+          "voltage_V": 0.701
+        },
+        "MQ135": {
+          "raw_adc": 167,
+          "voltage_V": 0.816
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 38.4,
+        "PM2_5": 75.3,
+        "PM10": 78.8
+      },
+      "environment": {
+        "temperature_C": 22.81,
+        "humidity_pct": 84.52
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 78.8,
+          "expected": 70.8947,
+          "residual": 7.9053,
+          "score": 1.581,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 75.3,
+          "expected": 69.0817,
+          "residual": 6.2183,
+          "score": 1.759,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 38.4,
+          "expected": 34.7705,
+          "residual": 3.6295,
+          "score": 1.21,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 171.0,
+          "expected": 173.4491,
+          "residual": -2.4491,
+          "score": 0.49,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.836,
+          "expected": 0.8466,
+          "residual": -0.0106,
+          "score": 0.213,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 143.0,
+          "expected": 178.7241,
+          "residual": -35.7241,
+          "score": 1.173,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.701,
+          "expected": 0.722,
+          "residual": -0.021,
+          "score": 0.42,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 167.0,
+          "expected": 610.8588,
+          "residual": -443.8588,
+          "score": 3.33,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 0.816,
+          "expected": 2.9854,
+          "residual": -2.1694,
+          "score": 3.33,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 22.81,
+          "expected": 22.9279,
+          "residual": -0.1179,
+          "score": 0.103,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 84.52,
+          "expected": 80.3676,
+          "residual": 4.1524,
+          "score": 0.75,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 9417,
+      "timestamp": "2024-12-03T16:45:00+00:00",
+      "scenario": "sensor_health_and_faults",
+      "fault": null,
+      "is_hw_fault": false,
+      "is_hw_alert": true,
+      "is_env_alert": false,
+      "detected": true,
+      "severity": "HIGH",
+      "score": 2.853,
+      "anomaly_source": "SENSOR_FAULT",
+      "anomaly_source_detail": "Sensor hardware fault on MQ135",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 173,
+          "voltage_V": 0.847
+        },
+        "MQ9": {
+          "raw_adc": 152,
+          "voltage_V": 0.742
+        },
+        "MQ135": {
+          "raw_adc": 168,
+          "voltage_V": 0.821
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 38.4,
+        "PM2_5": 76.47,
+        "PM10": 79.97
+      },
+      "environment": {
+        "temperature_C": 22.47,
+        "humidity_pct": 86.26
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 79.97,
+          "expected": 70.6491,
+          "residual": 9.3209,
+          "score": 1.864,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 76.47,
+          "expected": 68.8942,
+          "residual": 7.5758,
+          "score": 2.108,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 38.4,
+          "expected": 34.6436,
+          "residual": 3.7564,
+          "score": 1.252,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 173.0,
+          "expected": 172.8508,
+          "residual": 0.1492,
+          "score": 0.03,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.847,
+          "expected": 0.8444,
+          "residual": 0.0026,
+          "score": 0.052,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 152.0,
+          "expected": 176.3443,
+          "residual": -24.3443,
+          "score": 0.803,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.742,
+          "expected": 0.713,
+          "residual": 0.029,
+          "score": 0.58,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 168.0,
+          "expected": 599.896,
+          "residual": -431.896,
+          "score": 3.013,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 0.821,
+          "expected": 2.9322,
+          "residual": -2.1112,
+          "score": 3.021,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 22.47,
+          "expected": 23.0051,
+          "residual": -0.5351,
+          "score": 0.471,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 86.26,
+          "expected": 79.7425,
+          "residual": 6.5175,
+          "score": 1.166,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        }
+      }
+    },
+    {
+      "idx": 9419,
+      "timestamp": "2024-12-03T16:55:00+00:00",
+      "scenario": "sensor_health_and_faults",
+      "fault": null,
+      "is_hw_fault": false,
+      "is_hw_alert": true,
+      "is_env_alert": false,
+      "detected": true,
+      "severity": "HIGH",
+      "score": 3.053,
+      "anomaly_source": "SENSOR_FAULT",
+      "anomaly_source_detail": "Sensor hardware fault on MQ135",
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 170,
+          "voltage_V": 0.831
+        },
+        "MQ9": {
+          "raw_adc": 146,
+          "voltage_V": 0.712
+        },
+        "MQ135": {
+          "raw_adc": 165,
+          "voltage_V": 0.809
+        }
+      },
+      "particulate_matter": {
+        "PM1_0": 38.4,
+        "PM2_5": 77.88,
+        "PM10": 81.38
+      },
+      "environment": {
+        "temperature_C": 22.83,
+        "humidity_pct": 85.5
+      },
+      "sensor_evidence": {
+        "PM10": {
+          "actual": 81.38,
+          "expected": 70.71,
+          "residual": 10.67,
+          "score": 2.134,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "PM2_5": {
+          "actual": 77.88,
+          "expected": 69.0143,
+          "residual": 8.8657,
+          "score": 2.451,
+          "status": "ELEVATED",
+          "sensor_health": "GOOD"
+        },
+        "PM1_0": {
+          "actual": 38.4,
+          "expected": 34.5964,
+          "residual": 3.8036,
+          "score": 1.268,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_raw_adc": {
+          "actual": 170.0,
+          "expected": 168.9061,
+          "residual": 1.0939,
+          "score": 0.219,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ2_voltage_V": {
+          "actual": 0.831,
+          "expected": 0.8256,
+          "residual": 0.0054,
+          "score": 0.109,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_raw_adc": {
+          "actual": 146.0,
+          "expected": 174.3926,
+          "residual": -28.3926,
+          "score": 0.938,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ9_voltage_V": {
+          "actual": 0.712,
+          "expected": 0.7088,
+          "residual": 0.0032,
+          "score": 0.065,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_raw_adc": {
+          "actual": 165.0,
+          "expected": 612.6229,
+          "residual": -447.6229,
+          "score": 3.01,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "MQ135_voltage_V": {
+          "actual": 0.809,
+          "expected": 2.9952,
+          "residual": -2.1862,
+          "score": 3.007,
+          "status": "ANOMALOUS",
+          "sensor_health": "GOOD"
+        },
+        "temperature_C": {
+          "actual": 22.83,
+          "expected": 22.9094,
+          "residual": -0.0794,
+          "score": 0.068,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        },
+        "humidity_pct": {
+          "actual": 85.5,
+          "expected": 80.1372,
+          "residual": 5.3628,
+          "score": 0.945,
+          "status": "NORMAL",
+          "sensor_health": "GOOD"
+        }
+      }
+    }
+  ]
+}

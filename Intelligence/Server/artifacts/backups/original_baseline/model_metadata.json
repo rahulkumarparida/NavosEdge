@@ -1,0 +1,68 @@
+{
+  "model_version": "20261002_024216",
+  "architecture": {
+    "n_features": 5,
+    "hidden1": 32,
+    "hidden2": 16,
+    "n_classes": 3,
+    "p_drop": 0.1
+  },
+  "feature_order": [
+    "MQ2_V",
+    "MQ9_V",
+    "MQ135_V",
+    "temperature_C",
+    "humidity_pct"
+  ],
+  "class_labels": [
+    "Alcohol",
+    "CleanAir",
+    "Smoke"
+  ],
+  "calibration_temperature": 2.8,
+  "preprocessing": {
+    "scaler_mean": [
+      0.6721336914256295,
+      0.972407492979325,
+      1.441889834499614,
+      30.147861136982147,
+      87.05572224989294
+    ],
+    "scaler_scale": [
+      0.14503330729167607,
+      0.1951318623402718,
+      0.2448622910921645,
+      0.1234669222114611,
+      0.49976155900005786
+    ]
+  },
+  "evaluation": {
+    "accuracy": 0.554726368159204,
+    "macro_f1": 0.3568,
+    "safety_f1": 0.9975062344139651,
+    "n_test_samples": 402
+  },
+  "expected_input_ranges": {
+    "MQ2_V": [
+      0.0,
+      5.0
+    ],
+    "MQ9_V": [
+      0.0,
+      5.0
+    ],
+    "MQ135_V": [
+      0.0,
+      5.0
+    ],
+    "temperature_C": [
+      -35.0,
+      80.0
+    ],
+    "humidity_pct": [
+      0.0,
+      100.0
+    ]
+  },
+  "export_timestamp": "2026-10-02T02:42:16.999321"
+}

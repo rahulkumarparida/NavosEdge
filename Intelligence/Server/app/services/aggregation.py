@@ -14,12 +14,21 @@ from app.schemas.sensor import SensorPayload
 
 
 from app.aqi.calculator import AQICalculator
+from app.aqi.schemas import AQICalculationResult
+from app.core.config import get_settings
+from app.core.constants import DEFAULT_AQI_STANDARD
 
 
 class AqiProcessor:
     """AQI processor using regulatory standard breakpoint calculation."""
 
-    def __init__(self, standard: str = "EPA") -> None:
+    def __init__(self, standard: str | None = None) -> None:
+        if standard is None:
+            try:
+                standard = get_settings().AQI_STANDARD
+            except Exception:
+                standard = DEFAULT_AQI_STANDARD
+        self.standard = standard
         self.calculator = AQICalculator(standard=standard)
 
     def calculate(self, pm: dict[str, float]) -> float | None:
@@ -79,15 +88,28 @@ def aggregate_intelligence(
     pipeline: PipelineResults,
     inference: InferenceResult,
     forecast: Any = None,
+    aqi_result: AQICalculationResult | None = None,
+    aqi_standard: str | None = None,
 ) -> IntelligenceResult:
     """Build the only public intelligence result from internal module outputs."""
     pm = payload.particulate_matter
-    result = IntelligenceResult(
-        aqi=AqiProcessor().calculate({
+
+    if aqi_result is not None:
+        aqi_val = aqi_result.aqi
+        effective_standard = aqi_result.calculation_method.split("_")[0]
+        data_sufficiency = aqi_result.data_sufficiency
+    else:
+        processor = AqiProcessor(standard=aqi_standard)
+        aqi_val = processor.calculate({
             "PM1_0": pm.PM1_0,
             "PM2_5": pm.PM2_5,
             "PM10": pm.PM10,
-        }),
+        })
+        effective_standard = processor.standard
+        data_sufficiency = "VALID" if aqi_val is not None else "INSUFFICIENT_DATA"
+
+    result = IntelligenceResult(
+        aqi=aqi_val,
         pm={"PM1_0": pm.PM1_0, "PM2_5": pm.PM2_5, "PM10": pm.PM10},
         temperature_C=payload.environment.temperature_C,
         humidity_pct=payload.environment.humidity_pct,
@@ -103,7 +125,9 @@ def aggregate_intelligence(
         },
     )
     advisory_input = result.model_dump(mode="python", exclude={"advisory"})
+    advisory_input["data_sufficiency"] = data_sufficiency
+    advisory_input["standard"] = effective_standard
     result.advisory = AdvisoryResult.model_validate(
-        AdvisoryEngine().evaluate(advisory_input)
+        AdvisoryEngine(standard=effective_standard).evaluate(advisory_input)
     )
     return result

@@ -21,7 +21,7 @@ from app.anomaly.detector import (
     DetectionResult,
     SystemState,
 )
-from app.anomaly.residuals import ResidualTracker
+from app.anomaly.sensor_health import _RAILED_THRESHOLDS, _VALID_RANGES
 from app.anomaly.temporal import extract_temporal_features
 from app.anomaly.window import Observation, RollingWindow
 
@@ -103,6 +103,7 @@ class _NodeState:
             min_samples_regression=min_samples_regression,
         )
         self.last_refit_time: float = 0.0
+        self.last_refit_timestamp: Optional[datetime] = None
         self.lock = threading.Lock()
 
 
@@ -180,7 +181,10 @@ class AnomalyEngine:
             # Check staleness
             newest = state.window.newest()
             if newest is not None:
-                age_min = (datetime.now(timezone.utc) - newest.timestamp).total_seconds() / 60.0
+                now_ref = datetime.now(timezone.utc)
+                if abs((now_ref - ts).total_seconds()) > 3600:
+                    now_ref = ts
+                age_min = (now_ref - newest.timestamp).total_seconds() / 60.0
                 if age_min > self.stale_data_minutes:
                     result = DetectionResult()
                     result.timestamp = ts
@@ -191,11 +195,17 @@ class AnomalyEngine:
                     ]
                     return result.to_dict()
 
-            # Periodically refit baselines
+            # Periodically refit baselines (support both wall-clock time and historical stream time)
             now_mono = time.monotonic()
-            if (now_mono - state.last_refit_time) >= self.model_update_interval_s:
+            wall_clock_due = (now_mono - state.last_refit_time) >= self.model_update_interval_s
+            stream_due = (
+                state.last_refit_timestamp is not None
+                and abs((ts - state.last_refit_timestamp).total_seconds()) >= self.model_update_interval_s
+            )
+            if wall_clock_due or stream_due or state.last_refit_time == 0.0:
                 self._refit_baselines(state)
                 state.last_refit_time = now_mono
+                state.last_refit_timestamp = ts
 
             # Run detection
             detection = state.detector.detect(obs, state.window)
@@ -230,6 +240,7 @@ class AnomalyEngine:
             # Fit baselines from loaded history
             self._refit_baselines(state)
             state.last_refit_time = time.monotonic()
+            state.last_refit_timestamp = observations[-1].timestamp if observations else None
 
             return state.window.count()
 
@@ -237,7 +248,7 @@ class AnomalyEngine:
         """Return the current system state for a node."""
         state = self._get_or_create_node(node_id)
         with state.lock:
-            return state.detector._determine_state(state.window).value
+            return state.detector._determine_state(state.window, state.last_refit_timestamp).value
 
     # ------------------------------------------------------------------
     # Internal
@@ -257,7 +268,7 @@ class AnomalyEngine:
             return self._nodes[node_id]
 
     def _refit_baselines(self, state: _NodeState) -> None:
-        """Refit regression baselines from the current window data."""
+        """Refit regression baselines from current window data, filtering corrupted/railed values."""
         window = state.window
         detector = state.detector
 
@@ -266,23 +277,34 @@ class AnomalyEngine:
             if not ts_vals:
                 continue
 
-            timestamps = [tv[0] for tv in ts_vals]
-            values = [tv[1] for tv in ts_vals]
+            railed = _RAILED_THRESHOLDS.get(feature_name)
+            vrange = _VALID_RANGES.get(feature_name)
+            filtered_ts = []
+            filtered_vals = []
+            for ts, val in ts_vals:
+                if railed is not None and (val <= railed[0] or val >= railed[1]):
+                    # Corrupted/railed reading — do not contaminate baseline
+                    continue
+                if vrange is not None and (val < vrange[0] or val > vrange[1]):
+                    # Physically impossible reading — do not contaminate baseline
+                    continue
+                filtered_ts.append(ts)
+                filtered_vals.append(val)
 
-            # Fit baseline
-            detector.baseline.fit(feature_name, timestamps, values)
+            if len(filtered_vals) < 5:
+                continue
+
+            # Fit baseline with clean observations
+            detector.baseline.fit(feature_name, filtered_ts, filtered_vals)
 
             # Rebuild residual history from fitted baseline
             if detector.baseline.has_regression(feature_name):
                 predicted = []
-                for ts in timestamps:
+                for ts, v in zip(filtered_ts, filtered_vals):
                     p = detector.baseline.predict(feature_name, ts)
-                    if p is not None:
-                        predicted.append(p)
-                    else:
-                        predicted.append(values[timestamps.index(ts)])
+                    predicted.append(p if p is not None else v)
                 detector.residuals.load_from_history(
-                    feature_name, predicted, values
+                    feature_name, predicted, filtered_vals
                 )
 
     @staticmethod

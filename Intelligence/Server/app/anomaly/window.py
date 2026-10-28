@@ -128,9 +128,9 @@ class RollingWindow:
     # --- Internal ---
 
     def _evict(self) -> None:
-        """Remove observations older than the window."""
+        """Remove observations older than the window relative to newest observation."""
         if not self._data:
             return
-        cutoff = datetime.now(timezone.utc) - timedelta(hours=self.window_hours)
+        cutoff = self._data[-1].timestamp - timedelta(hours=self.window_hours)
         while self._data and self._data[0].timestamp < cutoff:
             self._data.popleft()

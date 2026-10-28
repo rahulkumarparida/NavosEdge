@@ -1,0 +1,274 @@
+[
+  {
+    "id": "unseen_hot_dry_traffic",
+    "description": "High temperature, low humidity with traffic emissions",
+    "scenario": "TRAFFIC",
+    "expected_source": "TRAFFIC",
+    "expected_gas": "Smoke",
+    "payload": {
+      "node_id": "eval-unseen-01",
+      "timestamp": "2024-09-15T14:30:00Z",
+      "environment": {
+        "temperature_C": 38.5,
+        "humidity_pct": 28.0
+      },
+      "particulate_matter": {
+        "PM1_0": 28.0,
+        "PM2_5": 72.0,
+        "PM10": 115.0
+      },
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 360,
+          "voltage_V": 1.76
+        },
+        "MQ9": {
+          "raw_adc": 420,
+          "voltage_V": 2.05
+        },
+        "MQ135": {
+          "raw_adc": 380,
+          "voltage_V": 1.86
+        }
+      }
+    }
+  },
+  {
+    "id": "unseen_cool_humid_background",
+    "description": "Cool morning with high humidity and clean air",
+    "scenario": "CLEAN_OR_BACKGROUND",
+    "expected_source": "CLEAN_OR_BACKGROUND",
+    "expected_gas": "CleanAir",
+    "payload": {
+      "node_id": "eval-unseen-01",
+      "timestamp": "2024-09-16T05:45:00Z",
+      "environment": {
+        "temperature_C": 18.2,
+        "humidity_pct": 92.0
+      },
+      "particulate_matter": {
+        "PM1_0": 5.0,
+        "PM2_5": 11.0,
+        "PM10": 18.0
+      },
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 130,
+          "voltage_V": 0.64
+        },
+        "MQ9": {
+          "raw_adc": 120,
+          "voltage_V": 0.59
+        },
+        "MQ135": {
+          "raw_adc": 145,
+          "voltage_V": 0.71
+        }
+      }
+    }
+  },
+  {
+    "id": "unseen_construction_dust_variable_fine",
+    "description": "Construction dust with low fine PM and huge coarse PM",
+    "scenario": "CONSTRUCTION_ACTIVITY",
+    "expected_source": "CONSTRUCTION_ACTIVITY",
+    "expected_gas": "CleanAir",
+    "payload": {
+      "node_id": "eval-unseen-01",
+      "timestamp": "2024-09-17T11:00:00Z",
+      "environment": {
+        "temperature_C": 32.0,
+        "humidity_pct": 45.0
+      },
+      "particulate_matter": {
+        "PM1_0": 8.0,
+        "PM2_5": 22.0,
+        "PM10": 240.0
+      },
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 145,
+          "voltage_V": 0.71
+        },
+        "MQ9": {
+          "raw_adc": 135,
+          "voltage_V": 0.66
+        },
+        "MQ135": {
+          "raw_adc": 155,
+          "voltage_V": 0.76
+        }
+      }
+    }
+  },
+  {
+    "id": "unseen_biomass_night_inversion",
+    "description": "Heavy smoke and combustion at night with cooler temp",
+    "scenario": "BIOMASS_OR_WASTE_BURNING",
+    "expected_source": "BIOMASS_OR_WASTE_BURNING",
+    "expected_gas": "Smoke",
+    "payload": {
+      "node_id": "eval-unseen-01",
+      "timestamp": "2024-09-18T22:15:00Z",
+      "environment": {
+        "temperature_C": 22.5,
+        "humidity_pct": 78.0
+      },
+      "particulate_matter": {
+        "PM1_0": 85.0,
+        "PM2_5": 165.0,
+        "PM10": 210.0
+      },
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 580,
+          "voltage_V": 2.84
+        },
+        "MQ9": {
+          "raw_adc": 410,
+          "voltage_V": 2.0
+        },
+        "MQ135": {
+          "raw_adc": 490,
+          "voltage_V": 2.4
+        }
+      }
+    }
+  },
+  {
+    "id": "unseen_heavy_dust_storm",
+    "description": "Severe wind-blown dust with elevated temperature",
+    "scenario": "HEAVY_DUST",
+    "expected_source": "HEAVY_DUST",
+    "expected_gas": "CleanAir",
+    "payload": {
+      "node_id": "eval-unseen-01",
+      "timestamp": "2024-09-19T15:00:00Z",
+      "environment": {
+        "temperature_C": 35.0,
+        "humidity_pct": 30.0
+      },
+      "particulate_matter": {
+        "PM1_0": 18.0,
+        "PM2_5": 55.0,
+        "PM10": 460.0
+      },
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 150,
+          "voltage_V": 0.73
+        },
+        "MQ9": {
+          "raw_adc": 140,
+          "voltage_V": 0.68
+        },
+        "MQ135": {
+          "raw_adc": 160,
+          "voltage_V": 0.78
+        }
+      }
+    }
+  },
+  {
+    "id": "unseen_alcohol_solvent_indoor",
+    "description": "Solvent/alcohol vapor spike with normal PM",
+    "scenario": "INDOOR_ACTIVITY",
+    "expected_source": "INDOOR_ACTIVITY",
+    "expected_gas": "Alcohol",
+    "payload": {
+      "node_id": "eval-unseen-01",
+      "timestamp": "2024-09-20T10:30:00Z",
+      "environment": {
+        "temperature_C": 24.0,
+        "humidity_pct": 52.0
+      },
+      "particulate_matter": {
+        "PM1_0": 4.0,
+        "PM2_5": 9.0,
+        "PM10": 14.0
+      },
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 180,
+          "voltage_V": 0.88
+        },
+        "MQ9": {
+          "raw_adc": 170,
+          "voltage_V": 0.83
+        },
+        "MQ135": {
+          "raw_adc": 640,
+          "voltage_V": 3.13
+        }
+      }
+    }
+  },
+  {
+    "id": "unseen_industrial_generator_exhaust",
+    "description": "Diesel generator emissions with high CO response and PM",
+    "scenario": "INDUSTRIAL_OR_GENERATOR_EMISSIONS",
+    "expected_source": "INDUSTRIAL_OR_GENERATOR_EMISSIONS",
+    "expected_gas": "CO",
+    "payload": {
+      "node_id": "eval-unseen-01",
+      "timestamp": "2024-09-21T16:45:00Z",
+      "environment": {
+        "temperature_C": 33.0,
+        "humidity_pct": 48.0
+      },
+      "particulate_matter": {
+        "PM1_0": 45.0,
+        "PM2_5": 95.0,
+        "PM10": 135.0
+      },
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 340,
+          "voltage_V": 1.66
+        },
+        "MQ9": {
+          "raw_adc": 590,
+          "voltage_V": 2.89
+        },
+        "MQ135": {
+          "raw_adc": 390,
+          "voltage_V": 1.91
+        }
+      }
+    }
+  },
+  {
+    "id": "unseen_mixed_traffic_biomass",
+    "description": "Simultaneous traffic congestion and evening biomass burning",
+    "scenario": "MIXED_POLLUTION",
+    "expected_source": "MIXED_POLLUTION",
+    "expected_gas": "Smoke",
+    "payload": {
+      "node_id": "eval-unseen-01",
+      "timestamp": "2024-09-22T19:00:00Z",
+      "environment": {
+        "temperature_C": 26.5,
+        "humidity_pct": 68.0
+      },
+      "particulate_matter": {
+        "PM1_0": 60.0,
+        "PM2_5": 125.0,
+        "PM10": 170.0
+      },
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 480,
+          "voltage_V": 2.35
+        },
+        "MQ9": {
+          "raw_adc": 440,
+          "voltage_V": 2.15
+        },
+        "MQ135": {
+          "raw_adc": 460,
+          "voltage_V": 2.25
+        }
+      }
+    }
+  }
+]

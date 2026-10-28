@@ -1,0 +1,79 @@
+Mid evals crossed we are gonna be finalist 
+this are the things i want to update before finals
+
+-1. we will revert the changes to 791253a (origin/test) feat: Implement network IP auto-detection and .env configuration utility and make the change from it cause the display error statred comming after thjis commit from the next ones.
+
+0. We will save the data for a month beofre deleting 
+
+1. Self learning AI model which trains itself in a particular interval based on the dta saved over the past month so that it can adapt to its enviourmetn accordingly
+
+2. We will increase the accuracy of the source classifer , and gas detector so that it can predict more effciently 
+
+3. we need to figure out on how and why the displays slows down after some time cause display loks liek its lagging
+
+4. we can add the touch features as well (optional) so that screen can be changed
+
+5. Forecast model will be changed form forecasting pm2.5 valuses to the aqi forecasting
+
+6. We need to make the datasheets accoring to the enviourment in india not globally. and according to that we nedd to change datasheet labelling and the advicing way
+
+7. Also i want the advices to not be genric we need to be specific accoring to the datasheets such that its cuurently like for a specific range some advices and then that stys as is cause the variations are very less in air pollution in one area.so we wil do sometihing like this for each sppecific range and suggestion there swould be counter so that when on specfic list of suggestion reaches it another evrsion of similar advices shows.
+
+8. we will try to create more accurate datasheets for the gas source classfier so it can help a little there  
+
+
+
+Days 1–2
+
+Restore the baseline and build the simulator
+
+Verify the known-good commit, isolate the display regression, establish reproducible synthetic data, and test the existing data pipeline without physical hardware.
+
+
+
+Days 3–4
+
+Storage and adaptation
+
+Implement 30-day raw-data retention, longer-lived daily aggregates, seasonal trend analysis, and adaptive baselines with fixed safety limits.
+
+
+
+Days 5–6
+
+India-specific AQI and forecasting
+
+Verify the applicable Indian AQI rules, update the calculation and advisory configuration, and evaluate direct AQI forecasting against your current PM2.5-based approach.
+
+
+
+Days 7–8
+
+Source classifier and advisory quality
+
+Improve labelled synthetic scenarios, evaluate classification metrics, add confidence-aware outputs, and implement contextual, non-repetitive advice.
+
+
+
+Day 9
+
+Weather and clothing integration
+
+Implement Manager-side weather fetching, caching, configurable locality, and deterministic clothing recommendations.
+
+
+
+Day 10
+
+Integration and demonstration preparation
+
+Run end-to-end simulation tests, prepare before/after metrics, document limitations, and create a deployment checklist for when the physical hardware becomes available.
+
+
+
+To revert the changes if field anamolies arrive
+git checkout HEAD -- Intelligence/Server/app/anomaly/sensor_health.py
+git checkout HEAD -- Intelligence/Server/app/anomaly/detector.py
+git checkout HEAD -- Intelligence/Server/app/anomaly/engine.py
+git checkout HEAD -- Intelligence/Server/app/schemas/anomaly.py
+python -m pytest Intelligence/Server/tests -q

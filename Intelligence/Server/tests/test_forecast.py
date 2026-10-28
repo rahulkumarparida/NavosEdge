@@ -686,3 +686,28 @@ async def test_forecast_api_predict_with_horizon(client):
     if data["status"] == "ok":
         for ch in data["channels"]:
             assert len(ch["predicted_values"]) == 3  # 30/10
+
+
+def test_forecast_zero_and_negative_parameters():
+    history = _make_history(n=25)
+    # Zero or negative horizon should be safely clamped to at least 1 step
+    res_zero_h = generate_forecast(
+        records=history,
+        channels=["PM2_5"],
+        node_id="zero-h-node",
+        horizon_minutes=0,
+        sampling_interval_minutes=5,
+    )
+    assert res_zero_h.status == ForecastStatus.OK
+    assert len(res_zero_h.channels[0].predicted_values) >= 1
+
+    # Zero sampling interval should be safely clamped to avoid ZeroDivisionError
+    res_zero_si = generate_forecast(
+        records=history,
+        channels=["PM2_5"],
+        node_id="zero-si-node",
+        horizon_minutes=60,
+        sampling_interval_minutes=0,
+    )
+    assert res_zero_si.status == ForecastStatus.OK
+    assert len(res_zero_si.channels[0].predicted_values) >= 1

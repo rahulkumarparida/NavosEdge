@@ -1,0 +1,82 @@
+{
+  "metrics": {
+    "tp": 332,
+    "fp": 47,
+    "tn": 9661,
+    "fn": 16,
+    "precision": 0.876,
+    "recall": 0.954,
+    "false_positive_rate": 0.0048,
+    "f1_score": 0.9133
+  },
+  "per_fault": {
+    "rail_high": {
+      "detected": 6,
+      "total": 6,
+      "recall": 1.0,
+      "delay_minutes": 0.0
+    },
+    "rail_low": {
+      "detected": 6,
+      "total": 6,
+      "recall": 1.0,
+      "delay_minutes": 0.0
+    },
+    "sensor_drift": {
+      "detected": 273,
+      "total": 288,
+      "recall": 0.9479,
+      "delay_minutes": 45.0
+    },
+    "stuck_value": {
+      "detected": 47,
+      "total": 48,
+      "recall": 0.9792,
+      "delay_minutes": 0.0
+    }
+  },
+  "per_scenario": {
+    "clean_background": {
+      "hw_fp": 0,
+      "total_non_hw": 1440,
+      "env_events": 94,
+      "total_readings": 1440
+    },
+    "combustion_smoke": {
+      "hw_fp": 1,
+      "total_non_hw": 1152,
+      "env_events": 207,
+      "total_readings": 1152
+    },
+    "construction_dust": {
+      "hw_fp": 0,
+      "total_non_hw": 1440,
+      "env_events": 112,
+      "total_readings": 1440
+    },
+    "mixed_pollution": {
+      "hw_fp": 23,
+      "total_non_hw": 1440,
+      "env_events": 400,
+      "total_readings": 1440
+    },
+    "seasonal_drift": {
+      "hw_fp": 0,
+      "total_non_hw": 1440,
+      "env_events": 55,
+      "total_readings": 1440
+    },
+    "sensor_health_and_faults": {
+      "hw_fp": 22,
+      "total_non_hw": 1356,
+      "env_events": 301,
+      "total_readings": 1704
+    },
+    "traffic": {
+      "hw_fp": 1,
+      "total_non_hw": 1440,
+      "env_events": 310,
+      "total_readings": 1440
+    }
+  }
+}

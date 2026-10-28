@@ -3,9 +3,10 @@ venv/
 .venv/
 node_modules/
 dist/
-/tests/
+tests/
 Hardware/build/
 Hardware/third_party/
 Hardware/display/build/
 build/
 local_dataset/
+data/

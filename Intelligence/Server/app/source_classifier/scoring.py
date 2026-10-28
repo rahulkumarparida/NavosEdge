@@ -256,29 +256,149 @@ def compute_combined_scores(
     return predictions
 
 
+# Physical source archetypes for mixture and ambiguity analysis (Phase 2B)
+PARTICULATE_ARCHETYPES = {
+    SourceCategory.HEAVY_DUST.value,
+    SourceCategory.CONSTRUCTION_ACTIVITY.value,
+}
+COMBUSTION_ARCHETYPES = {
+    SourceCategory.TRAFFIC.value,
+    SourceCategory.INDUSTRIAL_OR_GENERATOR_EMISSIONS.value,
+    SourceCategory.BIOMASS_OR_WASTE_BURNING.value,
+    SourceCategory.COOKING_OR_FUEL_COMBUSTION.value,
+}
+
+
+SMOKE_ARCHETYPES = {
+    SourceCategory.BIOMASS_OR_WASTE_BURNING.value,
+    SourceCategory.COOKING_OR_FUEL_COMBUSTION.value,
+}
+ENGINE_EXHAUST_ARCHETYPES = {
+    SourceCategory.TRAFFIC.value,
+    SourceCategory.INDUSTRIAL_OR_GENERATOR_EMISSIONS.value,
+}
+
+
 def detect_mixed_pollution(
     predictions: List[Dict[str, Any]],
     config: SourceClassifierConfig,
+    features: Optional[Dict[str, Optional[float]]] = None,
 ) -> bool:
     """
     Check if the pattern suggests multiple overlapping sources.
 
-    Returns True if >= mixed_pollution_min_sources categories all have
-    scores above mixed_pollution_threshold.
+    Multi-tier detection (Phase 2B):
+      Tier 1 (Tri-source): >= 3 categories scoring above mixed_pollution_threshold (0.35).
+      Tier 2 (Dual distinct archetypes): Top 2 candidates from different physical archetypes
+             (e.g., particulate/dust vs combustion/gas) both scoring >= mixed_pollution_dual_threshold (0.35)
+             with gap <= mixed_pollution_dual_gap (0.15).
+      Tier 3 (Asymmetric weaker secondary with orthogonal evidence):
+        3A: Coarse dust (PM10 >= 140 ug/m3 or coarse_ratio >= 1.7) + active gas (MQ >= 2.05V)
+            with particulate candidate >= 0.40 and combustion candidate >= 0.28.
+        3B: Dense combustion smoke (PM2.5 >= 100 ug/m3, MQ2 >= 2.2V) + heavy engine CO (MQ9 >= 2.0V)
+            with smoke candidate >= 0.40 and engine exhaust candidate >= 0.25 (top score < 0.85).
     """
-    high_scoring = [
+    candidates = [
         p
         for p in predictions
-        if p["source"] not in (SourceCategory.UNKNOWN.value, SourceCategory.MIXED_POLLUTION.value)
-        and p["match_score"] >= config.mixed_pollution_threshold
+        if p["source"] not in (
+            SourceCategory.UNKNOWN.value,
+            SourceCategory.MIXED_POLLUTION.value,
+            SourceCategory.CLEAN_OR_BACKGROUND.value,
+        )
     ]
-    return len(high_scoring) >= config.mixed_pollution_min_sources
+
+    if not candidates:
+        return False
+
+    # Tier 1: Tri-source or more (at least 3 sources scoring above threshold)
+    tri_threshold = getattr(config, "mixed_pollution_tri_threshold", config.mixed_pollution_threshold)
+    high_scoring = [p for p in candidates if p["match_score"] >= tri_threshold]
+    if len(high_scoring) >= config.mixed_pollution_min_sources:
+        return True
+
+    # Tier 2: Dual distinct archetypes (comparable scores)
+    if len(candidates) >= 2:
+        c1, c2 = candidates[0], candidates[1]
+        s1, s2 = c1["match_score"], c2["match_score"]
+        gap = abs(s1 - s2)
+        dual_gap = getattr(config, "mixed_pollution_dual_gap", 0.15)
+        dual_thresh = getattr(config, "mixed_pollution_dual_threshold", 0.35)
+
+        if s1 >= dual_thresh and s2 >= dual_thresh and gap <= dual_gap:
+            src1, src2 = c1["source"], c2["source"]
+            is_c1_part = src1 in PARTICULATE_ARCHETYPES
+            is_c2_part = src2 in PARTICULATE_ARCHETYPES
+            is_c1_comb = src1 in COMBUSTION_ARCHETYPES
+            is_c2_comb = src2 in COMBUSTION_ARCHETYPES
+
+            # Dust/particulate co-occurring with fuel/gas combustion
+            if (is_c1_part and is_c2_comb) or (is_c1_comb and is_c2_part):
+                # If one is CONSTRUCTION_ACTIVITY and the other is fuel combustion,
+                # construction already includes diesel machinery. Only treat as mixture if gap is <= 0.10
+                if (src1 == SourceCategory.CONSTRUCTION_ACTIVITY.value and src2 in (SourceCategory.TRAFFIC.value, SourceCategory.INDUSTRIAL_OR_GENERATOR_EMISSIONS.value)) or \
+                   (src2 == SourceCategory.CONSTRUCTION_ACTIVITY.value and src1 in (SourceCategory.TRAFFIC.value, SourceCategory.INDUSTRIAL_OR_GENERATOR_EMISSIONS.value)):
+                    if gap <= 0.10 and s1 >= 0.40 and s2 >= 0.40:
+                        return True
+                else:
+                    return True
+
+            # Two distinct combustion archetypes: Biomass burning + Vehicle traffic
+            if (
+                src1 == SourceCategory.BIOMASS_OR_WASTE_BURNING.value
+                and src2 == SourceCategory.TRAFFIC.value
+            ) or (
+                src2 == SourceCategory.BIOMASS_OR_WASTE_BURNING.value
+                and src1 == SourceCategory.TRAFFIC.value
+            ):
+                return True
+
+    # Tier 3: Asymmetric weaker secondary source with orthogonal physical sensor evidence
+    if features is not None:
+        pm_coarse_ratio = features.get("pm_coarse_ratio") or 0.0
+        pm10 = features.get("pm10") or 0.0
+        pm25 = features.get("pm2_5") or 0.0
+        mq2_v = features.get("mq2_v") or 0.0
+        mq9_v = features.get("mq9_v") or 0.0
+        mq135_v = features.get("mq135_v") or 0.0
+
+        # Sub-tier 3A: Coarse dust co-occurring with elevated combustion/industrial gas
+        has_coarse_dust = pm10 >= 140.0 or pm_coarse_ratio >= 1.7
+        has_elevated_gas = mq9_v >= 2.05 or mq135_v >= 2.05 or mq2_v >= 2.05
+
+        if has_coarse_dust and has_elevated_gas:
+            part_cands = [p for p in candidates if p["source"] in PARTICULATE_ARCHETYPES and p["match_score"] >= 0.40]
+            comb_cands = [
+                p for p in candidates
+                if p["source"] in COMBUSTION_ARCHETYPES
+                and p["match_score"] >= config.mixed_pollution_weak_secondary_threshold
+            ]
+            if part_cands and comb_cands:
+                return True
+
+        # Sub-tier 3B: Dense combustion smoke co-occurring with vehicle / engine exhaust gas
+        has_dense_smoke = pm25 >= 100.0 and mq2_v >= 2.20
+        has_engine_exhaust = mq9_v >= 2.00
+        top_cand_score = candidates[0]["match_score"] if candidates else 0.0
+
+        if has_dense_smoke and has_engine_exhaust and top_cand_score < 0.85:
+            smoke_cands = [p for p in candidates if p["source"] in SMOKE_ARCHETYPES and p["match_score"] >= 0.40]
+            engine_cands = [
+                p for p in candidates
+                if p["source"] in ENGINE_EXHAUST_ARCHETYPES
+                and p["match_score"] >= config.mixed_pollution_weak_secondary_threshold
+            ]
+            if smoke_cands and engine_cands:
+                return True
+
+    return False
 
 
 def assess_uncertainty(
     predictions: List[Dict[str, Any]],
     config: SourceClassifierConfig,
     data_quality_status: str,
+    features: Optional[Dict[str, Optional[float]]] = None,
 ) -> Dict[str, Any]:
     """
     Assess whether the classification result is uncertain.
@@ -286,12 +406,18 @@ def assess_uncertainty(
     Uncertainty arises from:
       - Low top match score
       - Small gap between top two candidates
-      - Degraded data quality
+      - Degraded or invalid data quality
       - Mixed pollution
+      - Physical sensor ambiguity (Traffic vs Industrial/Generator emissions)
+      - Baseline ambiguity (Indoor activity vs Clean ambient background)
     """
     reasons: List[str] = []
 
-    non_unknown = [p for p in predictions if p["source"] != SourceCategory.UNKNOWN.value]
+    non_unknown = [
+        p
+        for p in predictions
+        if p["source"] not in (SourceCategory.UNKNOWN.value, SourceCategory.MIXED_POLLUTION.value)
+    ]
 
     if not non_unknown:
         return {"is_uncertain": True, "reason": "No candidate sources available"}
@@ -309,8 +435,38 @@ def assess_uncertainty(
     if data_quality_status in ("degraded", "invalid"):
         reasons.append(f"Data quality is {data_quality_status}")
 
-    if detect_mixed_pollution(predictions, config):
+    if detect_mixed_pollution(predictions, config, features):
         reasons.append("Multiple sources may be contributing")
+
+    # Domain-specific physical ambiguity 1: Traffic vs Industrial / Generator Emissions
+    p_traffic = next((p for p in predictions if p["source"] == SourceCategory.TRAFFIC.value), None)
+    p_industrial = next((p for p in predictions if p["source"] == SourceCategory.INDUSTRIAL_OR_GENERATOR_EMISSIONS.value), None)
+    if p_traffic and p_industrial:
+        st = p_traffic["match_score"]
+        si = p_industrial["match_score"]
+        if max(st, si) >= 0.22 and abs(st - si) <= config.traffic_generator_ambiguity_gap:
+            reasons.append(
+                "Physical sensor ambiguity: MOS sensors cannot reliably differentiate vehicle traffic emissions from stationary diesel generator exhaust without chemical speciation"
+            )
+
+    # Domain-specific physical ambiguity 2: Indoor Activity vs Clean / Background
+    p_clean = next((p for p in predictions if p["source"] == SourceCategory.CLEAN_OR_BACKGROUND.value), None)
+    p_indoor = next((p for p in predictions if p["source"] == SourceCategory.INDOOR_ACTIVITY.value), None)
+    if p_clean and p_indoor:
+        sc = p_clean["match_score"]
+        s_in = p_indoor["match_score"]
+        if max(sc, s_in) >= 0.20 and abs(sc - s_in) <= config.indoor_background_ambiguity_gap:
+            near_baseline = True
+            if features:
+                pm25 = features.get("pm2_5") or 0.0
+                mq9 = features.get("mq9_v") or 0.0
+                mq2 = features.get("mq2_v") or 0.0
+                if pm25 > 35.0 or mq9 > 1.2 or mq2 > 1.2:
+                    near_baseline = False
+            if near_baseline:
+                reasons.append(
+                    "Baseline ambiguity: Low particulate and clean baseline gas levels cannot distinguish well-ventilated indoor activity from clean ambient outdoor air"
+                )
 
     return {
         "is_uncertain": len(reasons) > 0,

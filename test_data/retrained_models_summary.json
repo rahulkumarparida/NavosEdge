@@ -1,0 +1,49 @@
+{
+  "timestamp": "2026-10-24T16:32:51.602555+00:00",
+  "gasnet": {
+    "accuracy": 0.7477777777777778,
+    "macro_f1": 0.6384960485676762,
+    "safety_f1": 0.8662131519274376,
+    "classes": [
+      "Alcohol",
+      "CO",
+      "CleanAir",
+      "Hydrogen",
+      "LPG",
+      "Methane",
+      "Propane",
+      "Smoke"
+    ],
+    "optimal_T": 1.0999999999999999,
+    "scaler_scale": [
+      0.6577353895229981,
+      0.5638561335416346,
+      0.38243255902702916,
+      8.725950210827204,
+      17.135795413186422
+    ],
+    "scaler_mean": [
+      0.9291165488865781,
+      0.697519678011969,
+      0.4249357506668838,
+      24.992989279769716,
+      59.83832858312697
+    ]
+  },
+  "source_classifier": {
+    "accuracy": 0.8277777777777777,
+    "macro_f1": 0.8233309262889119,
+    "classes": [
+      "BIOMASS_OR_WASTE_BURNING",
+      "CLEAN_OR_BACKGROUND",
+      "CONSTRUCTION_ACTIVITY",
+      "COOKING_OR_FUEL_COMBUSTION",
+      "HEAVY_DUST",
+      "INDOOR_ACTIVITY",
+      "INDUSTRIAL_OR_GENERATOR_EMISSIONS",
+      "TRAFFIC"
+    ],
+    "tree_depth": 8,
+    "n_leaves": 76
+  }
+}

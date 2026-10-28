@@ -1,0 +1,166 @@
+[
+  {
+    "id": "boundary_rail_gnd",
+    "type": "hardware_fault",
+    "expected_anomaly": true,
+    "expected_uncertainty": true,
+    "payload": {
+      "node_id": "eval-boundary-01",
+      "timestamp": "2024-09-23T12:00:00Z",
+      "environment": {
+        "temperature_C": 25.0,
+        "humidity_pct": 50.0
+      },
+      "particulate_matter": {
+        "PM1_0": 10.0,
+        "PM2_5": 20.0,
+        "PM10": 30.0
+      },
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 0,
+          "voltage_V": 0.0
+        },
+        "MQ9": {
+          "raw_adc": 180,
+          "voltage_V": 0.88
+        },
+        "MQ135": {
+          "raw_adc": 180,
+          "voltage_V": 0.88
+        }
+      }
+    }
+  },
+  {
+    "id": "boundary_rail_vcc",
+    "type": "hardware_fault",
+    "expected_anomaly": true,
+    "expected_uncertainty": true,
+    "payload": {
+      "node_id": "eval-boundary-01",
+      "timestamp": "2024-09-23T12:05:00Z",
+      "environment": {
+        "temperature_C": 25.0,
+        "humidity_pct": 50.0
+      },
+      "particulate_matter": {
+        "PM1_0": 10.0,
+        "PM2_5": 20.0,
+        "PM10": 30.0
+      },
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 1023,
+          "voltage_V": 5.0
+        },
+        "MQ9": {
+          "raw_adc": 1023,
+          "voltage_V": 5.0
+        },
+        "MQ135": {
+          "raw_adc": 1023,
+          "voltage_V": 5.0
+        }
+      }
+    }
+  },
+  {
+    "id": "boundary_extreme_heatwave",
+    "type": "environmental_boundary",
+    "expected_anomaly": false,
+    "expected_gas": "CleanAir",
+    "payload": {
+      "node_id": "eval-boundary-01",
+      "timestamp": "2024-09-23T13:30:00Z",
+      "environment": {
+        "temperature_C": 44.5,
+        "humidity_pct": 22.0
+      },
+      "particulate_matter": {
+        "PM1_0": 12.0,
+        "PM2_5": 28.0,
+        "PM10": 45.0
+      },
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 150,
+          "voltage_V": 0.73
+        },
+        "MQ9": {
+          "raw_adc": 140,
+          "voltage_V": 0.68
+        },
+        "MQ135": {
+          "raw_adc": 160,
+          "voltage_V": 0.78
+        }
+      }
+    }
+  },
+  {
+    "id": "boundary_extreme_humidity_monsoon",
+    "type": "environmental_boundary",
+    "expected_anomaly": false,
+    "expected_gas": "CleanAir",
+    "payload": {
+      "node_id": "eval-boundary-01",
+      "timestamp": "2024-09-23T06:00:00Z",
+      "environment": {
+        "temperature_C": 21.0,
+        "humidity_pct": 98.0
+      },
+      "particulate_matter": {
+        "PM1_0": 7.0,
+        "PM2_5": 16.0,
+        "PM10": 25.0
+      },
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 140,
+          "voltage_V": 0.68
+        },
+        "MQ9": {
+          "raw_adc": 130,
+          "voltage_V": 0.64
+        },
+        "MQ135": {
+          "raw_adc": 150,
+          "voltage_V": 0.73
+        }
+      }
+    }
+  },
+  {
+    "id": "ood_ambiguous_signal",
+    "type": "ood_uncertainty",
+    "expected_uncertainty": true,
+    "payload": {
+      "node_id": "eval-boundary-01",
+      "timestamp": "2024-09-23T15:00:00Z",
+      "environment": {
+        "temperature_C": 27.0,
+        "humidity_pct": 55.0
+      },
+      "particulate_matter": {
+        "PM1_0": 1.0,
+        "PM2_5": 2.0,
+        "PM10": 3.0
+      },
+      "gas_sensors": {
+        "MQ2": {
+          "raw_adc": 700,
+          "voltage_V": 3.42
+        },
+        "MQ9": {
+          "raw_adc": 120,
+          "voltage_V": 0.59
+        },
+        "MQ135": {
+          "raw_adc": 140,
+          "voltage_V": 0.68
+        }
+      }
+    }
+  }
+]

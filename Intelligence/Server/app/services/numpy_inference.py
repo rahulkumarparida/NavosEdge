@@ -19,6 +19,7 @@ import numpy as np
 
 from app.schemas.inference import InferenceResult, InferenceStatus
 from app.services.inference import InferenceAdapter
+from app.services.safety_gate import SensorSafetyGate
 
 logger = logging.getLogger(__name__)
 
@@ -152,6 +153,19 @@ class NumpyGasNetAdapter(InferenceAdapter):
     ) -> InferenceResult:
         """Synchronous MC-Dropout inference using pure NumPy."""
         t0 = time.perf_counter()
+
+        # Pre-inference safety gate validation (defense in depth)
+        gate_result = SensorSafetyGate.validate(
+            mq2_v=mq2_v,
+            mq9_v=mq9_v,
+            mq135_v=mq135_v,
+            temperature_c=temperature_c,
+            humidity_pct=humidity_pct,
+        )
+        if not gate_result.is_valid:
+            t_elapsed = (time.perf_counter() - t0) * 1000.0
+            logger.warning("TinyGasNet input safety validation failed: %s", gate_result.reason)
+            return gate_result.to_inference_result(inference_time_ms=round(t_elapsed, 2))
 
         # Preprocessing: StandardScaler transform
         x_raw = np.array(

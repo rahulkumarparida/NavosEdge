@@ -11,16 +11,19 @@ from .content import AQI_VARIANTS, SOURCE_VARIANTS, FORECAST_VARIANTS, WEATHER_V
 class AdvisoryConfig:
     """Thresholds are centralized so deployments can tune policy explicitly."""
 
+    standard: str = "CPCB"
     aqi_moderate: float = 51.0
     aqi_high: float = 101.0
-    aqi_severe: float = 151.0
-    aqi_critical: float = 201.0
-    pm25_moderate: float = 35.0
-    pm25_high: float = 55.0
-    pm25_severe: float = 150.0
-    pm10_moderate: float = 50.0
-    pm10_high: float = 100.0
-    pm10_severe: float = 250.0
+    aqi_severe: float = 201.0
+    aqi_critical: float = 301.0
+    pm25_moderate: float = 31.0
+    pm25_high: float = 61.0
+    pm25_severe: float = 91.0
+    pm25_critical: float = 121.0
+    pm10_moderate: float = 51.0
+    pm10_high: float = 101.0
+    pm10_severe: float = 251.0
+    pm10_critical: float = 351.0
     source_confidence_minimum: float = 0.60
     forecast_confidence_minimum: float = 0.50
     forecast_change_fraction: float = 0.10
@@ -28,6 +31,41 @@ class AdvisoryConfig:
     cold_temperature: float = 16.0
     humid_humidity: float = 75.0
     dry_humidity: float = 30.0
+
+    @classmethod
+    def for_standard(cls, standard: str = "CPCB") -> AdvisoryConfig:
+        std = (standard or "CPCB").upper()
+        if std == "EPA":
+            return cls(
+                standard="EPA",
+                aqi_moderate=51.0,
+                aqi_high=101.0,
+                aqi_severe=151.0,
+                aqi_critical=201.0,
+                pm25_moderate=35.0,
+                pm25_high=55.0,
+                pm25_severe=150.0,
+                pm25_critical=250.0,
+                pm10_moderate=50.0,
+                pm10_high=100.0,
+                pm10_severe=250.0,
+                pm10_critical=350.0,
+            )
+        return cls(
+            standard="CPCB",
+            aqi_moderate=51.0,
+            aqi_high=101.0,
+            aqi_severe=201.0,
+            aqi_critical=301.0,
+            pm25_moderate=31.0,
+            pm25_high=61.0,
+            pm25_severe=91.0,
+            pm25_critical=121.0,
+            pm10_moderate=51.0,
+            pm10_high=101.0,
+            pm10_severe=251.0,
+            pm10_critical=351.0,
+        )
 
 
 @dataclass(frozen=True)
@@ -78,9 +116,28 @@ def current_air_quality(data: dict[str, Any], config: AdvisoryConfig) -> LayerRe
     pm25 = _number(pm.get("PM2_5"))
     pm10 = _number(pm.get("PM10"))
     seed = _get_seed(data)
+    data_sufficiency = str(data.get("data_sufficiency") or "VALID").upper()
+    is_provisional = (data_sufficiency == "INSUFFICIENT_DATA") or bool(data.get("is_provisional"))
+
+    # Missing measurements must not be interpreted as zero pollution
+    if aqi is None and pm25 <= 0.0 and pm10 <= 0.0 and ("PM2_5" not in pm or "PM10" not in pm):
+        return LayerResult("NORMAL", "Air quality data is unavailable or unverified. Maintain standard precautions.", ("Verify sensor telemetry.",))
+
+    # If data sufficiency is incomplete, provide provisional particulate advice without claiming complete AQI
+    if is_provisional:
+        effective_val = aqi_value if aqi_value >= 0 else max(pm25, pm10)
+        if effective_val >= config.aqi_critical or pm25 >= config.pm25_critical or pm10 >= config.pm10_critical:
+            return LayerResult("CRITICAL", "Provisional PM assessment indicates critical particulate levels based on available readings. Limit exposure.", ("Avoid outdoor exposure.", "Use suitable respiratory protection."))
+        if effective_val >= config.aqi_severe or pm25 >= config.pm25_severe or pm10 >= config.pm10_severe:
+            return LayerResult("SEVERE", "Provisional PM assessment indicates high particulate pollution based on available readings.", ("Limit outdoor activity.", "Keep windows closed where practical."))
+        if effective_val >= config.aqi_high or pm25 >= config.pm25_high or pm10 >= config.pm10_high:
+            return LayerResult("HIGH", "Provisional PM assessment shows elevated particulates. Sensitive individuals should take care.", ("Reduce prolonged outdoor activity.",))
+        if effective_val >= config.aqi_moderate or pm25 >= config.pm25_moderate or pm10 >= config.pm10_moderate:
+            return LayerResult("MODERATE", "Provisional PM assessment indicates moderate particulate levels.", ("Prefer well-ventilated, lower-pollution areas.",))
+        return LayerResult("NORMAL", "Provisional PM assessment indicates acceptable particulate levels across available readings.", ())
 
     if aqi_value >= config.aqi_critical:
-        sub = _get_sub_level(aqi_value, config.aqi_critical, config.aqi_critical + 50)
+        sub = _get_sub_level(aqi_value, config.aqi_critical, config.aqi_critical + 100)
         variants = AQI_VARIANTS["CRITICAL"][sub]
         return LayerResult("CRITICAL", _pick(variants, seed), ("Avoid outdoor exposure.", "Use suitable respiratory protection."))
     if aqi_value >= config.aqi_severe or pm25 >= config.pm25_severe or pm10 >= config.pm10_severe:
@@ -94,10 +151,11 @@ def current_air_quality(data: dict[str, Any], config: AdvisoryConfig) -> LayerRe
     if aqi_value >= config.aqi_moderate or pm25 >= config.pm25_moderate or pm10 >= config.pm10_moderate:
         sub = _get_sub_level(aqi_value, config.aqi_moderate, config.aqi_high)
         variants = AQI_VARIANTS["MODERATE"][sub]
-        return LayerResult("MODERATE", _pick(variants, seed), ("Prefer well-ventilated, lower-pollution areas." ,))
+        return LayerResult("MODERATE", _pick(variants, seed), ("Prefer well-ventilated, lower-pollution areas.",))
     
     sub = _get_sub_level(max(aqi_value, 0), 0, config.aqi_moderate)
     variants = AQI_VARIANTS["NORMAL"][sub]
+    return LayerResult("NORMAL", _pick(variants, seed), ())
     return LayerResult("NORMAL", _pick(variants, seed), ())
 
 

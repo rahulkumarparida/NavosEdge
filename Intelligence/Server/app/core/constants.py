@@ -99,9 +99,9 @@ BREAKPOINTS_CPCB: Dict[str, List[Tuple[float, float, float, float]]] = {
         (430.1, 500.0, 401.0, 500.0),
     ],
 }
-BREAKPOINTS_CPCB["PM1_0"] = BREAKPOINTS_CPCB["PM2_5"]
+# Note: PM1.0 is not a regulatory pollutant in CPCB National AQI and is excluded from sub-index calculation.
 
-DEFAULT_AQI_STANDARD: str = "EPA"
+DEFAULT_AQI_STANDARD: str = "CPCB"
 
 # ------------------------------------------------------------------
 # Feature Definitions for ML & Source Classifier
