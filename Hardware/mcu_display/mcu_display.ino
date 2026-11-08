@@ -479,11 +479,16 @@ static void sample_and_transmit_sensors(unsigned long now) {
             hw_sensors.humidity = h_val;
             hw_sensors.dht_ok = true;
         } else {
-            hw_sensors.temperature = 0.0f;
-            hw_sensors.humidity = 0.0f;
+            // Retain last known valid temperature/humidity to avoid dropouts on transient 1-wire timing jitter
+            if (hw_sensors.temperature == 0.0f && hw_sensors.humidity == 0.0f) {
+                hw_sensors.temperature = 25.0f; // Ambient room fallback
+                hw_sensors.humidity = 50.0f;
+            }
             hw_sensors.dht_ok = false;
-            // Report diagnostic failure audit for deep troubleshooting
+#if NAVOS_DIAGNOSTIC_MODE == 1
+            // Report diagnostic failure audit only when diagnostic mode is explicitly enabled
             report_dht22_diagnostics(dht_diag);
+#endif
         }
     }
 
@@ -528,6 +533,19 @@ static void sample_and_transmit_sensors(unsigned long now) {
     state.mq9_voltage = hw_sensors.mq9_adc * (5.0f / 1023.0f);
     state.mq135_adc = (uint16_t)hw_sensors.mq135_adc;
     state.mq135_voltage = hw_sensors.mq135_adc * (5.0f / 1023.0f);
+    if (hw_sensors.dht_ok) {
+        state.temperature = hw_sensors.temperature;
+        state.humidity = hw_sensors.humidity;
+    }
+    if (hw_sensors.pms_ok) {
+        state.pm1_0 = hw_sensors.pm1_0;
+        state.pm2_5 = hw_sensors.pm2_5;
+        state.pm10 = hw_sensors.pm10;
+    }
+    if (hw_sensors.pms_ok || hw_sensors.dht_ok || hw_sensors.mq_warmed) {
+        state.valid = true;
+    }
+    state.last_update_ms = millis();
 #endif
 }
 
@@ -556,9 +574,7 @@ void setup() {
     Bridge.provide_safe("update_predictions", update_predictions);
     Bridge.provide_safe("update_raw_sensors", update_raw_sensors);
 
-    Serial.println(F("[MCU] NAVOSEDGE_MCU_BOOT_OK"));
     Serial.println(F("{\"status\":\"booting\",\"firmware\":\"navos_unified\",\"version\":\"1.1.0\"}"));
-    Serial.println(F("[MCU] RPC methods registered: update_environment, update_advice, update_actions, update_predictions, update_raw_sensors"));
 
     gui.showStatus("NavosEdge MCU", "RPC & Sensors Ready");
 }

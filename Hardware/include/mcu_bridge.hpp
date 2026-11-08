@@ -24,6 +24,7 @@
 #include <thread>
 #include <algorithm>
 #include <cerrno>
+#include <mutex>
 #include <nlohmann/json.hpp>
 #include "../display/state/NavosEdgeState.h"
 
@@ -104,6 +105,7 @@ public:
     }
 
     bool send_state(const NavosEdgeState& s) {
+        std::lock_guard<std::mutex> lock(rpc_mutex_);
         latest_state_ = s;
         latest_state_.valid = true;
         has_latest_state_ = true;
@@ -372,6 +374,7 @@ private:
     std::chrono::steady_clock::time_point last_unavailable_log_time_;
     NavosEdgeState latest_state_;
     bool has_latest_state_;
+    std::mutex rpc_mutex_;
 };
 
 } // namespace navos

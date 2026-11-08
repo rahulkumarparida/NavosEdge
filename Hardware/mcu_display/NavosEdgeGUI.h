@@ -88,8 +88,10 @@ public:
      * Show a connection status message (for startup/errors).
      */
     void showStatus(const char* line1, const char* line2 = nullptr);
+    void setYieldCallback(void (*cb)());
 
 private:
+    void (*_yieldCb)() = nullptr;
     uint8_t _currentScreen;
     unsigned long _lastRotateMs;
     NavosEdgeState _lastDrawnState;
@@ -124,6 +126,10 @@ private:
     void drawScreen2_Forecast(const NavosEdgeState& state);
     void drawScreen3_ModelConfidence(const NavosEdgeState& state);
     void drawScreen4_RawSensors(const NavosEdgeState& state);
+
+    // ─── Fast In-Place Dynamic Updates ───
+    void updateScreen0_Dynamic(const NavosEdgeState& state);
+    void updateScreen4_Dynamic(const NavosEdgeState& state);
 
     // ─── UI helpers ───
     void drawHeader(const char* title);

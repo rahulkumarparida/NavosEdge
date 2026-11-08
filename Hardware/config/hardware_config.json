@@ -9,5 +9,5 @@
     "scenario": "normal",
     "serial_port": "127.0.0.1:7500",
     "serial_baud": 115200,
-    "serial_timeout_ms": 5000
+    "serial_timeout_ms": 6000
 }

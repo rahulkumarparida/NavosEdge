@@ -29,6 +29,10 @@ NavosEdgeGUI::NavosEdgeGUI()
     }
 }
 
+void NavosEdgeGUI::setYieldCallback(void (*cb)()) {
+    _yieldCb = cb;
+}
+
 void NavosEdgeGUI::begin() {
 #ifdef ARDUINO
     _tft.begin();
@@ -55,8 +59,8 @@ void NavosEdgeGUI::update(const NavosEdgeState& state) {
         _lastRotateMs = now; // Reset rotation timer on startup so Screen 0 gets its full duration
     }
 
-    // Per-screen duration timing (Environment=20s, others=15s)
-    uint32_t durationMs = (_currentScreen == 0) ? 20000 : 15000;
+    // Per-screen duration timing (Environment=15s, others=15s)
+    uint32_t durationMs = 15000;
 
     if (now - _lastRotateMs >= durationMs) {
         _currentScreen = (_currentScreen + 1) % GUI_NUM_SCREENS;
@@ -68,6 +72,29 @@ void NavosEdgeGUI::update(const NavosEdgeState& state) {
 
     if (_needsFullRedraw || screenChanged) {
         forceRedraw(state);
+    } else {
+        // Fast in-place updates when state values change
+        bool stateChanged = (state.last_update_ms != _lastDrawnState.last_update_ms) ||
+                            (state.aqi != _lastDrawnState.aqi) ||
+                            (state.pm2_5 != _lastDrawnState.pm2_5) ||
+                            (state.pm10 != _lastDrawnState.pm10) ||
+                            (state.pm1_0 != _lastDrawnState.pm1_0) ||
+                            (state.temperature != _lastDrawnState.temperature) ||
+                            (state.humidity != _lastDrawnState.humidity) ||
+                            (state.mq2_adc != _lastDrawnState.mq2_adc) ||
+                            (state.mq9_adc != _lastDrawnState.mq9_adc) ||
+                            (state.mq135_adc != _lastDrawnState.mq135_adc);
+
+        if (stateChanged) {
+            _lastDrawnState = state;
+            if (_currentScreen == 0) {
+                updateScreen0_Dynamic(state);
+            } else if (_currentScreen == 4) {
+                updateScreen4_Dynamic(state);
+            } else if (_currentScreen == 1 || _currentScreen == 2 || _currentScreen == 3) {
+                forceRedraw(state);
+            }
+        }
     }
 
     // Non-blocking dust particle animation on the Environment screen
@@ -127,49 +154,13 @@ uint16_t NavosEdgeGUI::dustRand() {
 }
 
 void NavosEdgeGUI::dustInit(float aqi) {
-    // Determine particle count from AQI
-    uint8_t target = 0;
-    if (aqi <= 30.0f) {
-        target = 0;           // very clean — no particles
-    } else if (aqi <= 50.0f) {
-        target = 2;           // good — barely visible
-    } else if (aqi <= 100.0f) {
-        target = 6;           // moderate — sparse
-    } else if (aqi <= 150.0f) {
-        target = 12;          // unhealthy-sensitive — visible
-    } else if (aqi <= 200.0f) {
-        target = 18;          // unhealthy — noticeable
-    } else if (aqi <= 300.0f) {
-        target = 24;          // very unhealthy — dense
-    } else {
-        target = DUST_MAX_PARTICLES; // hazardous — maximum
-    }
-
-    if (target > DUST_MAX_PARTICLES) target = DUST_MAX_PARTICLES;
-    _dustCount = target;
-
-    // Seed initial positions spread across the background area (y=34..319)
-    _dustRng = (uint32_t)(aqi * 137 + millis());
-    for (uint8_t i = 0; i < DUST_MAX_PARTICLES; i++) {
-        if (i < _dustCount) {
-            _dust[i].active = true;
-            _dust[i].x = dustRand() % GUI_WIDTH;
-            _dust[i].y = 34 + (dustRand() % (GUI_HEIGHT - 34));
-            // Random slow drift direction
-            _dust[i].dx = (int8_t)((dustRand() % 3) - 1);  // -1, 0, +1
-            _dust[i].dy = (int8_t)((dustRand() % 3) - 1);
-            if (_dust[i].dx == 0 && _dust[i].dy == 0) _dust[i].dx = 1;
-        } else {
-            _dust[i].active = false;
-        }
-        _dustPrevX[i] = _dust[i].x;
-        _dustPrevY[i] = _dust[i].y;
-    }
-
-    _dustLastMs = millis();
+    (void)aqi;
+    // Dust particles disabled to prevent erasing borders and static card elements with GUI_BG_COLOR
+    _dustCount = 0;
 }
 
 void NavosEdgeGUI::dustTick() {
+    if (_dustCount == 0) return;
     for (uint8_t i = 0; i < _dustCount; i++) {
         if (!_dust[i].active) continue;
 
@@ -287,6 +278,67 @@ void NavosEdgeGUI::drawScreen0_Environment(const NavosEdgeState& state) {
     tftDrawString(334, 193, "NODE STATUS", GUI_LIGHT_GREY, GUI_CARD_BG, 1);
     tftDrawString(334, 215, "uno-q-001", GUI_WHITE, GUI_CARD_BG, 2);
     tftDrawString(334, 250, live ? "Active" : "Offline", live ? GUI_GOOD_GREEN : GUI_BAD_RED, GUI_CARD_BG, 2);
+    drawStatusBadge(live ? "LIVE" : "OFFLINE", live ? GUI_GOOD_GREEN : GUI_BAD_RED);
+}
+
+void NavosEdgeGUI::updateScreen0_Dynamic(const NavosEdgeState& state) {
+    bool live = state.valid && (millis() - state.last_update_ms < 60000);
+    uint16_t aCol = aqiColor(state.aqi);
+
+    // Update AQI Border & Value
+    tftDrawRect(6, 34, 180, 145, aCol);
+    tftFillRect(18, 62, 160, 48, GUI_CARD_BG);
+    char aqiBuf[16];
+    snprintf(aqiBuf, sizeof(aqiBuf), "%.0f", state.aqi);
+    tftDrawString(18, 62, aqiBuf, aCol, GUI_CARD_BG, 5);
+
+    // AQI Category pill
+    const char* catStr = "Good";
+    if (state.aqi > 300) catStr = "Hazardous";
+    else if (state.aqi > 200) catStr = "V.Unhealthy";
+    else if (state.aqi > 150) catStr = "Unhealthy";
+    else if (state.aqi > 100) catStr = "Unhealthy*";
+    else if (state.aqi > 50)  catStr = "Moderate";
+
+    tftFillRect(14, 140, 164, 32, aCol);
+    tftDrawString(20, 146, catStr, GUI_BLACK, aCol, 2);
+
+    // PM progress bars & values
+    char buf[32];
+
+    // PM10
+    drawProgressBar(248, 62, 150, 12, state.pm10, 200.0f, (state.pm10 > 50.0f ? GUI_WARN_YELLOW : GUI_GOOD_GREEN));
+    tftFillRect(406, 58, 64, 16, GUI_CARD_BG);
+    snprintf(buf, sizeof(buf), "%.1f", state.pm10);
+    tftDrawString(406, 60, buf, GUI_WHITE, GUI_CARD_BG, 1);
+
+    // PM2.5
+    drawProgressBar(248, 92, 150, 12, state.pm2_5, 150.0f, (state.pm2_5 > 35.0f ? GUI_WARN_ORANGE : GUI_GOOD_GREEN));
+    tftFillRect(406, 88, 64, 16, GUI_CARD_BG);
+    snprintf(buf, sizeof(buf), "%.1f", state.pm2_5);
+    tftDrawString(406, 90, buf, GUI_WHITE, GUI_CARD_BG, 1);
+
+    // PM1.0
+    drawProgressBar(248, 122, 150, 12, state.pm1_0, 100.0f, GUI_CYAN);
+    tftFillRect(406, 118, 64, 16, GUI_CARD_BG);
+    snprintf(buf, sizeof(buf), "%.1f", state.pm1_0);
+    tftDrawString(406, 120, buf, GUI_WHITE, GUI_CARD_BG, 1);
+
+    // Temperature value
+    tftFillRect(16, 210, 130, 42, GUI_CARD_BG);
+    snprintf(buf, sizeof(buf), "%.1f C", state.temperature);
+    drawAdaptiveString(16, 213, buf, GUI_CYAN, GUI_CARD_BG, 3, 130, 30);
+
+    // Humidity value
+    tftFillRect(175, 210, 130, 42, GUI_CARD_BG);
+    snprintf(buf, sizeof(buf), "%.1f %%", state.humidity);
+    drawAdaptiveString(175, 213, buf, GUI_YELLOW, GUI_CARD_BG, 3, 130, 30);
+
+    // Node status
+    tftFillRect(334, 248, 130, 26, GUI_CARD_BG);
+    tftDrawString(334, 250, live ? "Active" : "Offline", live ? GUI_GOOD_GREEN : GUI_BAD_RED, GUI_CARD_BG, 2);
+    // Erase previous badge area to prevent stale character trailing pixels
+    tftFillRect(415, 298, 59, 18, GUI_CARD_BG);
     drawStatusBadge(live ? "LIVE" : "OFFLINE", live ? GUI_GOOD_GREEN : GUI_BAD_RED);
 }
 
@@ -617,6 +669,71 @@ void NavosEdgeGUI::drawScreen4_RawSensors(const NavosEdgeState& state) {
     drawStatusBadge("RAW", GUI_YELLOW, -1, 312 - 24);
 }
 
+void NavosEdgeGUI::updateScreen4_Dynamic(const NavosEdgeState& state) {
+    char buf[32];
+
+    // Particulate values
+    tftFillRect(14, 70, 129, 24, GUI_CARD_BG);
+    snprintf(buf, sizeof(buf), "%.1f", state.pm1_0);
+    drawAdaptiveString(14, 72, buf, GUI_WHITE, GUI_CARD_BG, 2, 129, 20);
+
+    tftFillRect(14, 106, 129, 24, GUI_CARD_BG);
+    snprintf(buf, sizeof(buf), "%.1f", state.pm2_5);
+    drawAdaptiveString(14, 108, buf, GUI_WHITE, GUI_CARD_BG, 2, 129, 20);
+
+    tftFillRect(14, 142, 129, 24, GUI_CARD_BG);
+    snprintf(buf, sizeof(buf), "%.1f", state.pm10);
+    drawAdaptiveString(14, 144, buf, GUI_WHITE, GUI_CARD_BG, 2, 129, 20);
+
+    // Humidity & Temp values
+    tftFillRect(14, 214, 129, 24, GUI_CARD_BG);
+    snprintf(buf, sizeof(buf), "%.1f %%", state.humidity);
+    drawAdaptiveString(14, 216, buf, GUI_WHITE, GUI_CARD_BG, 2, 129, 20);
+
+    tftFillRect(14, 254, 129, 24, GUI_CARD_BG);
+    snprintf(buf, sizeof(buf), "%.1f C", state.temperature);
+    drawAdaptiveString(14, 256, buf, GUI_WHITE, GUI_CARD_BG, 2, 129, 20);
+
+    // MQ Gas Sensors values
+    // MQ2
+    tftFillRect(165, 74, 152, 40, GUI_CARD_BG);
+    snprintf(buf, sizeof(buf), "ADC: %u", state.mq2_adc);
+    drawAdaptiveString(165, 76, buf, GUI_WHITE, GUI_CARD_BG, 2, 152, 16);
+    snprintf(buf, sizeof(buf), "V: %.2f", state.mq2_voltage);
+    drawAdaptiveString(165, 96, buf, GUI_LIGHT_GREY, GUI_CARD_BG, 2, 152, 16);
+
+    // MQ9
+    tftFillRect(165, 136, 152, 40, GUI_CARD_BG);
+    snprintf(buf, sizeof(buf), "ADC: %u", state.mq9_adc);
+    drawAdaptiveString(165, 138, buf, GUI_WHITE, GUI_CARD_BG, 2, 152, 16);
+    snprintf(buf, sizeof(buf), "V: %.2f", state.mq9_voltage);
+    drawAdaptiveString(165, 158, buf, GUI_LIGHT_GREY, GUI_CARD_BG, 2, 152, 16);
+
+    // MQ135
+    tftFillRect(165, 198, 152, 40, GUI_CARD_BG);
+    snprintf(buf, sizeof(buf), "ADC: %u", state.mq135_adc);
+    drawAdaptiveString(165, 200, buf, GUI_WHITE, GUI_CARD_BG, 2, 152, 16);
+    snprintf(buf, sizeof(buf), "V: %.2f", state.mq135_voltage);
+    drawAdaptiveString(165, 220, buf, GUI_LIGHT_GREY, GUI_CARD_BG, 2, 152, 16);
+
+    // Air Quality hero on right
+    uint16_t aCol = aqiColor(state.aqi);
+    tftDrawRect(331, 34, 143, 278, aCol);
+    tftFillRect(339, 96, 127, 48, GUI_CARD_BG);
+    snprintf(buf, sizeof(buf), "%.0f", state.aqi);
+    tftDrawString(339, 100, buf, aCol, GUI_CARD_BG, 5);
+
+    const char* catStr = "Good";
+    if (state.aqi > 300) catStr = "Hazardous";
+    else if (state.aqi > 200) catStr = "V.Unhealthy";
+    else if (state.aqi > 150) catStr = "Unhealthy";
+    else if (state.aqi > 100) catStr = "Unhealthy*";
+    else if (state.aqi > 50)  catStr = "Moderate";
+
+    tftFillRect(339, 180, 127, 32, aCol);
+    tftDrawString(345, 186, catStr, GUI_BLACK, aCol, 2);
+}
+
 // ─────────────────────────────────────────────────────────────
 // UI Helpers
 // ─────────────────────────────────────────────────────────────
@@ -657,6 +774,18 @@ void NavosEdgeGUI::drawAdaptiveString(int16_t x, int16_t y, const char* str,
             break;
         }
         size--;
+    }
+
+    // Safety guard: if even size 1 exceeds maxWidth, truncate safely
+    int maxChars = maxWidth / (6 * size);
+    if (maxChars < 1) maxChars = 1;
+    if (len > maxChars) {
+        char buf[64];
+        int copyLen = (maxChars < 63) ? maxChars : 63;
+        strncpy(buf, str, copyLen);
+        buf[copyLen] = '\0';
+        tftDrawString(x, y, buf, color, bg, size);
+        return;
     }
 
     tftDrawString(x, y, str, color, bg, size);

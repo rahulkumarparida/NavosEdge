@@ -121,6 +121,9 @@ cleanup() {
         fi
     done
     wait 2>/dev/null || true
+    if command -v systemctl >/dev/null 2>&1 && [ -f /lib/systemd/system/arduino-router-serial.service ]; then
+        sudo -n systemctl start arduino-router-serial.service 2>/dev/null || true
+    fi
     echo "[DONE] All processes stopped."
     exit 0
 }
@@ -217,6 +220,11 @@ step "Checking physical hardware..."
 if [[ "$SERIAL_PORT" =~ :[0-9]+$ ]] || [[ "$SERIAL_PORT" =~ ^tcp:// ]]; then
     # TCP endpoint (e.g. 127.0.0.1:7500 on UNO Q monitor proxy)
     echo "  [ OK ] Router monitor proxy endpoint configured: $SERIAL_PORT"
+    # Resolve conflict: arduino-router-serial consumes port 7500 exclusively
+    if command -v systemctl >/dev/null 2>&1 && systemctl is-active --quiet arduino-router-serial.service 2>/dev/null; then
+        echo "  [INFO] Stopping conflicting arduino-router-serial.service on port 7500..."
+        sudo -n systemctl stop arduino-router-serial.service arduino-router-serial.path 2>/dev/null || true
+    fi
 elif [ -S "$SERIAL_PORT" ] || [[ "$SERIAL_PORT" =~ \.sock$ ]] || [[ "$SERIAL_PORT" =~ ^unix:// ]]; then
     if [ -S "$SERIAL_PORT" ] || [ -e "$SERIAL_PORT" ]; then
         echo "  [ OK ] Router monitor socket found: $SERIAL_PORT"
@@ -445,7 +453,7 @@ cat > "$HW_RUNTIME_CONFIG" <<EOF
     "scenario": "normal",
     "serial_port": "${SERIAL_PORT}",
     "serial_baud": 115200,
-    "serial_timeout_ms": 5000
+    "serial_timeout_ms": 6000
 }
 EOF
 
@@ -598,11 +606,13 @@ try:
 
     # Source prediction
     preds = d.get('predictions', {})
-    if isinstance(preds, dict) and preds.get('source', {}).get('value'):
+    if isinstance(preds, dict) and isinstance(preds.get('source'), dict):
         src = preds['source']
-        conf = src.get('confidence', 0)
-        conf_pct = f'{conf*100:.0f}%' if isinstance(conf, (int, float)) else str(conf)
-        print(f'│  🔍 Source:    {src["value"]}  (confidence: {conf_pct})')
+        src_val = src.get('value')
+        if src_val:
+            conf = src.get('confidence', 0)
+            conf_pct = f'{conf*100:.0f}%' if isinstance(conf, (int, float)) else str(conf)
+            print(f'│  🔍 Source:    {src_val}  (confidence: {conf_pct})')
 
 except Exception as e:
     print(f'│  ⚠️  Parse error: {e}')

@@ -427,6 +427,11 @@ private:
 
     void transmit_reading() {
         SensorData data = sensor_->read();
+        if (data.pm1_0 < 0.0) {
+            std::cerr << "[HW] Serial sensor read failed or timed out — skipping transmission\n";
+            return;
+        }
+
         app_state_.mq2_adc = (uint16_t)data.mq2_raw_adc;
         app_state_.mq2_voltage = (float)data.mq2_voltage_v;
         app_state_.mq9_adc = (uint16_t)data.mq9_raw_adc;

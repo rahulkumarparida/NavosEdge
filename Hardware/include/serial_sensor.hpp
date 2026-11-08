@@ -85,8 +85,6 @@ public:
         // Read a complete JSON line from the Arduino
         std::string line;
         if (!read_line(line)) {
-            // If the port was closed due to peer disconnect during read_line,
-            // attempt an immediate reconnect
             if (fd_ < 0 && open_port()) {
                 read_line(line);
             }
@@ -504,6 +502,8 @@ private:
         if (fd_ < 0) return false;
 
         auto start = std::chrono::steady_clock::now();
+        std::string latest_json;
+        bool found_json = false;
 
         while (true) {
             // Check if buffer already contains a complete line
@@ -515,28 +515,44 @@ private:
                 if (!candidate.empty() && candidate.back() == '\r') {
                     candidate.pop_back();
                 }
-                // Skip empty lines or malformed lines
-                if (candidate.empty() || candidate[0] != '{') {
-                    if (candidate.find("NAVOSEDGE_MCU_TEST") != std::string::npos) {
-                        std::cout << "[SERIAL] Diagnostic beacon received: " << candidate << "\n";
-                    } else if (candidate.find("[MCU]") != std::string::npos) {
-                        std::cout << "[SERIAL] MCU log received: " << candidate << "\n";
-                    }
-                    continue; // Try next line
+                size_t first = candidate.find_first_not_of(" \t\r\n");
+                if (first == std::string::npos) {
+                    continue; // Skip whitespace/empty lines
                 }
-                // If this is an Arduino hardware status/boot message, log it immediately
-                if (candidate.find("\"status\"") != std::string::npos) {
-                    std::cout << "[SERIAL] Arduino hardware message: " << candidate << "\n";
-                    continue; // Continue to read actual sensor frame
-                }
+                std::string trimmed = candidate.substr(first);
 
-                // If another complete line is already queued, discard the older sensor frame
-                // to ensure the application always processes the freshest real-time reading
-                if (read_buffer_.find('\n') != std::string::npos) {
+                // Check for diagnostic beacon or MCU/DHT22 log
+                if (trimmed.find("NAVOSEDGE_MCU_TEST") != std::string::npos) {
+                    std::cout << "[SERIAL] Diagnostic beacon received: " << trimmed << "\n";
+                    continue;
+                }
+                if (trimmed.find("[MCU]") != std::string::npos || trimmed.find("[DHT22]") != std::string::npos) {
+                    std::cout << "[SERIAL] MCU log received: " << trimmed << "\n";
                     continue;
                 }
 
-                line = std::move(candidate);
+                // If this is an Arduino hardware status/boot message, log it immediately
+                if (trimmed.find("\"status\"") != std::string::npos) {
+                    std::cout << "[SERIAL] Arduino hardware message: " << trimmed << "\n";
+                    continue; // Continue to read actual sensor frame
+                }
+
+                // Check if this is a valid JSON frame (starts with '{')
+                if (trimmed[0] == '{') {
+                    latest_json = std::move(trimmed);
+                    found_json = true;
+                    // Continue processing buffer in case a fresher frame is queued
+                    continue;
+                }
+
+                // Any other non-JSON line
+                std::cout << "[SERIAL] [MCU LOG] " << trimmed << "\n";
+                continue;
+            }
+
+            // All currently buffered complete lines have been evaluated
+            if (found_json) {
+                line = std::move(latest_json);
                 return true;
             }
 

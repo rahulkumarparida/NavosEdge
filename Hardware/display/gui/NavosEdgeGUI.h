@@ -125,6 +125,10 @@ private:
     void drawScreen3_ModelConfidence(const NavosEdgeState& state);
     void drawScreen4_RawSensors(const NavosEdgeState& state);
 
+    // ─── Fast In-Place Dynamic Updates ───
+    void updateScreen0_Dynamic(const NavosEdgeState& state);
+    void updateScreen4_Dynamic(const NavosEdgeState& state);
+
     // ─── UI helpers ───
     void drawHeader(const char* title);
     void drawStatusBadge(const char* badgeStr, uint16_t badgeColor, int16_t overrideX = -1, int16_t overrideY = -1);

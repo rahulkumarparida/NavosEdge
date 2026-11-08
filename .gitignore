@@ -5,7 +5,8 @@ node_modules/
 dist/
 tests/
 Hardware/build/
-Hardware/third_party/
+Hardware/third_party/*
+!Hardware/third_party/UNOQ_MPI3501/
 Hardware/display/build/
 build/
 local_dataset/
