@@ -117,6 +117,17 @@ async def test_get_latest_after_submit(client, sample_payload):
     data = resp.json()
     assert set(data) == {"aqi", "pm", "temperature_C", "humidity_pct", "predictions", "advisory"}
 
+    # Dynamic language localization query parameter (?lang=hi, ?lang=or)
+    resp_hi = await client.get(f"/api/v1/nodes/{node_id}/latest?lang=hi")
+    assert resp_hi.status_code == 200
+    data_hi = resp_hi.json()
+    assert any(w in data_hi["advisory"]["advice"] for w in ("हवा", "वायु", "प्रदूषण"))
+
+    resp_or = await client.get(f"/api/v1/nodes/{node_id}/latest?lang=or")
+    assert resp_or.status_code == 200
+    data_or = resp_or.json()
+    assert any(w in data_or["advisory"]["advice"] for w in ("ବାୟୁ", "ପ୍ରଦୂଷଣ"))
+
 
 @pytest.mark.asyncio
 async def test_get_latest_unknown_node(client):

@@ -127,7 +127,30 @@ def aggregate_intelligence(
     advisory_input = result.model_dump(mode="python", exclude={"advisory"})
     advisory_input["data_sufficiency"] = data_sufficiency
     advisory_input["standard"] = effective_standard
+    try:
+        gas = payload.gas_sensors
+        advisory_input["gas_sensors"] = {
+            "MQ2_V": getattr(getattr(gas, "MQ2", None), "voltage_V", None),
+            "MQ9_V": getattr(getattr(gas, "MQ9", None), "voltage_V", None),
+            "MQ135_V": getattr(getattr(gas, "MQ135", None), "voltage_V", None),
+            "MQ2_adc": getattr(getattr(gas, "MQ2", None), "raw_adc", None),
+            "MQ9_adc": getattr(getattr(gas, "MQ9", None), "raw_adc", None),
+            "MQ135_adc": getattr(getattr(gas, "MQ135", None), "raw_adc", None),
+        }
+    except AttributeError:
+        pass
+
+    if inference is not None:
+        advisory_input["gas_inference"] = {
+            "gas_class": getattr(inference, "gas_class", None),
+            "class_confidence": getattr(inference, "class_confidence", None),
+            "safety_status": getattr(inference, "safety_status", None),
+            "safety_confidence": getattr(inference, "safety_confidence", None),
+        }
+
+    import os
+    advisory_lang = os.getenv("NAVOS_ADVISORY_LANGUAGE", "en")
     result.advisory = AdvisoryResult.model_validate(
-        AdvisoryEngine(standard=effective_standard).evaluate(advisory_input)
+        AdvisoryEngine(standard=effective_standard, language=advisory_lang).evaluate(advisory_input)
     )
     return result

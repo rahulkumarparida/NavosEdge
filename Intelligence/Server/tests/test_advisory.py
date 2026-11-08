@@ -172,3 +172,157 @@ def test_missing_measurements_not_interpreted_as_zero_pollution():
     }
     result = AdvisoryEngine().evaluate(r)
     assert "unavailable" in result["advice"].lower() or "unverified" in result["advice"].lower()
+
+
+# =====================================================================
+# Phase 4.1: Acute Gas Hazard & Toxic Spike Detection Tests
+# =====================================================================
+
+
+def test_mq9_carbon_monoxide_spike_escalates_to_critical():
+    # PM2.5 is low (clean air), but MQ-9 reads 3.3V (critical CO concentration)
+    r = reading(aqi=20, pm25=12.0, pm10=25.0)
+    r["mq9_v"] = 3.30
+    result = AdvisoryEngine().evaluate(r)
+
+    assert result["severity"] == "CRITICAL"
+    assert "carbon monoxide" in result["advice"].lower() or "co" in result["advice"].lower()
+    assert any("evacuate" in action.lower() for action in result["actions"])
+    assert any("ventilate" in action.lower() for action in result["actions"])
+    assert set(result) == {"severity", "advice", "actions", "weather_advice"}
+
+
+def test_mq2_flammable_lpg_spike_escalates_to_critical():
+    # Low particulate reading with MQ-2 at 3.5V (critical combustible/LPG leak)
+    r = reading(aqi=25, pm25=14.0)
+    r["gas_sensors"] = {"MQ2_V": 3.50, "MQ9_V": 0.80, "MQ135_V": 0.90}
+    result = AdvisoryEngine().evaluate(r)
+
+    assert result["severity"] == "CRITICAL"
+    assert "combustible" in result["advice"].lower() or "flammable" in result["advice"].lower() or "gas" in result["advice"].lower()
+    assert any("switches" in action.lower() or "flames" in action.lower() for action in result["actions"])
+    assert any("evacuate" in action.lower() for action in result["actions"])
+
+
+def test_mq135_toxic_voc_spike_escalates_to_critical():
+    # Clean PM baseline, MQ-135 at 3.4V (critical toxic chemical vapors / VOCs)
+    r = reading(aqi=30, pm25=15.0)
+    r["mq135_v"] = 3.40
+    result = AdvisoryEngine().evaluate(r)
+
+    assert result["severity"] == "CRITICAL"
+    assert "chemical" in result["advice"].lower() or "voc" in result["advice"].lower() or "toxic" in result["advice"].lower()
+    assert any("chemical" in action.lower() or "ventilation" in action.lower() for action in result["actions"])
+
+
+def test_rate_of_change_gas_spike_escalation():
+    # Ambient voltages are moderate, but rate-of-change shows a sudden surge >= 0.8V
+    r = reading(aqi=20, pm25=10.0)
+    r["mq9_v"] = 2.0  # normally moderate
+    r["mq9_delta_v"] = 0.85  # rapid surge
+    result = AdvisoryEngine().evaluate(r)
+
+    # Escalates beyond moderate due to rapid spike
+    assert result["severity"] in ("HIGH", "SEVERE", "CRITICAL")
+    assert any(term in result["advice"].lower() for term in ("surge", "spike", "carbon monoxide"))
+
+
+def test_neural_inference_hazard_escalation():
+    # Particulates are low, but TinyGasNet model flags hazardous CO
+    r = reading(aqi=25, pm25=12.0)
+    r["gas_inference"] = {
+        "gas_class": "CO",
+        "safety_status": "hazardous",
+        "safety_confidence": 0.90,
+    }
+    result = AdvisoryEngine().evaluate(r)
+
+    assert result["severity"] in ("HIGH", "SEVERE", "CRITICAL")
+    assert "co" in result["advice"].lower() or "carbon monoxide" in result["advice"].lower()
+
+
+def test_sensor_fault_rails_rejected_without_false_gas_alarm():
+    # Readings < 0.10V (GND short) or > 4.90V (VCC short) are sensor faults, NOT gas leaks
+    r_gnd = reading(aqi=20, pm25=12.0)
+    r_gnd["mq9_v"] = 0.05  # Ground short
+    res_gnd = AdvisoryEngine().evaluate(r_gnd)
+    assert res_gnd["severity"] == "NORMAL"
+
+    r_vcc = reading(aqi=20, pm25=12.0)
+    r_vcc["mq2_v"] = 4.95  # VCC rail short
+    res_vcc = AdvisoryEngine().evaluate(r_vcc)
+    assert res_vcc["severity"] == "NORMAL"
+
+
+def test_gas_hazard_overrides_particulate_window_sealing():
+    # Severe particulates would normally prescribe "Keep windows closed",
+    # but a severe gas leak requires ventilation and evacuation!
+    r = reading(aqi=250, pm25=105.0, pm10=300.0)
+    r["mq9_v"] = 3.30  # Critical CO leak
+    result = AdvisoryEngine().evaluate(r)
+
+    assert result["severity"] == "CRITICAL"
+    # Gas evacuation actions must be present
+    assert any("evacuate" in a.lower() for a in result["actions"])
+    # Contradictory particulate advice to keep windows closed must be suppressed
+    assert not any("windows closed" in a.lower() for a in result["actions"])
+
+
+# =====================================================================
+# Phase 4.2: Multi-Language Localization Tests (Hindi & Odia)
+# =====================================================================
+
+
+def test_hindi_advisory_clean_air_and_weather():
+    r = reading(aqi=20, pm25=10.0, temperature=22.0, humidity=50.0)
+    result = AdvisoryEngine(language="hi").evaluate(r)
+
+    assert set(result) == {"severity", "advice", "actions", "weather_advice"}
+    assert result["severity"] == "NORMAL"
+    assert result["actions"] == ["सामान्य प्रदूषण सावधानियों का पालन करें।"]
+    assert "हवा" in result["advice"] or "वायु" in result["advice"]
+    assert "मौसम" in result["weather_advice"]
+
+
+def test_hindi_advisory_acute_gas_hazard():
+    r = reading(aqi=20, pm25=10.0)
+    r["mq9_v"] = 3.30
+    result = AdvisoryEngine().evaluate(r, language="hi")
+
+    assert result["severity"] == "CRITICAL"
+    assert "कार्बन मोनोऑक्साइड" in result["advice"]
+    assert any("तुरंत" in a for a in result["actions"])
+    assert any("वेंटिलेशन" in a or "खिड़कियाँ" in a for a in result["actions"])
+
+
+def test_odia_advisory_clean_air_and_weather():
+    r = reading(aqi=20, pm25=10.0, temperature=22.0, humidity=50.0)
+    result = AdvisoryEngine(language="or").evaluate(r)
+
+    assert set(result) == {"severity", "advice", "actions", "weather_advice"}
+    assert result["severity"] == "NORMAL"
+    assert result["actions"] == ["ସାଧାରଣ ପ୍ରଦୂଷଣ ସତର୍କତା ଅବଲମ୍ବନ କରନ୍ତୁ।"]
+    assert "ବାୟୁ" in result["advice"]
+    assert "ପାଗ" in result["weather_advice"]
+
+
+def test_odia_advisory_acute_gas_hazard():
+    r = reading(aqi=20, pm25=10.0)
+    r["mq2_v"] = 3.50  # Flammable leak
+    result = AdvisoryEngine().evaluate(r, language="or")
+
+    assert result["severity"] == "CRITICAL"
+    assert "ଜ୍ୱଳନଶୀଳ" in result["advice"] or "ଗ୍ୟାସ୍" in result["advice"]
+    assert any("ନିରାପଦ ସ୍ଥାନ" in a or "ସ୍ଥାନ" in a for a in result["actions"])
+    assert any("ବିଦ୍ୟୁତ୍" in a for a in result["actions"])
+
+
+def test_unsupported_language_fallback_to_english():
+    r = reading(aqi=20, pm25=10.0)
+    result = AdvisoryEngine(language="fr").evaluate(r)
+
+    # Seamlessly falls back to English
+    assert result["severity"] == "NORMAL"
+    assert result["actions"] == ["Use general pollution precautions."]
+    assert "air" in result["advice"].lower()
+

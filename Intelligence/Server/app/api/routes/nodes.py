@@ -63,7 +63,7 @@ async def get_node_status(node_id: str, request: Request):
 
 
 @router.get("/api/v1/nodes/{node_id}/latest", response_model=IntelligenceResult)
-async def get_latest_reading(node_id: str, request: Request):
+async def get_latest_reading(node_id: str, request: Request, lang: str | None = None):
     node_registry = request.app.state.node_registry
     processing_service = request.app.state.processing_service
 
@@ -78,6 +78,14 @@ async def get_latest_reading(node_id: str, request: Request):
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No readings stored for this node",
         )
+
+    if lang:
+        from app.advisory import AdvisoryEngine
+        from app.advisory.schemas import AdvisoryResult
+        advisory_input = result.model_dump(mode="python", exclude={"advisory"})
+        localized = AdvisoryEngine(language=lang).evaluate(advisory_input)
+        result = result.model_copy(update={"advisory": AdvisoryResult.model_validate(localized)})
+
     return result
 
 

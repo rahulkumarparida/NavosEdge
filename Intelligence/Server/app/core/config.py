@@ -39,6 +39,7 @@ class Settings(BaseSettings):
     # AQI Module
     AQI_STORAGE_FILE: Path = Path('./data/aqi_latest.json')
     AQI_STANDARD: str = constants.DEFAULT_AQI_STANDARD
+    ADVISORY_LANGUAGE: str = "en"
 
     model_config = SettingsConfigDict(
         env_prefix='NAVOS_',
