@@ -67,6 +67,26 @@ All visual rendering defects, driver performance bottlenecks, and pipeline stabi
 - **Resolution:**
   Enhanced `read_line()` in `serial_sensor.hpp` to process all buffered complete lines, filter diagnostic and status messages, and always yield the freshest complete JSON frame. In `bridge.hpp`, added validation to skip telemetry transmission if sensor readings report negative PM values (indicating read timeouts).
 
+### 2.6 Socket Stream Framing: Invalid MsgPack Response Frame & Reconnection Loop
+- **File:** `Hardware/include/mcu_bridge.hpp` & `Hardware/mcu_display/mcu_display.ino`
+- **Symptom:**
+  ```
+  [MCU] Router RPC reconnected
+  [MCU] Resending latest display state
+  [MCU] Environment RPC sent
+  [MCU] Advice RPC sent
+  [MCU] RPC call failed: invalid MsgPack response frame
+  ```
+  Followed by continuous socket teardowns and `arduino-router` logging `read unix /var/run/arduino-router.sock->@: read: connection reset by peer`.
+- **Root Cause:**
+  `McuBridge::send_rpc_call` called `recv()` exactly once expecting the entire 4-element MessagePack RPC array `[1, req_id, error, result]` in a single socket read. On UNIX stream sockets, UART delivery from the MCU or router can fragment responses across packet boundaries (e.g. 4 bytes in read 1, and 1 byte in read 2) or concatenate multiple responses into a single buffer.
+  Calling `nlohmann::json::from_msgpack` with `strict = true` on a partial chunk returned `is_discarded() == true`, which immediately executed `close_socket()`. This dropped the stream, sent a RST/FIN to the router, and triggered an endless reconnect-and-fail loop. Furthermore, `mcu_display.ino` only serviced safe RPC callbacks at the end of `loop()`, adding latency to consecutive RPC handling.
+- **Resolution:**
+  1. Implemented a persistent stream buffer (`rx_stream_buf_`) and `extract_next_msgpack_frame()` in `mcu_bridge.hpp`. It buffers incoming chunks using `poll()` with a 2.5s deadline and unpacks complete 4-element arrays cleanly, handling arbitrary packet fragmentation, concatenated responses, and leading garbage resynchronization.
+  2. Late-arriving responses (`resp_id < req_id`) from earlier timed-out RPCs are safely discarded from the buffer rather than triggering false socket failures.
+  3. Added `gui.setYieldCallback(safeUpdate)` and called `safeUpdate()` before and after GUI rendering in `mcu_display.ino` so incoming RPC calls are serviced with zero display latency.
+  4. Added regression unit tests in `Hardware/tests/test_bridge.cpp` validating concatenated, partial, and garbage-prefixed MsgPack stream framing.
+
 ---
 
 ## 3. Inventory of Modified Files
@@ -79,11 +99,12 @@ All visual rendering defects, driver performance bottlenecks, and pipeline stabi
 | `Hardware/mcu_display/NavosEdgeGUI.h` | MCU Firmware GUI | Synchronized method declarations. |
 | `Hardware/display/gui/NavosEdgeGUI.cpp` | Linux GUI Sim | Synchronized identical GUI rendering improvements with MCU firmware. |
 | `Hardware/display/gui/NavosEdgeGUI.h` | Linux GUI Sim | Synchronized method declarations. |
-| `Hardware/mcu_display/mcu_display.ino` | MCU Application | Guarded diagnostic DHT22 dumps behind `NAVOS_DIAGNOSTIC_MODE`; retained last known valid environmental reading on transient 1-wire jitter; set `state.valid = true`. |
+| `Hardware/mcu_display/mcu_display.ino` | MCU Application | Hooked `safeUpdate()` in `setup()` and `loop()` for low-latency RPC servicing; guarded diagnostic DHT22 dumps behind `NAVOS_DIAGNOSTIC_MODE`; retained last known valid environmental reading on transient 1-wire jitter; set `state.valid = true`. |
 | `Hardware/include/bridge.hpp` | C++ Bridge | Dropped telemetry transmission on negative PM values to prevent stale/corrupt server updates. |
 | `Hardware/include/constants.hpp` | C++ Bridge | Increased `DEFAULT_SERIAL_TIMEOUT_MS` from 5000 to 6000ms. |
-| `Hardware/include/mcu_bridge.hpp` | C++ Bridge | Added thread-safe `std::mutex rpc_mutex_` to prevent data races on `latest_state_`. |
+| `Hardware/include/mcu_bridge.hpp` | C++ Bridge | Added stream-framed MessagePack response parser (`rx_stream_buf_`), stale response filtering, poll-based socket timeout handling, and thread-safe `std::mutex rpc_mutex_`. |
 | `Hardware/include/serial_sensor.hpp` | C++ Bridge | Drained older buffered lines to deliver freshest frame; robustly filtered MCU logs and beacons. |
+| `Hardware/tests/test_bridge.cpp` | Test Suite | Added unit tests 20, 21, and 22 verifying concatenated, partial, and garbage-prefixed MessagePack stream framing. |
 | `Hardware/config/hardware_config.json` | Configuration | Synchronized `serial_timeout_ms` to 6000ms. |
 | `run_hardware.sh` | Deployment | Resolved port 7500 contention with `arduino-router-serial.service`; restored service on exit; fixed safe dict parsing for source prediction. |
 | `.gitignore` | Repository Config | Configured `.gitignore` to track `Hardware/third_party/UNOQ_MPI3501/` while ignoring temporary build directories. |

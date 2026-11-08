@@ -16,6 +16,7 @@
 #include <sys/un.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <poll.h>
 #include <string>
 #include <iostream>
 #include <vector>
@@ -128,7 +129,21 @@ public:
             close(fd_);
             fd_ = -1;
         }
+        rx_stream_buf_.clear();
         state_ = BridgeState::DISCONNECTED;
+    }
+
+    // Testing helper methods to verify stream framing and message extraction
+    bool extract_next_frame_for_test(nlohmann::json& out_j) {
+        return extract_next_msgpack_frame(out_j);
+    }
+
+    void feed_stream_bytes_for_test(const uint8_t* data, size_t len) {
+        rx_stream_buf_.insert(rx_stream_buf_.end(), data, data + len);
+    }
+
+    void clear_stream_buffer_for_test() {
+        rx_stream_buf_.clear();
     }
 
 private:
@@ -274,12 +289,41 @@ private:
         return false;
     }
 
+    bool extract_next_msgpack_frame(nlohmann::json& out_j) {
+        // Discard any leading noise/garbage that cannot be a valid RPC frame
+        // A valid MsgPack RPC response frame is always a 4-element array:
+        // fixarray: 0x94, or array16: 0xdc 0x00 0x04
+        while (!rx_stream_buf_.empty()) {
+            uint8_t b0 = rx_stream_buf_[0];
+            if (b0 == 0x94) {
+                break;
+            }
+            if (b0 == 0xdc && rx_stream_buf_.size() >= 3 &&
+                rx_stream_buf_[1] == 0x00 && rx_stream_buf_[2] == 0x04) {
+                break;
+            }
+            rx_stream_buf_.erase(rx_stream_buf_.begin());
+        }
+
+        if (rx_stream_buf_.size() < 5) {
+            return false;
+        }
+
+        // Search for valid frame boundary by testing lengths from 5 up to rx_stream_buf_.size()
+        for (size_t len = 5; len <= rx_stream_buf_.size(); ++len) {
+            nlohmann::json j = nlohmann::json::from_msgpack(
+                rx_stream_buf_.data(), rx_stream_buf_.data() + len, true, false);
+            if (!j.is_discarded() && j.is_array() && j.size() >= 4) {
+                out_j = std::move(j);
+                rx_stream_buf_.erase(rx_stream_buf_.begin(), rx_stream_buf_.begin() + len);
+                return true;
+            }
+        }
+        return false;
+    }
+
     bool send_rpc_call(const std::string& method_name, const nlohmann::json& params) {
         if (fd_ < 0) return false;
-
-        // Drain any stale unread response packets from earlier timed-out RPCs
-        uint8_t drain_buf[512];
-        while (recv(fd_, drain_buf, sizeof(drain_buf), MSG_DONTWAIT) > 0) {}
 
         uint32_t req_id = msg_id_++;
 
@@ -301,50 +345,83 @@ private:
             return false;
         }
 
-        // 2. Read Response from Arduino Router using recv()
-        uint8_t rx_buf[2048];
-        ssize_t bytes_read = recv(fd_, rx_buf, sizeof(rx_buf), 0);
+        // 2. Read Response with streaming accumulation and deadline
+        auto start_time = std::chrono::steady_clock::now();
+        constexpr int RPC_TIMEOUT_MS = 2500;
 
-        if (bytes_read <= 0) {
-            if (bytes_read == 0) {
-                log_rpc_failure("connection closed by router");
-            } else if (errno == EAGAIN || errno == EWOULDBLOCK) {
-                log_rpc_failure("receive timeout");
-            } else {
-                log_rpc_failure("socket receive error (" + std::string(std::strerror(errno)) + ")");
+        while (true) {
+            // First check if an already accumulated frame matches req_id
+            nlohmann::json res_j;
+            while (extract_next_msgpack_frame(res_j)) {
+                int type = res_j[0].is_number_integer() ? res_j[0].get<int>() : -1;
+                uint32_t resp_id = res_j[1].is_number_unsigned() ? res_j[1].get<uint32_t>()
+                                 : (res_j[1].is_number_integer() ? (uint32_t)res_j[1].get<int>() : 0);
+
+                if (type == 1) {
+                    if (resp_id == req_id) {
+                        // Matching response
+                        if (!res_j[2].is_null()) {
+                            std::string rpc_err = res_j[2].is_string() ? res_j[2].get<std::string>() : res_j[2].dump();
+                            log_rpc_failure(rpc_err);
+                            return false;
+                        }
+                        return true;
+                    } else if (resp_id < req_id) {
+                        // Stale response from earlier timed-out RPC, safely drop and continue
+                        continue;
+                    }
+                }
             }
-            close_socket();
-            return false;
+
+            auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::steady_clock::now() - start_time).count();
+            if (elapsed >= RPC_TIMEOUT_MS) {
+                log_rpc_failure("response timeout for " + method_name);
+                return false;
+            }
+
+            struct pollfd pfd;
+            pfd.fd = fd_;
+            pfd.events = POLLIN;
+            pfd.revents = 0;
+
+            int remaining_ms = std::max(RPC_TIMEOUT_MS - (int)elapsed, 10);
+            int poll_res = poll(&pfd, 1, std::min(remaining_ms, 500));
+
+            if (poll_res < 0) {
+                if (errno == EINTR) continue;
+                log_rpc_failure("socket poll error (" + std::string(std::strerror(errno)) + ")");
+                close_socket();
+                return false;
+            }
+
+            if (poll_res == 0) {
+                continue;
+            }
+
+            if (pfd.revents & (POLLERR | POLLHUP | POLLNVAL)) {
+                log_rpc_failure("socket hangup or error from router");
+                close_socket();
+                return false;
+            }
+
+            if (pfd.revents & POLLIN) {
+                uint8_t chunk[1024];
+                ssize_t bytes_read = recv(fd_, chunk, sizeof(chunk), 0);
+                if (bytes_read <= 0) {
+                    if (bytes_read == 0) {
+                        log_rpc_failure("connection closed by router");
+                    } else if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                        continue;
+                    } else {
+                        log_rpc_failure("socket receive error (" + std::string(std::strerror(errno)) + ")");
+                    }
+                    close_socket();
+                    return false;
+                }
+                rx_stream_buf_.insert(rx_stream_buf_.end(), chunk, chunk + bytes_read);
+            }
         }
-
-        // 3. Decode MessagePack Response: [1, msg_id, error, result]
-        nlohmann::json res_j = nlohmann::json::from_msgpack(rx_buf, rx_buf + bytes_read, true, false);
-        if (res_j.is_discarded() || !res_j.is_array() || res_j.size() < 4) {
-            log_rpc_failure("invalid MsgPack response frame");
-            close_socket();
-            return false;
-        }
-
-        int type = res_j[0].is_number_integer() ? res_j[0].get<int>() : -1;
-        uint32_t resp_id = res_j[1].is_number_unsigned() ? res_j[1].get<uint32_t>() : (res_j[1].is_number_integer() ? res_j[1].get<int>() : 0);
-
-        if (type != 1) {
-            log_rpc_failure("unexpected response type " + std::to_string(type));
-            return false;
-        }
-
-        if (resp_id != req_id) {
-            log_rpc_failure("msg_id mismatch (got " + std::to_string(resp_id) + ", expected " + std::to_string(req_id) + ")");
-            return false;
-        }
-
-        if (!res_j[2].is_null()) {
-            std::string rpc_err = res_j[2].is_string() ? res_j[2].get<std::string>() : res_j[2].dump();
-            log_rpc_failure(rpc_err);
-            return false;
-        }
-
-        return true;
     }
 
     void log_rpc_failure(const std::string& reason) {
@@ -375,6 +452,7 @@ private:
     NavosEdgeState latest_state_;
     bool has_latest_state_;
     std::mutex rpc_mutex_;
+    std::vector<uint8_t> rx_stream_buf_;
 };
 
 } // namespace navos

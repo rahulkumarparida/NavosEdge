@@ -565,6 +565,7 @@ void setup() {
     boot_ms = millis();
 
     gui.begin();
+    gui.setYieldCallback(safeUpdate);
     gui.showStatus("NavosEdge MCU", "Connecting RPC Bridge...");
 
     Bridge.begin();
@@ -581,13 +582,20 @@ void setup() {
 
 // ─── Arduino Loop ─────────────────────────────────────────────────
 void loop() {
-    // 1. Update physical display GUI non-blockingly
+    // 1. Service any pending safe RPC requests immediately
+    safeUpdate();
+
+    // 2. Update physical display GUI non-blockingly
     gui.update(state);
 
-    // 2. Periodically sample physical sensors and stream JSON
+    // 3. Service any safe RPC requests that arrived during GUI rendering
+    safeUpdate();
+
+    // 4. Periodically sample physical sensors and stream JSON
     unsigned long now = millis();
     if ((now - last_sensor_sample_ms) >= SENSOR_SAMPLE_MS) {
         last_sensor_sample_ms = now;
         sample_and_transmit_sensors(now);
+        safeUpdate();
     }
 }

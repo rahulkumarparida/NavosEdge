@@ -21,6 +21,7 @@
 #include "http_client.hpp"
 #include "sse_client.hpp"
 #include "bridge.hpp"
+#include "mcu_bridge.hpp"
 
 static int tests_passed = 0;
 static int tests_failed = 0;
@@ -587,6 +588,56 @@ TEST(mcu_bridge_rpc_encoding) {
     ASSERT_TRUE(decoded[2].get<std::string>() == "update_environment");
     ASSERT_TRUE(decoded[3].is_array());
     ASSERT_EQ(decoded[3].size(), 6);
+}
+
+// ──────────────────────────────────────────────────────────────────
+// Test 20: McuBridge concatenated stream framing
+// ──────────────────────────────────────────────────────────────────
+TEST(mcu_bridge_concatenated_stream_framing) {
+    navos::McuBridge bridge;
+    nlohmann::json out;
+    // Two concatenated frames: [1, 10, null, null], [1, 11, null, null]
+    std::vector<uint8_t> concat = {0x94, 0x01, 0x0a, 0xc0, 0xc0, 0x94, 0x01, 0x0b, 0xc0, 0xc0};
+    bridge.feed_stream_bytes_for_test(concat.data(), concat.size());
+
+    ASSERT_TRUE(bridge.extract_next_frame_for_test(out));
+    ASSERT_EQ(out[1].get<int>(), 10);
+
+    ASSERT_TRUE(bridge.extract_next_frame_for_test(out));
+    ASSERT_EQ(out[1].get<int>(), 11);
+
+    ASSERT_TRUE(!bridge.extract_next_frame_for_test(out));
+}
+
+// ──────────────────────────────────────────────────────────────────
+// Test 21: McuBridge partial / split stream framing
+// ──────────────────────────────────────────────────────────────────
+TEST(mcu_bridge_partial_stream_framing) {
+    navos::McuBridge bridge;
+    nlohmann::json out;
+    // Frame: [1, 12, null, null] split into 4 bytes + 1 byte
+    std::vector<uint8_t> part1 = {0x94, 0x01, 0x0c, 0xc0};
+    bridge.feed_stream_bytes_for_test(part1.data(), part1.size());
+    ASSERT_TRUE(!bridge.extract_next_frame_for_test(out));
+
+    uint8_t part2 = 0xc0;
+    bridge.feed_stream_bytes_for_test(&part2, 1);
+    ASSERT_TRUE(bridge.extract_next_frame_for_test(out));
+    ASSERT_EQ(out[1].get<int>(), 12);
+}
+
+// ──────────────────────────────────────────────────────────────────
+// Test 22: McuBridge garbage byte resynchronization
+// ──────────────────────────────────────────────────────────────────
+TEST(mcu_bridge_garbage_resync_stream_framing) {
+    navos::McuBridge bridge;
+    nlohmann::json out;
+    // Leading noise bytes followed by valid frame [1, 13, null, null]
+    std::vector<uint8_t> with_garbage = {0xff, 0x00, 0x12, 0x94, 0x01, 0x0d, 0xc0, 0xc0};
+    bridge.feed_stream_bytes_for_test(with_garbage.data(), with_garbage.size());
+
+    ASSERT_TRUE(bridge.extract_next_frame_for_test(out));
+    ASSERT_EQ(out[1].get<int>(), 13);
 }
 
 // ──────────────────────────────────────────────────────────────────
