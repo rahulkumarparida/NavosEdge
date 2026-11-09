@@ -20,6 +20,8 @@ AUTO_IP=true
 NODE_ID="${NAVOS_NODE_ID:-navos-01}"
 SCENARIO="${NAVOS_SCENARIO:-traffic}"
 INTERVAL="${NAVOS_INTERVAL:-3}"
+SENSOR_MODE=""
+DO_FLASH=false
 
 # Parse command line flags/arguments
 while [[ $# -gt 0 ]]; do
@@ -43,6 +45,18 @@ while [[ $# -gt 0 ]]; do
     --interval|-i)
       INTERVAL="$2"
       shift 2
+      ;;
+    --mock|-m)
+      SENSOR_MODE="--mock"
+      shift
+      ;;
+    --physical)
+      SENSOR_MODE="--physical"
+      shift
+      ;;
+    --flash)
+      DO_FLASH=true
+      shift
       ;;
     *)
       shift
@@ -103,13 +117,42 @@ free_port() {
     fi
 }
 
+MODE_LABEL="Hardware Default (from hardware_config.json)"
+if [ "$SENSOR_MODE" = "--mock" ]; then
+    MODE_LABEL="Mock Sensor Simulator (Scenario: $SCENARIO)"
+elif [ "$SENSOR_MODE" = "--physical" ]; then
+    MODE_LABEL="Physical Hardware Sensors (127.0.0.1:7500)"
+fi
+
 echo "============================================================"
 echo "          NavosEdge — UNO Q Edge Node Launcher"
 echo "============================================================"
 echo " Node ID:  $NODE_ID"
-echo " Scenario: $SCENARIO"
+echo " Mode:     $MODE_LABEL"
 echo " Interval: ${INTERVAL}s"
 echo "============================================================"
+
+# 1. Build C++ Hardware Application first so diagnostics & bridge are ready
+echo "[NAVOS] [1/3] Building C++ Hardware Application..."
+cd Hardware
+mkdir -p build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release > /dev/null
+make -j$(nproc 2>/dev/null || echo 1) > /dev/null
+cd "$SCRIPT_DIR"
+
+# 2. Verify MCU Display Firmware (Auto-flash if un-flashed or out of sync on UNO Q)
+if [ "$DO_FLASH" = true ]; then
+    echo "[NAVOS] Explicit flash requested. Flashing MCU display firmware..."
+    bash "$SCRIPT_DIR/flash_display.sh"
+elif [ -S "/var/run/arduino-router.sock" ] && [ "$SENSOR_MODE" != "--mock" ]; then
+    echo "[NAVOS] Verifying MCU display firmware RPC readiness..."
+    if ! "$SCRIPT_DIR/Hardware/build/navos_hardware_bridge" --test-mcu-rpc > /dev/null 2>&1; then
+        echo "[NAVOS] MCU display firmware not responding or out of sync. Auto-flashing..."
+        bash "$SCRIPT_DIR/flash_display.sh"
+    else
+        echo "[NAVOS] MCU display firmware verified (MPI3501 RPC operational)."
+    fi
+fi
 
 # Absolute paths for virtual environment binaries
 SERVER_DIR="$SCRIPT_DIR/Intelligence/Server"
@@ -121,8 +164,8 @@ if [ ! -d "$SERVER_DIR/venv" ]; then
     "$PYTHON_BIN" -m pip install -r "$SERVER_DIR/requirements.txt"
 fi
 
-# 1. Start Python Intelligence Server on UNO Q
-echo "[NAVOS] [1/3] Starting Python Intelligence Server..."
+# 3. Start Python Intelligence Server on UNO Q
+echo "[NAVOS] [2/3] Starting Python Intelligence Server..."
 free_port $INTEL_PORT
 cd "$SERVER_DIR"
 PYTHONPATH="$SERVER_DIR" NAVOS_MANAGER_URL="http://$MANAGER_HOST:$MANAGER_PORT" "$PYTHON_BIN" -m uvicorn --host $INTEL_HOST --port $INTEL_PORT --log-level warning app.main:app &
@@ -130,7 +173,7 @@ INTEL_PID=$!
 PIDS+=($INTEL_PID)
 cd "$SCRIPT_DIR"
 
-# 2. Wait for Python Intelligence Server health/readiness
+# Wait for Python Intelligence Server health/readiness
 echo "[NAVOS] Waiting for Intelligence Server readiness on http://$INTEL_HOST:$INTEL_PORT/health ..."
 READY=0
 for i in {1..30}; do
@@ -147,16 +190,13 @@ if [ $READY -ne 1 ]; then
     exit 1
 fi
 
-# 3. Build & Launch C++ Hardware Application
-echo "[NAVOS] [2/3] Building C++ Hardware Application..."
-cd Hardware
-mkdir -p build && cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release > /dev/null
-make -j$(nproc 2>/dev/null || echo 1) > /dev/null
-cd "$SCRIPT_DIR"
-
+# 4. Launch C++ Hardware Application
 echo "[NAVOS] [3/3] Launching C++ Hardware Application..."
-./Hardware/build/navos_hardware_bridge --node-id "$NODE_ID" --scenario "$SCENARIO" --interval "$INTERVAL" &
+HW_CMD=("./Hardware/build/navos_hardware_bridge" "--node-id" "$NODE_ID" "--scenario" "$SCENARIO" "--interval" "$INTERVAL")
+if [ -n "$SENSOR_MODE" ]; then
+    HW_CMD+=("$SENSOR_MODE")
+fi
+"${HW_CMD[@]}" &
 HW_PID=$!
 PIDS+=($HW_PID)
 

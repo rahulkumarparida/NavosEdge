@@ -108,19 +108,31 @@ void update_advice(String severity, String advice, String weather_advice) {
 
 void update_actions(String actions_csv) {
     state.action_count = 0;
-    int start = 0;
-    int len = actions_csv.length();
-    while (start < len && state.action_count < NAVOS_MAX_ACTIONS) {
-        int end = actions_csv.indexOf(';', start);
-        if (end == -1) end = len;
-        String actStr = actions_csv.substring(start, end);
-        actStr.trim();
-        if (actStr.length() > 0) {
-            strncpy(state.actions[state.action_count], actStr.c_str(), NAVOS_MAX_STRING_LEN - 1);
-            state.actions[state.action_count][NAVOS_MAX_STRING_LEN - 1] = '\0';
+    const char* p = actions_csv.c_str();
+
+    while (*p && state.action_count < NAVOS_MAX_ACTIONS) {
+        // Skip leading separators and whitespace
+        while (*p == ';' || *p == ' ' || *p == '\t' || *p == '\r' || *p == '\n') p++;
+        if (!*p) break;
+
+        const char* start = p;
+        while (*p && *p != ';') p++;
+        const char* end = p;
+
+        // Trim trailing whitespace
+        while (end > start && (*(end - 1) == ' ' || *(end - 1) == '\t' || *(end - 1) == '\r' || *(end - 1) == '\n')) {
+            end--;
+        }
+
+        size_t len = end - start;
+        if (len > 0) {
+            size_t copy_len = (len < NAVOS_MAX_STRING_LEN - 1) ? len : (NAVOS_MAX_STRING_LEN - 1);
+            memcpy(state.actions[state.action_count], start, copy_len);
+            state.actions[state.action_count][copy_len] = '\0';
             state.action_count++;
         }
-        start = end + 1;
+
+        if (*p == ';') p++;
     }
 
     state.valid = true;

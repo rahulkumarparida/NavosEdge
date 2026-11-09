@@ -74,24 +74,63 @@ void NavosEdgeGUI::update(const NavosEdgeState& state) {
         forceRedraw(state);
     } else {
         // Fast in-place updates when state values change
-        bool stateChanged = (state.last_update_ms != _lastDrawnState.last_update_ms) ||
-                            (state.aqi != _lastDrawnState.aqi) ||
-                            (state.pm2_5 != _lastDrawnState.pm2_5) ||
-                            (state.pm10 != _lastDrawnState.pm10) ||
-                            (state.pm1_0 != _lastDrawnState.pm1_0) ||
-                            (state.temperature != _lastDrawnState.temperature) ||
-                            (state.humidity != _lastDrawnState.humidity) ||
-                            (state.mq2_adc != _lastDrawnState.mq2_adc) ||
-                            (state.mq9_adc != _lastDrawnState.mq9_adc) ||
-                            (state.mq135_adc != _lastDrawnState.mq135_adc);
-
-        if (stateChanged) {
-            _lastDrawnState = state;
-            if (_currentScreen == 0) {
+        if (_currentScreen == 0) {
+            bool envChanged = (state.aqi != _lastDrawnState.aqi) ||
+                              (state.pm2_5 != _lastDrawnState.pm2_5) ||
+                              (state.pm10 != _lastDrawnState.pm10) ||
+                              (state.pm1_0 != _lastDrawnState.pm1_0) ||
+                              (state.temperature != _lastDrawnState.temperature) ||
+                              (state.humidity != _lastDrawnState.humidity);
+            if (envChanged) {
+                _lastDrawnState = state;
                 updateScreen0_Dynamic(state);
-            } else if (_currentScreen == 4) {
+            }
+        } else if (_currentScreen == 4) {
+            bool rawChanged = (state.pm1_0 != _lastDrawnState.pm1_0) ||
+                              (state.pm2_5 != _lastDrawnState.pm2_5) ||
+                              (state.pm10 != _lastDrawnState.pm10) ||
+                              (state.temperature != _lastDrawnState.temperature) ||
+                              (state.humidity != _lastDrawnState.humidity) ||
+                              (state.mq2_adc != _lastDrawnState.mq2_adc) ||
+                              (state.mq9_adc != _lastDrawnState.mq9_adc) ||
+                              (state.mq135_adc != _lastDrawnState.mq135_adc) ||
+                              (state.aqi != _lastDrawnState.aqi);
+            if (rawChanged) {
+                _lastDrawnState = state;
                 updateScreen4_Dynamic(state);
-            } else if (_currentScreen == 1 || _currentScreen == 2 || _currentScreen == 3) {
+            }
+        } else if (_currentScreen == 1) {
+            bool advChanged = (strncmp(state.severity, _lastDrawnState.severity, sizeof(state.severity)) != 0) ||
+                              (strncmp(state.advice, _lastDrawnState.advice, sizeof(state.advice)) != 0) ||
+                              (state.action_count != _lastDrawnState.action_count);
+            if (!advChanged && state.action_count == _lastDrawnState.action_count) {
+                for (uint8_t i = 0; i < state.action_count; i++) {
+                    if (strncmp(state.actions[i], _lastDrawnState.actions[i], NAVOS_MAX_STRING_LEN) != 0) {
+                        advChanged = true;
+                        break;
+                    }
+                }
+            }
+            if (advChanged) {
+                forceRedraw(state);
+            }
+        } else if (_currentScreen == 2) {
+            bool fcChanged = (strncmp(state.forecast_trend, _lastDrawnState.forecast_trend, sizeof(state.forecast_trend)) != 0) ||
+                             (state.forecast_confidence != _lastDrawnState.forecast_confidence) ||
+                             (state.pm2_5 != _lastDrawnState.pm2_5) ||
+                             (state.forecast_pm2_5_pred[0] != _lastDrawnState.forecast_pm2_5_pred[0]) ||
+                             (state.forecast_pm2_5_pred[1] != _lastDrawnState.forecast_pm2_5_pred[1]);
+            if (fcChanged) {
+                forceRedraw(state);
+            }
+        } else if (_currentScreen == 3) {
+            bool scoreChanged = (strncmp(state.anomaly_status, _lastDrawnState.anomaly_status, sizeof(state.anomaly_status)) != 0) ||
+                                (strncmp(state.source_value, _lastDrawnState.source_value, sizeof(state.source_value)) != 0) ||
+                                (state.source_confidence != _lastDrawnState.source_confidence) ||
+                                (state.aqi != _lastDrawnState.aqi) ||
+                                (strncmp(state.forecast_trend, _lastDrawnState.forecast_trend, sizeof(state.forecast_trend)) != 0) ||
+                                (state.forecast_confidence != _lastDrawnState.forecast_confidence);
+            if (scoreChanged) {
                 forceRedraw(state);
             }
         }
