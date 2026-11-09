@@ -31,7 +31,10 @@ def test_normal_air_quality_has_concise_public_shape():
     result = AdvisoryEngine().evaluate(reading())
     assert set(result) == {"severity", "advice", "actions", "weather_advice"}
     assert result["severity"] == "NORMAL"
-    assert result["actions"] == ["Use general pollution precautions."]
+    assert 3 <= len(result["actions"]) <= 4
+    assert any("[ACTIVITY]" in a for a in result["actions"])
+    assert any("[HOME]" in a for a in result["actions"])
+    assert any("[HEALTH]" in a for a in result["actions"])
     assert "temperature" not in result["advice"].lower()
 
 
@@ -279,7 +282,10 @@ def test_hindi_advisory_clean_air_and_weather():
 
     assert set(result) == {"severity", "advice", "actions", "weather_advice"}
     assert result["severity"] == "NORMAL"
-    assert result["actions"] == ["सामान्य प्रदूषण सावधानियों का पालन करें।"]
+    assert 3 <= len(result["actions"]) <= 4
+    assert any("[गतिविधि]" in a for a in result["actions"])
+    assert any("[घर]" in a for a in result["actions"])
+    assert any("[स्वास्थ्य]" in a for a in result["actions"])
     assert "हवा" in result["advice"] or "वायु" in result["advice"]
     assert "मौसम" in result["weather_advice"]
 
@@ -301,7 +307,10 @@ def test_odia_advisory_clean_air_and_weather():
 
     assert set(result) == {"severity", "advice", "actions", "weather_advice"}
     assert result["severity"] == "NORMAL"
-    assert result["actions"] == ["ସାଧାରଣ ପ୍ରଦୂଷଣ ସତର୍କତା ଅବଲମ୍ବନ କରନ୍ତୁ।"]
+    assert 3 <= len(result["actions"]) <= 4
+    assert any("[କାର୍ଯ୍ୟକଳାପ]" in a for a in result["actions"])
+    assert any("[ଘର]" in a for a in result["actions"])
+    assert any("[ସ୍ୱାସ୍ଥ୍ୟ]" in a for a in result["actions"])
     assert "ବାୟୁ" in result["advice"]
     assert "ପାଗ" in result["weather_advice"]
 
@@ -323,6 +332,66 @@ def test_unsupported_language_fallback_to_english():
 
     # Seamlessly falls back to English
     assert result["severity"] == "NORMAL"
-    assert result["actions"] == ["Use general pollution precautions."]
+    assert 3 <= len(result["actions"]) <= 4
+    assert any("[ACTIVITY]" in a for a in result["actions"])
     assert "air" in result["advice"].lower()
+
+
+# =====================================================================
+# Phase 4.3: 3-Pillar Display Safety & Diurnal Tests
+# =====================================================================
+
+
+def test_actions_strict_display_character_budget():
+    """Verify that all actions across various scenarios and languages strictly satisfy <= 68 chars."""
+    test_cases = [
+        reading(aqi=20, pm25=10.0),
+        reading(aqi=75, pm25=45.0),
+        reading(aqi=140, pm25=80.0, source="TRAFFIC", source_confidence=0.85),
+        reading(aqi=240, pm25=120.0, source="COMBUSTION", source_confidence=0.85),
+        reading(aqi=380, pm25=220.0),
+        reading(aqi=50, pm25=30.0, forecast={"PM2_5": [40, 70]}, forecast_confidence=0.80),
+        reading(aqi=50, pm25=30.0, forecast={"PM2_5": [30, 10]}, forecast_confidence=0.80),
+    ]
+
+    for tc in test_cases:
+        for lang in ("en", "hi", "or"):
+            result = AdvisoryEngine(language=lang).evaluate(tc)
+            actions = result["actions"]
+            assert 3 <= len(actions) <= 4, f"Action count {len(actions)} not in [3, 4] for lang {lang}"
+            for action in actions:
+                assert action.startswith("["), f"Action '{action}' missing category tag"
+                assert len(action) <= 68, f"Action exceeds 68-char display limit ({len(action)} chars): '{action}'"
+
+
+def test_diurnal_variation_morning_vs_midday_vs_evening():
+    """Verify that distinct hours alter the narrative opener to match diurnal cycle."""
+    engine = AdvisoryEngine()
+
+    r_morning = reading(aqi=25, pm25=12.0)
+    r_morning["timestamp"] = "2026-11-08T07:30:00Z"
+    adv_morning = engine.evaluate(r_morning)["advice"]
+
+    r_midday = reading(aqi=25, pm25=12.0)
+    r_midday["timestamp"] = "2026-11-08T13:00:00Z"
+    adv_midday = engine.evaluate(r_midday)["advice"]
+
+    r_evening = reading(aqi=25, pm25=12.0)
+    r_evening["timestamp"] = "2026-11-08T18:00:00Z"
+    adv_evening = engine.evaluate(r_evening)["advice"]
+
+    r_night = reading(aqi=25, pm25=12.0)
+    r_night["timestamp"] = "2026-11-08T23:30:00Z"
+    adv_night = engine.evaluate(r_night)["advice"]
+
+    # All should produce meaningful narratives, differing based on diurnal phase
+    assert len(adv_morning) > 10
+    assert len(adv_midday) > 10
+    assert len(adv_evening) > 10
+    assert len(adv_night) > 10
+    assert "morning" in adv_morning.lower()
+    assert "midday" in adv_midday.lower() or "sunlight" in adv_midday.lower() or "pleasant" in adv_midday.lower() or "daytime" in adv_midday.lower()
+    assert "evening" in adv_evening.lower() or "dusk" in adv_evening.lower()
+    assert "night" in adv_night.lower() or "overnight" in adv_night.lower() or "quiet" in adv_night.lower()
+
 

@@ -7,6 +7,8 @@ from typing import Any
 from .rules import (
     AdvisoryConfig,
     LayerResult,
+    build_fusion_advice,
+    build_three_pillar_actions,
     current_air_quality,
     forecast_advice,
     gas_hazard_advice,
@@ -50,11 +52,11 @@ class AdvisoryEngine:
         pollution_layers = (air, source, forecast.layer, gas)
         winning = max(pollution_layers, key=lambda layer: _PRIORITY.get(layer.severity, 0))
 
-        gas_severe = gas.severity in ("SEVERE", "CRITICAL")
-        ordered_layers = (gas, air, source, forecast.layer) if gas_severe else (air, source, forecast.layer, gas)
+        # Generate cohesive Cause -> Forecast -> Action fusion advice
+        advice = build_fusion_advice(data, cfg, air, source, forecast, gas, winning.severity, lang=effective_lang)
 
-        actions = _merge_actions(ordered_layers, gas_priority=gas_severe)
-        advice = _combine_advice(winning, air, source, forecast.layer, gas, gas_priority=gas_severe)
+        # Generate structured 3-Pillar categorized actions ([ACTIVITY], [HOME], [HEALTH], [FORECAST/GAS])
+        actions = build_three_pillar_actions(data, cfg, winning.severity, gas, forecast, source, lang=effective_lang)
 
         return AdvisoryResult(
             severity=winning.severity,
@@ -62,38 +64,3 @@ class AdvisoryEngine:
             actions=actions,
             weather_advice=weather,
         ).model_dump(mode="json")
-
-
-def _merge_actions(layers: tuple[LayerResult, ...], gas_priority: bool = False) -> list[str]:
-    actions: list[str] = []
-    # If an acute toxic or flammable gas hazard is present, suppress contradictory advice
-    # like sealing windows which could lead to lethal asphyxiation or explosion.
-    contradictory_snippets = (
-        "keep windows closed",
-        "खिड़कियाँ बंद",
-        "ଝରକା କବାଟ ବନ୍ଦ",
-    )
-    for layer in layers:
-        for action in layer.actions:
-            if gas_priority and any(s in action.lower() for s in contradictory_snippets):
-                continue
-            if action not in actions:
-                actions.append(action)
-    return actions
-
-
-def _combine_advice(
-    winning: LayerResult,
-    air: LayerResult,
-    source: LayerResult,
-    forecast: LayerResult,
-    gas: LayerResult,
-    gas_priority: bool = False,
-) -> str:
-    messages: list[str] = []
-    if gas_priority and gas.advice:
-        messages.append(gas.advice)
-    for layer in (winning, air, source, forecast, gas):
-        if layer.advice and layer.advice not in messages:
-            messages.append(layer.advice)
-    return " ".join(messages)

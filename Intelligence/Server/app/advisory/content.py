@@ -2137,3 +2137,646 @@ def get_provisional_text(msg_key: str, lang: str = "en") -> str:
     return text
 
 
+# =====================================================================
+# 3-Pillar Categorized Actions & Fusion Narrative Dictionaries
+# =====================================================================
+
+PILLAR_TAGS = {
+    "en": {
+        "ACTIVITY": "[ACTIVITY]",
+        "HOME": "[HOME]",
+        "HEALTH": "[HEALTH]",
+        "FORECAST": "[FORECAST]",
+        "GAS_ALERT": "[GAS ALERT]",
+    },
+    "hi": {
+        "ACTIVITY": "[गतिविधि]",
+        "HOME": "[घर]",
+        "HEALTH": "[स्वास्थ्य]",
+        "FORECAST": "[पूर्वानुमान]",
+        "GAS_ALERT": "[गैस चेतावनी]",
+    },
+    "or": {
+        "ACTIVITY": "[କାର୍ଯ୍ୟକଳାପ]",
+        "HOME": "[ଘର]",
+        "HEALTH": "[ସ୍ୱାସ୍ଥ୍ୟ]",
+        "FORECAST": "[ପୂର୍ବାନୁମାନ]",
+        "GAS_ALERT": "[ଗ୍ୟାସ୍ ସତର୍କତା]",
+    },
+}
+
+PILLAR_ACTIONS_EN = {
+    "ACTIVITY": {
+        "NORMAL": [
+            "Ideal for outdoor cardio, cycling, and sports.",
+            "Safe for morning runs and regular outdoor plans.",
+            "Great conditions for walking, sports, and errands.",
+        ],
+        "MODERATE": [
+            "Take normal precautions; reduce long outdoor cardio.",
+            "Outdoor activity is safe; take regular hydration breaks.",
+            "Keep high-intensity training moderate outdoors.",
+        ],
+        "HIGH": [
+            "Reduce prolonged outdoor exercise; shift cardio indoors.",
+            "Keep outdoor activities light; avoid high-traffic roads.",
+            "Limit intense training; prefer early morning sessions.",
+        ],
+        "SEVERE": [
+            "Avoid outdoor exertion; wear an N95 mask outside.",
+            "Cancel outdoor sports; keep outdoor stays brief.",
+            "Limit all outdoor movement; wear respiratory protection.",
+        ],
+        "CRITICAL": [
+            "Strictly avoid outdoor exposure; stay indoors.",
+            "Emergency pollution: avoid stepping outside.",
+            "Do not exercise outdoors; use fitted N95 if outside.",
+        ],
+    },
+    "HOME": {
+        "NORMAL": [
+            "Open cross-ventilation windows to refresh indoor air.",
+            "Good time for airing out living spaces and rooms.",
+            "Maintain natural airflow through open windows.",
+        ],
+        "MODERATE": [
+            "Ventilate rooms during midday; close during evening rush.",
+            "Ensure moderate indoor air circulation and fresh airflow.",
+            "Run air purifiers or cross-ventilation as convenient.",
+        ],
+        "HIGH": [
+            "Keep road-facing windows closed; run indoor air circulation.",
+            "Minimize outdoor air infiltration; run air purifiers.",
+            "Close windows during traffic peaks; filter indoor air.",
+        ],
+        "SEVERE": [
+            "Keep all windows and doors closed; seal drafty gaps.",
+            "Run indoor air purifiers on high filtration mode.",
+            "Protect indoor air; keep external vents closed.",
+        ],
+        "CRITICAL": [
+            "Keep living spaces sealed; run continuous air purification.",
+            "Keep doors and windows firmly shut; minimize infiltration.",
+            "Maintain filtered indoor air; seal external openings.",
+        ],
+    },
+    "HEALTH": {
+        "NORMAL": [
+            "Air is safe for sensitive groups, children, and elderly.",
+            "No restrictions for asthma or respiratory conditions.",
+            "Clean baseline across vulnerable demographics.",
+        ],
+        "MODERATE": [
+            "Sensitive individuals should take regular rest breaks.",
+            "Asthmatics and elderly take standard pollution precautions.",
+            "Noticeable particles; sensitive groups take extra care.",
+        ],
+        "HIGH": [
+            "Asthmatics and elderly keep rescue inhalers accessible.",
+            "Children and seniors should reduce strenuous outdoor time.",
+            "Sensitive individuals monitor for throat or eye tickle.",
+        ],
+        "SEVERE": [
+            "High risk: children and seniors remain strictly indoors.",
+            "Asthma and heart patients avoid all physical strain.",
+            "Sensitive groups monitor for wheezing or chest tightness.",
+        ],
+        "CRITICAL": [
+            "Severe hazard: high risk of respiratory distress.",
+            "Vulnerable groups must remain in sealed, filtered rooms.",
+            "Seek medical care if experiencing breathing difficulty.",
+        ],
+    },
+    "FORECAST": {
+        "RISING": [
+            "PM2.5 forecast to rise; take early precautions.",
+            "Pollution increasing soon; take early precautions.",
+            "Rising particles expected; take early precautions.",
+        ],
+        "FALLING": [
+            "Air quality improving soon; dispersion expected.",
+            "Expect cleaner air in coming hours as dust settles.",
+            "Conditions projected to improve steadily by afternoon.",
+        ],
+        "STABLE": [
+            "Current air quality projected to remain steady.",
+            "Stable conditions expected across the forecast horizon.",
+            "No major pollution shifts anticipated over next 3 hrs.",
+        ],
+    },
+    "GAS_ALERT": {
+        "CO": [
+            "Evacuate enclosed space immediately into fresh air.",
+            "Open doors and windows to ventilate if safe to do so.",
+            "Seek medical attention if dizzy, nauseous, or headache.",
+        ],
+        "FLAMMABLE": [
+            "Evacuate area immediately; do not operate switches.",
+            "No open flames, lighters, or electrical sparks.",
+            "Shut off main gas supply valve if accessible safely.",
+        ],
+        "TOXIC_VOC": [
+            "Move away from chemical fumes; ensure ventilation.",
+            "Avoid breathing vapors directly; use protection.",
+            "Ensure strong continuous ventilation in the area.",
+        ],
+        "SMOKE": [
+            "Check for nearby fire sources; move away from smoke.",
+            "Protect airways from heavy smoke and ventilate.",
+            "Use suitable respiratory protection away from burning.",
+        ],
+    },
+}
+
+PILLAR_ACTIONS_HI = {
+    "ACTIVITY": {
+        "NORMAL": [
+            "सुबह की दौड़, खेल और बाहर घूमने के लिए सुरक्षित।",
+            "हवा साफ है; सामान्य गतिविधियाँ जारी रख सकते हैं।",
+            "आउटडोर व्यायाम और सैर के लिए बहुत अच्छा समय।",
+        ],
+        "MODERATE": [
+            "हल्का प्रदूषण; लंबे समय तक कठिन व्यायाम से बचें।",
+            "आउटडोर काम सुरक्षित हैं; बीच-बीच में आराम लें।",
+            "बाहरी गतिविधियाँ सामान्य रखें और पानी पीते रहें।",
+        ],
+        "HIGH": [
+            "कठिन व्यायाम घर के अंदर करें; बाहर का समय घटाएं।",
+            "व्यस्त सड़कों के पास जाने से बचें; हल्की सैर करें।",
+            "लंबे समय तक बाहर रहने से बचें और सावधानी बरतें।",
+        ],
+        "SEVERE": [
+            "बाहरी गतिविधियों से बचें; बाहर जाने पर N95 मास्क पहनें।",
+            "आउटडोर खेल स्थगित करें; घर के अंदर रहना बेहतर है।",
+            "बाहर शारीरिक परिश्रम बिल्कुल न करें।",
+        ],
+        "CRITICAL": [
+            "बाहर जाने से बिल्कुल बचें; घर के अंदर सुरक्षित रहें।",
+            "आपातकालीन प्रदूषण स्तर; बाहर निकलना बंद करें।",
+            "घर के अंदर रहें; बाहर N95 मास्क का उपयोग अनिवार्य।",
+        ],
+    },
+    "HOME": {
+        "NORMAL": [
+            "ताज़ी हवा के लिए खिड़कियाँ और वेंटिलेशन खोलें।",
+            "कमरों में ताज़ी हवा आने के लिए अच्छा समय है।",
+            "प्राकृतिक वायु प्रवाह बनाए रखें।",
+        ],
+        "MODERATE": [
+            "दोपहर में खिड़कियाँ खोलें; शाम को बंद रखें।",
+            "कमरों में अच्छा वेंटिलेशन और हवा का बहाव रखें।",
+            "जरूरत पड़ने पर एयर प्यूरीफायर चलाएं।",
+        ],
+        "HIGH": [
+            "सड़क की ओर वाली खिड़कियाँ बंद रखें; प्यूरीफायर चलाएं।",
+            "बाहरी धूल को अंदर आने से रोकें।",
+            "पीक आवर्स में खिड़कियाँ बंद रखें।",
+        ],
+        "SEVERE": [
+            "सभी खिड़कियाँ और दरवाजे बंद रखें; सील करें।",
+            "एयर प्यूरीफायर को हाई मोड पर चलाएं।",
+            "इनडोर हवा को सुरक्षित रखें; बाहरी वेंट बंद करें।",
+        ],
+        "CRITICAL": [
+            "कमरे पूरी तरह बंद रखें; एयर प्यूरीफायर चालू रखें।",
+            "दरवाजे-खिड़कियाँ कसकर बंद रखें।",
+            "बाहरी हवा को घर के अंदर न आने दें।",
+        ],
+    },
+    "HEALTH": {
+        "NORMAL": [
+            "बच्चों और संवेदनशील लोगों के लिए सुरक्षित हवा।",
+            "दमा और सांस के मरीजों के लिए कोई पाबंदी नहीं।",
+            "सभी आयु वर्ग के लिए हवा पूरी तरह अनुकूल है।",
+        ],
+        "MODERATE": [
+            "संवेदनशील लोग बीच-बीच में आराम लेते रहें।",
+            "दमा और बुजुर्ग सामान्य सावधानियाँ बरतें।",
+            "गले में हल्की खराश होने पर ध्यान दें।",
+        ],
+        "HIGH": [
+            "दमा और सांस के मरीज अपनी दवाएं पास रखें।",
+            "बच्चे और बुजुर्ग अधिक समय बाहर न बिताएं।",
+            "संवेदनशील लोग खांसी या सांस की तकलीफ पर ध्यान दें।",
+        ],
+        "SEVERE": [
+            "गंभीर खतरा: बच्चे और बुजुर्ग केवल घर में रहें।",
+            "हृदय और दमा के मरीज किसी भी तनाव से बचें।",
+            "सांस लेने में कठिनाई होने पर डॉक्टर से संपर्क करें।",
+        ],
+        "CRITICAL": [
+            "अत्यंत गंभीर जोखिम: सांस के मरीज घर से न निकलें।",
+            "कमजोर वर्ग के लोग पूरी तरह सीलबंद कमरों में रहें।",
+            "सांस की तकलीफ होने पर तुरंत चिकित्सा सहायता लें।",
+        ],
+    },
+    "FORECAST": {
+        "RISING": [
+            "शाम तक प्रदूषण बढ़ने की संभावना; पहले से सतर्क रहें।",
+            "प्रदूषण बढ़ सकता है; पहले से सावधानी बरतें।",
+            "आने वाले घंटों में हवा खराब होने का अनुमान।",
+        ],
+        "FALLING": [
+            "जल्द ही हवा में सुधार होने की संभावना है।",
+            "आने वाले घंटों में धूल छंटने से हवा साफ होगी।",
+            "दोपहर तक प्रदूषण में कमी आने की उम्मीद है।",
+        ],
+        "STABLE": [
+            "वायु गुणवत्ता वर्तमान स्तर पर स्थिर रहने की संभावना।",
+            "अगले 3 घंटों में कोई बड़ा बदलाव नहीं देखा जाएगा।",
+            "स्थिति स्थिर बनी रहने का अनुमान है।",
+        ],
+    },
+    "GAS_ALERT": {
+        "CO": [
+            "तुरंत बंद कमरा छोड़कर बाहर ताज़ी हवा में जाएं।",
+            "बाहरी दरवाजे और खिड़कियाँ खोलकर तुरंत वेंटिलेशन करें।",
+            "चक्कर या मतली होने पर तुरंत चिकित्सा सहायता लें।",
+        ],
+        "FLAMMABLE": [
+            "तुरंत स्थान खाली करें; बिजली के स्विच न छुएं।",
+            "खुली आग, माचिस या चिंगारी से पूरी तरह बचें।",
+            "सुरक्षित होने पर मुख्य गैस वाल्व बंद करें।",
+        ],
+        "TOXIC_VOC": [
+            "रासायनिक वाष्प से तुरंत दूर हटें; वेंटिलेशन करें।",
+            "सीधे वाष्प में सांस न लें; सुरक्षा उपाय करें।",
+            "क्षेत्र में लगातार तेज वेंटिलेशन बनाए रखें।",
+        ],
+        "SMOKE": [
+            "आग के स्रोत की जाँच करें; धुएँ से तुरंत दूर जाएं।",
+            "धुएँ से सांस की नली को बचाएं और बाहर निकलें।",
+            "धुएँ वाले स्थान पर मास्क का उपयोग करें।",
+        ],
+    },
+}
+
+PILLAR_ACTIONS_OR = {
+    "ACTIVITY": {
+        "NORMAL": [
+            "ପ୍ରାତଃ ଭ୍ରମଣ, ଖେଳକୁଦ ଓ ବାହାର କାର୍ଯ୍ୟ ପାଇଁ ଅନୁକୂଳ।",
+            "ବାୟୁ ସ୍ୱଚ୍ଛ ଅଛି; ନିୟମିତ କାର୍ଯ୍ୟ କରିପାରିବେ।",
+            "ସାଇକେଲିଂ ଏବଂ ବ୍ୟାୟାମ ପାଇଁ ଉତ୍ତମ ପରିବେଶ।",
+        ],
+        "MODERATE": [
+            "ସାଧାରଣ ସତର୍କତା ବଜାୟ ରଖନ୍ତୁ; କଠିନ ବ୍ୟାୟାମ କମାନ୍ତୁ।",
+            "ବାହାର କାମ ସୁରକ୍ଷିତ; ମଝିରେ ମଝିରେ ବିଶ୍ରାମ ନିଅନ୍ତୁ।",
+            "ପ୍ରଚୁର ପାଣି ପିଅନ୍ତୁ ଏବଂ ହାଲୁକା ବ୍ୟାୟାମ କରନ୍ତୁ।",
+        ],
+        "HIGH": [
+            "କଠିନ ବ୍ୟାୟାମ ଘର ଭିତରେ କରନ୍ତୁ; ବାହାର ସମୟ କମାନ୍ତୁ।",
+            "ବ୍ୟସ୍ତବହୁଳ ରାସ୍ତା ନିକଟକୁ ଯାଆନ୍ତୁ ନାହିଁ।",
+            "ଲମ୍ବା ସମୟ ବାହାରେ ରହିବା ଠାରୁ ଦୂରେଇ ରୁହନ୍ତୁ।",
+        ],
+        "SEVERE": [
+            "ବାହାର କାମ ବନ୍ଦ ରଖନ୍ତୁ; N95 ମାସ୍କ ବ୍ୟବହାର କରନ୍ତୁ।",
+            "ଖେଳକୁଦ ସ୍ଥଗିତ ରଖନ୍ତୁ; ଘର ଭିତରେ ରହିବା ଶ୍ରେୟସ୍କର।",
+            "ବାହାରେ ପରିଶ୍ରମ କରନ୍ତୁ ନାହିଁ।",
+        ],
+        "CRITICAL": [
+            "ବାହାରକୁ ଆଦୌ ଯାଆନ୍ତୁ ନାହିଁ; ଘରେ ସୁରକ୍ଷିତ ରୁହନ୍ତୁ।",
+            "ଜରୁରୀକାଳୀନ ପ୍ରଦୂଷଣ ସ୍ତର; ବାହାରକୁ ବାହାରନ୍ତୁ ନାହିଁ।",
+            "ଘର ଭିତରେ ରୁହନ୍ତୁ; ବାହାରକୁ ଗଲେ N95 ମାସ୍କ ବାଧ୍ୟତାମୂଳକ।",
+        ],
+    },
+    "HOME": {
+        "NORMAL": [
+            "ସତେଜ ବାୟୁ ପାଇଁ ଝରକା କବାଟ ଖୋଲା ରଖନ୍ତୁ।",
+            "କୋଠରୀରେ ପବନ ଚଳାଚଳ ପାଇଁ ଅନୁକୂଳ ସମୟ।",
+            "ପ୍ରାକୃତିକ ବାୟୁ ପ୍ରବାହ ବଜାୟ ରଖନ୍ତୁ।",
+        ],
+        "MODERATE": [
+            "ଦ୍ୱିପ୍ରହରରେ ଝରକା ଖୋଲନ୍ତୁ; ସନ୍ଧ୍ୟାରେ ବନ୍ଦ ରଖନ୍ତୁ।",
+            "ଘର ଭିତରେ ଉତ୍ତମ ବାୟୁ ଚଳାଚଳ ସୁନିଶ୍ଚିତ କରନ୍ତୁ।",
+            "ଆବଶ୍ୟକ ହେଲେ ଏୟାର ପ୍ୟୁରିଫାୟାର୍ ଚଲାନ୍ତୁ।",
+        ],
+        "HIGH": [
+            "ରାସ୍ତା ପାଖ ଝରକା ବନ୍ଦ ରଖନ୍ତୁ; ପବନ ଚଳାଚଳ କରନ୍ତୁ।",
+            "ବାହାର ଧୂଳିକୁ ଘର ଭିତରକୁ ଆସିବାକୁ ଦିଅନ୍ତୁ ନାହିଁ।",
+            "ପ୍ରଦୂଷଣ ସମୟରେ ଝରକା କବାଟ ବନ୍ଦ ରଖନ୍ତୁ।",
+        ],
+        "SEVERE": [
+            "ସମସ୍ତ ଝରକା କବାଟ ବନ୍ଦ ରଖନ୍ତୁ; ସିଲ୍ କରନ୍ତୁ।",
+            "ଏୟାର ପ୍ୟୁରିଫାୟାର୍ କୁ ହାଇ ମୋଡ୍‌ରେ ଚଲାନ୍ତୁ।",
+            "ଘର ଭିତର ବାୟୁ ସୁରକ୍ଷିତ ରଖନ୍ତୁ।",
+        ],
+        "CRITICAL": [
+            "ଘର ସମ୍ପୂର୍ଣ୍ଣ ବନ୍ଦ ରଖନ୍ତୁ; ପ୍ୟୁରିଫାୟାର୍ ଚାଲୁ ରଖନ୍ତୁ।",
+            "କବାଟ ଝରକା ଦୃଢ଼ ଭାବରେ ବନ୍ଦ ରଖନ୍ତୁ।",
+            "ବାହାର ପ୍ରଦୂଷିତ ବାୟୁକୁ ଭିତରକୁ ଆସିବାକୁ ଦିଅନ୍ତୁ ନାହିଁ।",
+        ],
+    },
+    "HEALTH": {
+        "NORMAL": [
+            "ଶିଶୁ ଓ ବରିଷ୍ଠ ନାଗରିକଙ୍କ ପାଇଁ ବାୟୁ ସୁରକ୍ଷିତ।",
+            "ଶ୍ୱାସରୋଗୀଙ୍କ ପାଇଁ କୌଣସି ପ୍ରତିବନ୍ଧକ ନାହିଁ।",
+            "ସମସ୍ତ ବୟସ ବର୍ଗଙ୍କ ପାଇଁ ପରିବେଶ ସୁରକ୍ଷିତ।",
+        ],
+        "MODERATE": [
+            "ସମ୍ବେଦନଶୀଳ ବ୍ୟକ୍ତି ମଝିରେ ମଝିରେ ବିଶ୍ରାମ ନିଅନ୍ତୁ।",
+            "ଶ୍ୱାସରୋଗୀ ଓ ବୟସ୍କ ସାଧାରଣ ସତର୍କତା ଅବଲମ୍ବନ କରନ୍ତୁ।",
+            "ଗଳାରେ ସାମାନ୍ୟ କୁଣ୍ଡେଇ ହେଲେ ସତର୍କ ରୁହନ୍ତୁ।",
+        ],
+        "HIGH": [
+            "ଶ୍ୱାସରୋଗୀମାନେ ନିଜର ଔଷଧ ସାଙ୍ଗରେ ରଖନ୍ତୁ।",
+            "ଶିଶୁ ଓ ବରିଷ୍ଠ ନାଗରିକ ବାହାରେ ଅଧିକ ସମୟ ନ ବିତାନ୍ତୁ।",
+            "ସମ୍ବେଦନଶୀଳ ବ୍ୟକ୍ତି କାଶ କିମ୍ବା ଶ୍ୱାସକଷ୍ଟ ଉପରେ ନଜର ରଖନ୍ତୁ।",
+        ],
+        "SEVERE": [
+            "ଗମ୍ଭୀର ବିପଦ: ଶିଶୁ ଏବଂ ବୃଦ୍ଧ କେବଳ ଘରେ ରୁହନ୍ତୁ।",
+            "ହୃଦରୋଗୀ ଓ ଶ୍ୱାସରୋଗୀ ପରିଶ୍ରମରୁ ଦୂରେଇ ରୁହନ୍ତୁ।",
+            "ନିଶ୍ୱାସ ନେବାରେ କଷ୍ଟ ହେଲେ ଡାକ୍ତରଙ୍କ ସହ ପରାମର୍ଶ କରନ୍ତୁ।",
+        ],
+        "CRITICAL": [
+            "ଅତି ଗମ୍ଭୀର ବିପଦ: ଶ୍ୱାସରୋଗୀ ଘରୁ ବାହାରନ୍ତୁ ନାହିଁ।",
+            "ଅସୁସ୍ଥ ବ୍ୟକ୍ତି ସମ୍ପୂର୍ଣ୍ଣ ସିଲ୍ ହୋଇଥିବା କୋଠରୀରେ ରୁହନ୍ତୁ।",
+            "ଶ୍ୱାସକଷ୍ଟ ହେଲେ ତୁରନ୍ତ ଡାକ୍ତରୀ ଚିକିତ୍ସା ନିଅନ୍ତୁ।",
+        ],
+    },
+    "FORECAST": {
+        "RISING": [
+            "ସନ୍ଧ୍ୟାରେ ପ୍ରଦୂଷଣ ବଢିପାରେ; କାମ ଶୀଘ୍ର ସାରନ୍ତୁ।",
+            "ପ୍ରଦୂଷଣ ବୃଦ୍ଧି ହୋଇପାରେ; ପୂର୍ବରୁ ସତର୍କ ରୁହନ୍ତୁ।",
+            "ଆଗାମୀ ଘଣ୍ଟାରେ ବାୟୁ ଖରାପ ହେବାର ଆଶଙ୍କା।",
+        ],
+        "FALLING": [
+            "ଖୁବ୍ ଶୀଘ୍ର ବାୟୁ ମାନରେ ଉନ୍ନତି ହେବାର ସମ୍ଭାବନା।",
+            "ଧୂଳି କମିବା ସହିତ ବାୟୁ ସ୍ୱଚ୍ଛ ହେବାର ଆଶା।",
+            "ଦ୍ୱିପ୍ରହର ସୁଦ୍ଧା ପ୍ରଦୂଷଣ କମିବାର ଅନୁମାନ।",
+        ],
+        "STABLE": [
+            "ବାୟୁ ମାନ ବର୍ତ୍ତମାନ ସ୍ତରରେ ସ୍ଥିର ରହିବାର ସମ୍ଭାବନା।",
+            "ଆଗାମୀ ୩ ଘଣ୍ଟାରେ କୌଣସି ବଡ଼ ପରିବର୍ତ୍ତନ ହେବ ନାହିଁ।",
+            "ସ୍ଥିତି ସ୍ଥିର ରହିବାର ଅନୁମାନ।",
+        ],
+    },
+    "GAS_ALERT": {
+        "CO": [
+            "ତୁରନ୍ତ ବନ୍ଦ କୋଠରୀ ଛାଡ଼ି ବାହାର ସତେଜ ବାୟୁକୁ ଯାଆନ୍ତୁ।",
+            "ବାହାର କବାଟ ଓ ଝରକା ଖୋଲି ଘର ଭିତରେ ବାୟୁ ଚଳାଚଳ କରାନ୍ତୁ।",
+            "ଅସୁସ୍ଥତା ଅନୁଭବ ହେଲେ ଡାକ୍ତରଙ୍କ ପରାମର୍ଶ ନିଅନ୍ତୁ।",
+        ],
+        "FLAMMABLE": [
+            "ସ୍ଥାନ ତୁରନ୍ତ ଛାଡ଼ନ୍ତୁ; ସୁଇଚ୍ ବ୍ୟବହାର ନିଷେଧ।",
+            "ନିଆଁ, ଦିଆସିଲି ଓ ସ୍ପାର୍କରୁ ସମ୍ପୂର୍ଣ୍ଣ ଦୂରେଇ ରୁହନ୍ତୁ।",
+            "ସୁରକ୍ଷିତ ଥିଲେ ମୁଖ୍ୟ ଗ୍ୟାସ୍ ଭଲ୍ଭ ବନ୍ଦ କରନ୍ତୁ।",
+        ],
+        "TOXIC_VOC": [
+            "ରାସାୟନିକ ବାଷ୍ପରୁ ଦୂରେଇ ଯାଆନ୍ତୁ; ବାୟୁ ଚଳାଚଳ କରନ୍ତୁ।",
+            "ବାଷ୍ପ ନିଅନ୍ତୁ ନାହିଁ; ସୁରକ୍ଷା ଉପାୟ ବ୍ୟବହାର କରନ୍ତୁ।",
+            "କୋଠରୀରେ ନିରନ୍ତର ବାୟୁ ଚଳାଚଳ ବଜାୟ ରଖନ୍ତୁ।",
+        ],
+        "SMOKE": [
+            "ନିଆଁ ଯାଞ୍ଚ କରନ୍ତୁ; ଧୂଆଁରୁ ତୁରନ୍ତ ଦୂରେଇ ଯାଆନ୍ତୁ।",
+            "ଧୂଆଁରୁ ଶ୍ୱାସନଳୀକୁ ରକ୍ଷା କରନ୍ତୁ ଏବଂ ବାହାରକୁ ଆସନ୍ତୁ।",
+            "ଧୂଆଁ ଥିବା ସ୍ଥାନରେ ମାସ୍କ ବ୍ୟବହାର କରନ୍ତୁ।",
+        ],
+    },
+}
+
+LOCALIZED_PILLAR_ACTIONS = {
+    "en": PILLAR_ACTIONS_EN,
+    "hi": PILLAR_ACTIONS_HI,
+    "or": PILLAR_ACTIONS_OR,
+}
+
+# Diurnal Openers by Time-of-Day and Severity
+DIURNAL_OPENERS_EN = {
+    "MORNING": {
+        "NORMAL": [
+            "Crisp morning air with healthy atmospheric dispersion.",
+            "Fresh morning conditions across the local area.",
+            "Clear morning air; ideal start to the day.",
+        ],
+        "MODERATE": [
+            "Mild morning haze as ambient traffic begins building.",
+            "Morning air slightly hazy with light boundary layer mixing.",
+        ],
+        "HIGH": [
+            "Morning haze and stagnant air elevating localized pollution.",
+            "Dense morning particulates trapped near ground level.",
+        ],
+        "SEVERE": [
+            "Heavy morning smog trapped under thermal inversion layer.",
+        ],
+        "CRITICAL": [
+            "Severe hazardous morning smog with near-zero dispersion.",
+        ],
+    },
+    "MIDDAY": {
+        "NORMAL": [
+            "Midday conditions remain favorable and comfortable.",
+            "Good midday solar mixing dispersing ambient particles.",
+        ],
+        "MODERATE": [
+            "Midday sun and dust activity causing moderate haze.",
+            "Moderate particulate concentrations observed across midday.",
+        ],
+        "HIGH": [
+            "Elevated midday dust and emissions across active sectors.",
+        ],
+        "SEVERE": [
+            "Heavy midday particulate buildup despite thermal mixing.",
+        ],
+        "CRITICAL": [
+            "Critical midday pollution emergency across the area.",
+        ],
+    },
+    "EVENING": {
+        "NORMAL": [
+            "Pleasant evening conditions with clean ambient airflow.",
+            "Favorable evening atmosphere for outdoor activities.",
+        ],
+        "MODERATE": [
+            "Evening commute traffic contributing to moderate particle levels.",
+            "Cooling evening air beginning to settle ambient dust.",
+        ],
+        "HIGH": [
+            "Evening rush and cooling temperatures trapping road emissions.",
+            "Noticeable evening smog accumulation near traffic corridors.",
+        ],
+        "SEVERE": [
+            "Heavy evening inversion trapping vehicular emissions and smoke.",
+        ],
+        "CRITICAL": [
+            "Hazardous evening smog trapped near ground level.",
+        ],
+    },
+    "NIGHT": {
+        "NORMAL": [
+            "Calm nighttime air within safe and healthy limits.",
+            "Clean nighttime baseline; restful sleeping environment.",
+        ],
+        "MODERATE": [
+            "Nighttime cooling slightly concentrating ground-level particles.",
+        ],
+        "HIGH": [
+            "Nighttime thermal inversion concentrating localized emissions.",
+        ],
+        "SEVERE": [
+            "Dense nighttime particulate stagnation; sealed rooms advised.",
+        ],
+        "CRITICAL": [
+            "Hazardous nighttime air emergency with stagnant dispersion.",
+        ],
+    },
+}
+
+DIURNAL_OPENERS_HI = {
+    "MORNING": {
+        "NORMAL": ["सुबह की हवा साफ और स्वच्छ है।"],
+        "MODERATE": ["सुबह की हवा में हल्का प्रदूषण और धुंध देखी गई है।"],
+        "HIGH": ["सुबह के समय बढ़ता प्रदूषण और धुंध दर्ज की गई है।"],
+        "SEVERE": ["सुबह के समय घना स्मॉग और गंभीर प्रदूषण का स्तर है।"],
+        "CRITICAL": ["सुबह के समय खतरनाक और आपातकालीन प्रदूषण स्तर है।"],
+    },
+    "MIDDAY": {
+        "NORMAL": ["दोपहर के समय मौसम अनुकूल और हवा साफ बनी हुई है।"],
+        "MODERATE": ["दोपहर में हल्की धूल और मध्यम प्रदूषण दर्ज किया गया है।"],
+        "HIGH": ["दोपहर के समय बढ़ा हुआ प्रदूषण और धूल का स्तर है।"],
+        "SEVERE": ["दोपहर में भी गंभीर प्रदूषण स्तर बना हुआ है।"],
+        "CRITICAL": ["दोपहर के समय अत्यधिक गंभीर प्रदूषण आपातकाल।"],
+    },
+    "EVENING": {
+        "NORMAL": ["शाम का मौसम सुखद और हवा काफी साफ है।"],
+        "MODERATE": ["शाम के ट्रैफिक के कारण हवा में हल्का प्रदूषण बढ़ रहा है।"],
+        "HIGH": ["शाम के ट्रैफिक और ठंडी हवा से प्रदूषण बढ़ रहा है।"],
+        "SEVERE": ["शाम के समय घना स्मॉग और भारी प्रदूषण जमा हो रहा है।"],
+        "CRITICAL": ["शाम के समय खतरनाक प्रदूषण का स्तर बना हुआ है।"],
+    },
+    "NIGHT": {
+        "NORMAL": ["रात के समय हवा शांत और सुरक्षित स्तर पर है।"],
+        "MODERATE": ["रात की ठंड से निचले स्तर पर हल्का प्रदूषण रुका हुआ है।"],
+        "HIGH": ["रात के समय प्रदूषण का स्तर सामान्य से अधिक है।"],
+        "SEVERE": ["रात के समय गंभीर प्रदूषण; खिड़कियाँ बंद रखें।"],
+        "CRITICAL": ["रात के समय अत्यधिक खतरनाक प्रदूषण स्तर।"],
+    },
+}
+
+DIURNAL_OPENERS_OR = {
+    "MORNING": {
+        "NORMAL": ["ପ୍ରଭାତର ବାୟୁ ସ୍ୱଚ୍ଛ ଓ ସତେଜ ରହିଛି।"],
+        "MODERATE": ["ସକାଳ ସମୟରେ ବାୟୁରେ ସାମାନ୍ୟ କୁହୁଡ଼ି ଓ ପ୍ରଦୂଷଣ ଅନୁଭୂତ।"],
+        "HIGH": ["ସକାଳ ସମୟରେ ବାୟୁ ପ୍ରଦୂଷଣ ବୃଦ୍ଧି ପାଇଛି।"],
+        "SEVERE": ["ସକାଳେ ପ୍ରବଳ କୁହୁଡ଼ି ସହ ଗମ୍ଭୀର ପ୍ରଦୂଷଣ ଦେଖାଦେଇଛି।"],
+        "CRITICAL": ["ସକାଳେ ଅତ୍ୟନ୍ତ ବିପଜ୍ଜନକ ପ୍ରଦୂଷଣ ସ୍ତର।"],
+    },
+    "MIDDAY": {
+        "NORMAL": ["ଦ୍ୱିପ୍ରହରରେ ପାଗ ଅନୁକୂଳ ଏବଂ ବାୟୁ ସ୍ୱଚ୍ଛ ରହିଛି।"],
+        "MODERATE": ["ଦ୍ୱିପ୍ରହରରେ ସାମାନ୍ୟ ଧୂଳି ସହ ମଧ୍ୟମ ପ୍ରଦୂଷଣ ରହିଛି।"],
+        "HIGH": ["ଦ୍ୱିପ୍ରହରରେ ବୃଦ୍ଧି ପାଇଥିବା ପ୍ରଦୂଷଣ ଓ ଧୂଳି ଦେଖାଯାଇଛି।"],
+        "SEVERE": ["ଦ୍ୱିପ୍ରହରରେ ଗମ୍ଭୀର ପ୍ରଦୂଷଣ ସ୍ଥିତି ଜାରି ରହିଛି।"],
+        "CRITICAL": ["ଦ୍ୱିପ୍ରହରରେ ଜରୁରୀକାଳୀନ ବିପଜ୍ଜନକ ପ୍ରଦୂଷଣ।"],
+    },
+    "EVENING": {
+        "NORMAL": ["ସନ୍ଧ୍ୟା ସମୟରେ ପାଗ ଆରାମଦାୟକ ଓ ବାୟୁ ନିର୍ମଳ ଅଛି।"],
+        "MODERATE": ["ସନ୍ଧ୍ୟା ଟ୍ରାଫିକ୍ ଯୋଗୁଁ ବାୟୁରେ ସାମାନ୍ୟ ପ୍ରଦୂଷଣ ବଢୁଛି।"],
+        "HIGH": ["ସନ୍ଧ୍ୟାରେ ଯାନବାହନ ଚଳାଚଳ ଯୋଗୁଁ ପ୍ରଦୂଷଣ ବୃଦ୍ଧି ପାଇଛି।"],
+        "SEVERE": ["ସନ୍ଧ୍ୟା ସମୟରେ ପ୍ରବଳ ଧୂଆଁ ଓ ଗମ୍ଭୀର ପ୍ରଦୂଷଣ।"],
+        "CRITICAL": ["ସନ୍ଧ୍ୟାରେ ବିପଦଜନକ ପ୍ରଦୂଷଣ ସ୍ତର ରହିଛି।"],
+    },
+    "NIGHT": {
+        "NORMAL": ["ରାତ୍ରି କାଳୀନ ବାୟୁ ଶାନ୍ତ ଓ ସୁରକ୍ଷିତ ରହିଛି।"],
+        "MODERATE": ["ରାତିର ଥଣ୍ଡା ଯୋଗୁଁ ତଳ ଭାଗରେ ସାମାନ୍ୟ ପ୍ରଦୂଷଣ ରହିଛି।"],
+        "HIGH": ["ରାତି ସମୟରେ ପ୍ରଦୂଷଣ ସ୍ତର ସାଧାରଣଠାରୁ ଅଧିକ ରହିଛି।"],
+        "SEVERE": ["ରାତିରେ ଗମ୍ଭୀର ପ୍ରଦୂଷଣ; ଝରକା ବନ୍ଦ ରଖନ୍ତୁ।"],
+        "CRITICAL": ["ରାତ୍ରି କାଳରେ ଅତ୍ୟନ୍ତ ବିପଜ୍ଜନକ ପ୍ରଦୂଷଣ।"],
+    },
+}
+
+LOCALIZED_DIURNAL_OPENERS = {
+    "en": DIURNAL_OPENERS_EN,
+    "hi": DIURNAL_OPENERS_HI,
+    "or": DIURNAL_OPENERS_OR,
+}
+
+SOURCE_FUSION_PHRASES = {
+    "en": {
+        "TRAFFIC": "Traffic and vehicular emissions are prominent along arterial roads.",
+        "HEAVY_DUST": "Suspended mineral dust and particulate matter are elevated.",
+        "COMBUSTION": "Combustion smoke is actively lingering nearby.",
+        "BIOMASS_OR_WASTE_BURNING": "Local biomass and waste burning smoke detected.",
+        "CONSTRUCTION": "Construction activity is contributing localized dust.",
+        "INDUSTRIAL": "Industrial emissions detected in downwind sectors.",
+        "INDOOR_ACTIVITY": "Indoor activity is affecting ambient air exchange.",
+    },
+    "hi": {
+        "TRAFFIC": "सड़कों पर वाहनों का धुआँ और ट्रैफिक उत्सर्जन अधिक है।",
+        "HEAVY_DUST": "हवा में धूल और बारीक कणों की मात्रा बढ़ी हुई है।",
+        "COMBUSTION": "आसपास दहन और धुएँ का प्रभाव दिखाई दे रहा है।",
+        "BIOMASS_OR_WASTE_BURNING": "कचरा या बायोमास जलने से धुआँ फैल रहा है।",
+        "CONSTRUCTION": "निर्माण कार्य से धूल का स्तर बढ़ रहा है।",
+        "INDUSTRIAL": "औद्योगिक क्षेत्रों से उत्सर्जन दर्ज किया गया है।",
+        "INDOOR_ACTIVITY": "इनडोर गतिविधियों से हवा प्रभावित हो रही है।",
+    },
+    "or": {
+        "TRAFFIC": "ରାସ୍ତାରେ ଯାନବାହାନର ଧୂଆଁ ଓ ଟ୍ରାଫିକ୍ ବୃଦ୍ଧି ପାଇଛି।",
+        "HEAVY_DUST": "ବାୟୁରେ ଧୂଳିକଣାର ମାତ୍ରା ବୃଦ୍ଧି ପାଇଛି।",
+        "COMBUSTION": "ଆଖପାଖରେ ଜଳିବା ଓ ଧୂଆଁର ପ୍ରଭାବ ଦେଖାଯାଉଛି।",
+        "BIOMASS_OR_WASTE_BURNING": "ଆବର୍ଜନା ଜଳିବା ଯୋଗୁଁ ଧୂଆଁ ବ୍ୟାପୁଛି।",
+        "CONSTRUCTION": "ନିର୍ମାଣ କାର୍ଯ୍ୟ ଯୋଗୁଁ ଧୂଳି ବଢୁଛି।",
+        "INDUSTRIAL": "କାରଖାନାରୁ ନିର୍ଗତ ଧୂଆଁ ଚିହ୍ନଟ ହୋଇଛି।",
+        "INDOOR_ACTIVITY": "ଘର ଭିତର କାର୍ଯ୍ୟ ଯୋଗୁଁ ବାୟୁ ପ୍ରଭାବିତ ହେଉଛି।",
+    },
+}
+
+FORECAST_FUSION_PHRASES = {
+    "en": {
+        "rising": "Fine particulates forecast to increase (+20-30%) over coming hours—plan ahead.",
+        "falling": "Conditions expected to improve steadily as particulates disperse.",
+        "stable": "Air quality projected to hold steady across the forecast horizon.",
+    },
+    "hi": {
+        "rising": "आने वाले घंटों में प्रदूषण बढ़ने का अनुमान है—पहले से योजना बनाएं।",
+        "falling": "आने वाले समय में वायु गुणवत्ता में निरंतर सुधार की उम्मीद है।",
+        "stable": "वायु गुणवत्ता वर्तमान स्तर पर स्थिर रहने का अनुमान है।",
+    },
+    "or": {
+        "rising": "ଆଗାମୀ ଘଣ୍ଟାରେ ପ୍ରଦୂଷଣ ବଢିପାରେ—ପୂର୍ବରୁ ସତର୍କ ରୁହନ୍ତୁ।",
+        "falling": "ବାୟୁ ମାନରେ ନିରନ୍ତର ସୁଧାର ଆସିବାର ଆଶା କରାଯାଉଛି।",
+        "stable": "ଆଗାମୀ ସମୟରେ ବାୟୁ ସ୍ଥିତି ସ୍ଥିର ରହିବାର ଅନୁମାନ।",
+    },
+}
+
+
+def get_pillar_tag(tag_key: str, lang: str = "en") -> str:
+    norm_lang = normalize_language(lang)
+    lang_tags = PILLAR_TAGS.get(norm_lang, PILLAR_TAGS["en"])
+    return lang_tags.get(tag_key, f"[{tag_key}]")
+
+
+def get_pillar_action(category: str, severity: str, seed: int, lang: str = "en") -> str:
+    norm_lang = normalize_language(lang)
+    lang_actions = LOCALIZED_PILLAR_ACTIONS.get(norm_lang, PILLAR_ACTIONS_EN)
+    cat_map = lang_actions.get(category, PILLAR_ACTIONS_EN.get(category, {}))
+    sev_list = cat_map.get(severity) or PILLAR_ACTIONS_EN.get(category, {}).get(severity) or cat_map.get("NORMAL", [])
+    if not sev_list:
+        return ""
+    text = sev_list[seed % len(sev_list)]
+    tag = get_pillar_tag(category, lang=norm_lang)
+    return f"{tag} {text}"
+
+
+def get_diurnal_opener(period: str, severity: str, seed: int, lang: str = "en") -> str:
+    norm_lang = normalize_language(lang)
+    lang_openers = LOCALIZED_DIURNAL_OPENERS.get(norm_lang, DIURNAL_OPENERS_EN)
+    period_map = lang_openers.get(period, DIURNAL_OPENERS_EN.get(period, {}))
+    sev_list = period_map.get(severity) or DIURNAL_OPENERS_EN.get(period, {}).get(severity) or period_map.get("NORMAL", [])
+    if not sev_list:
+        return ""
+    return sev_list[seed % len(sev_list)]
+
+
+def get_source_fusion_phrase(source: str, lang: str = "en") -> str:
+    norm_lang = normalize_language(lang)
+    lang_sources = SOURCE_FUSION_PHRASES.get(norm_lang, SOURCE_FUSION_PHRASES["en"])
+    return lang_sources.get(source, "")
+
+
+def get_forecast_fusion_phrase(trend: str, lang: str = "en") -> str:
+    norm_lang = normalize_language(lang)
+    lang_fc = FORECAST_FUSION_PHRASES.get(norm_lang, FORECAST_FUSION_PHRASES["en"])
+    return lang_fc.get(trend.lower(), "")
+
+
+
