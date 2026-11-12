@@ -412,21 +412,31 @@ void NavosEdgeGUI::drawScreen1_AdviceActions(const NavosEdgeState& state) {
     tftDrawFastHLine(16, 158, 448, GUI_DARK_GREY);
 
     uint8_t count = state.action_count;
-    int currentY = 168;
-    uint8_t actSize = (count > 3) ? 1 : 2;
+    int currentY = 164;
+    uint8_t actSize = 2;
 
     if (count == 0) {
-        currentY = drawWrappedString(16, currentY, "1. No special precautions needed.", GUI_WHITE, GUI_CARD_BG, actSize, 448, 2);
+        currentY = drawWrappedString(16, currentY, "No special precautions needed.", GUI_WHITE, GUI_CARD_BG, actSize, 448, 2);
         currentY += 4;
-        drawWrappedString(16, currentY, "2. Enjoy fresh air and normal routine.", GUI_WHITE, GUI_CARD_BG, actSize, 448, 2);
+        drawWrappedString(16, currentY, "Enjoy fresh air and normal routine.", GUI_WHITE, GUI_CARD_BG, actSize, 448, 2);
     } else {
         for (uint8_t i = 0; i < count; i++) {
             if (currentY + 8 * actSize > 310) break; // Don't overflow the panel
 
-            char lineBuf[256];
-            snprintf(lineBuf, sizeof(lineBuf), "%d. %s", i + 1, state.actions[i]);
-            currentY = drawWrappedString(16, currentY, lineBuf, GUI_WHITE, GUI_CARD_BG, actSize, 448, 2);
-            currentY += 4; // spacing
+            const char* actText = state.actions[i];
+            // Strip any leading serial number if present (e.g. "1. " or "1) ")
+            if (actText[0] >= '0' && actText[0] <= '9') {
+                if (actText[1] == '.' || actText[1] == ')') {
+                    actText += 2;
+                    while (*actText == ' ') actText++;
+                } else if (actText[1] >= '0' && actText[1] <= '9' && (actText[2] == '.' || actText[2] == ')')) {
+                    actText += 3;
+                    while (*actText == ' ') actText++;
+                }
+            }
+
+            currentY = drawWrappedString(16, currentY, actText, GUI_WHITE, GUI_CARD_BG, actSize, 448, 2);
+            currentY += 3; // spacing between actions
         }
     }
 

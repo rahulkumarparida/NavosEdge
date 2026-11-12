@@ -27,6 +27,7 @@ The NavosEdge node integrates five environmental sensors and a 3.5" TFT display 
 | **TFT Display — SPI MOSI** | MPI3501 (ILI9486) | **D11** | Hardware SPI | Master Out Slave In | 3.3V / 5V |
 | **TFT Display — SPI MISO** | MPI3501 (ILI9486) | **D12** | Hardware SPI | Master In Slave Out (Touch / Read) | 3.3V / 5V |
 | **TFT Display — SPI SCK** | MPI3501 (ILI9486) | **D13** | Hardware SPI | Serial SPI Clock line | 3.3V / 5V |
+| **Emergency Buzzer** | Active / Passive Piezo | **D9** | Digital Output (PWM) | Audible hazard alarm & boot self-test | 3.3V or 5V @ ~30mA |
 | **Telemetry to Linux MPU** | Onboard Bridge | **USB** | CDC Serial @ 115200 | Transmits JSON lines to `/dev/ttyACM0` | Powered via board bus |
 
 > [!IMPORTANT]
@@ -123,6 +124,24 @@ The NavosEdge node integrates five environmental sensors and a 3.5" TFT display 
 
 ---
 
+### 3.6 Emergency Buzzer (Active or Passive Piezo)
+```
+       Buzzer Module                    Arduino UNO Q
+   ┌───────────────────────┐        ┌─────────────────┐
+   │ VCC / Signal (+)      ├────────┤ D9              │
+   │ GND (-)               ├────────┤ GND             │
+   │ I/O (3-pin modules)   ├────────┤ D9              │
+   └───────────────────────┘        └─────────────────┘
+```
+- **Signal / VCC (+) → D9**: Connect positive terminal (or I/O pin on 3-pin modules) to digital pin **D9**.
+- **GND (-) → GND**: Connect negative terminal to Arduino Common Ground.
+- **Active vs Passive Support**:
+  - **Active Buzzer (Default, `BUZZER_IS_PASSIVE 0`)**: Has internal oscillator; driven via DC `HIGH`/`LOW`.
+  - **Passive Buzzer (`BUZZER_IS_PASSIVE 1`)**: Driven via `tone(9, 1000)` and `noTone(9)`.
+- **Startup Test Pattern**: Automatically activates 3 test beeps (500 ms ON, 500 ms OFF) upon boot.
+
+---
+
 ## 4. Full System Interconnection Schematic
 
 ```
@@ -143,7 +162,7 @@ The NavosEdge node integrates five environmental sensors and a 3.5" TFT display 
   DHT22 [DATA] ───────┤ D8 (Bit-Bang I/O)                         │  ││   │   │   │   │
                       │    │                                      │  ││   │   │   │   │
                       │    └── [ 10kΩ Pull-Up Resistor ] ─────────┼──┼┴───┼───┼───┼───┘
-                      │                                           │  ││   │   │   │
+  BUZZER [Signal] ────┤ D9 (PWM / Active Buzzer Output)           │  ││   │   │   │
   TFT Display [CS] ───┤ D10 (SPI Chip Select)                     │  ││   │   │   │
   TFT Display [MOSI] ─┤ D11 (SPI MOSI)                            │  ││   │   │   │
   TFT Display [MISO] ─┤ D12 (SPI MISO)                            │  ││   │   │   │

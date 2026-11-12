@@ -42,6 +42,21 @@
 #define DHT22_PIN  8
 #define pmsSerial  Serial1   // MPM10-CS on hardware Serial1 (D0=RX, D1=TX)
 
+// ─── Buzzer Configuration (Pin D9) ────────────────────────────────
+#define BUZZER_PIN          9      // Digital Pin 9 (PWM / GPIO)
+
+// Hardware buzzer type selection:
+//   0 = Active buzzer (built-in oscillator, triggered via digitalWrite HIGH/LOW)
+//   1 = Passive piezo buzzer (requires oscillating frequency via tone() / noTone())
+#ifndef BUZZER_IS_PASSIVE
+#define BUZZER_IS_PASSIVE   0      // Default: Active buzzer
+#endif
+
+#define BUZZER_TONE_FREQ    1000   // 1 kHz audible tone frequency for passive piezo
+#define BUZZER_TEST_CYCLES  3      // 3 test pulses on startup
+#define BUZZER_ON_TIME_MS   500    // 500 ms active sound pulse
+#define BUZZER_OFF_TIME_MS  500    // 500 ms silence interval
+
 // ─── Timing ──────────────────────────────────────────────────────
 #define SERIAL_BAUD       115200
 #define PMS_BAUD          9600
@@ -411,6 +426,89 @@ void transmitJSON() {
 #endif
 }
 
+// ─── Buzzer Hardware Control Helpers ──────────────────────────────
+static inline void buzzerOn() {
+#if BUZZER_IS_PASSIVE
+  tone(BUZZER_PIN, BUZZER_TONE_FREQ);
+#else
+  digitalWrite(BUZZER_PIN, HIGH);
+#endif
+}
+
+static inline void buzzerOff() {
+#if BUZZER_IS_PASSIVE
+  noTone(BUZZER_PIN);
+#else
+  digitalWrite(BUZZER_PIN, LOW);
+#endif
+}
+
+/**
+ * @brief Self-test activation routine for the buzzer connected to Digital Pin 9 (D9).
+ *
+ * Requirements:
+ *   1. Configures D9 as OUTPUT and ensures pin starts in the LOW (OFF) state.
+ *   2. Activates buzzer for 500ms ON / 500ms OFF repeated 3 times.
+ *   3. If operating in active buzzer mode, prints "BUZZER TEST: ACTIVATED".
+ *   4. Prints clear cycle-by-cycle status messages to Serial Monitor.
+ *   5. Guarantees buzzer remains OFF after test completion.
+ *   6. Supports tone()/noTone() for passive piezo or digitalWrite() for active buzzer.
+ *   7. Zero interference with MQ sensors, DHT22, or MPM10-CS.
+ *   8. Reusable standalone function.
+ *
+ * Note: A digital GPIO pin cannot electrically confirm physical transducer
+ * presence or acoustic pressure without external feedback hardware.
+ * This routine confirms GPIO channel activation.
+ */
+void testBuzzer() {
+  pinMode(BUZZER_PIN, OUTPUT);
+  buzzerOff();
+
+  Serial.println(F("=================================================="));
+  Serial.println(F("[BUZZER] Starting Buzzer Self-Test on Pin D9..."));
+  Serial.print(F("[BUZZER] Output Pin: Digital D"));
+  Serial.println(BUZZER_PIN);
+
+#if !BUZZER_IS_PASSIVE
+  Serial.println(F("[BUZZER] Mode: Active Buzzer (digitalWrite HIGH/LOW)"));
+  Serial.println(F("BUZZER TEST: ACTIVATED"));
+#else
+  Serial.println(F("[BUZZER] Mode: Passive Piezo (tone() @ 1000 Hz)"));
+  Serial.println(F("BUZZER TEST: ACTIVATED"));
+#endif
+
+  Serial.print(F("[BUZZER] Pattern: "));
+  Serial.print(BUZZER_TEST_CYCLES);
+  Serial.println(F(" cycles (500 ms ON / 500 ms OFF)"));
+  Serial.println(F("=================================================="));
+
+  for (int cycle = 1; cycle <= BUZZER_TEST_CYCLES; cycle++) {
+    Serial.print(F("[BUZZER] Cycle "));
+    Serial.print(cycle);
+    Serial.print(F("/"));
+    Serial.print(BUZZER_TEST_CYCLES);
+    Serial.println(F(": State = ON  (500 ms) -> SOUND ACTIVE"));
+    buzzerOn();
+    delay(BUZZER_ON_TIME_MS);
+
+    Serial.print(F("[BUZZER] Cycle "));
+    Serial.print(cycle);
+    Serial.print(F("/"));
+    Serial.print(BUZZER_TEST_CYCLES);
+    Serial.println(F(": State = OFF (500 ms) -> SILENCE"));
+    buzzerOff();
+    delay(BUZZER_OFF_TIME_MS);
+  }
+
+  // Explicitly guarantee buzzer remains OFF
+  buzzerOff();
+
+  Serial.println(F("[BUZZER] ----------------------------------------"));
+  Serial.println(F("[BUZZER] Status: Test completed. Buzzer is OFF."));
+  Serial.println(F("[BUZZER] Note: GPIO pin D9 pulsed. Verify sound manually."));
+  Serial.println(F("=================================================="));
+}
+
 // ─── Arduino Setup ──────────────────────────────────────────────
 void setup() {
 #if __has_include(<Arduino_RouterBridge.h>)
@@ -427,6 +525,9 @@ void setup() {
 
   memset(&state, 0, sizeof(state));
   boot_ms = millis();
+
+  // Execute isolated Buzzer Activation Test on startup
+  testBuzzer();
 
   Serial.println(F("[MCU] NAVOSEDGE_MCU_BOOT_OK"));
   Serial.println(F("{\"status\":\"booting\",\"firmware\":\"navos_sensors\",\"version\":\"1.1.0\"}"));

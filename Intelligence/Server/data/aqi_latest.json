@@ -1,18 +1,23 @@
 {
   "status": "available",
-  "aqi": 161.07,
-  "category": "Unhealthy",
+  "aqi": 54.11,
+  "category": "Satisfactory",
   "dominant_pollutant": "PM2_5",
   "pm": {
-    "PM1_0": 45.0,
-    "PM2_5": 75.0,
-    "PM10": 110.0
+    "PM1_0": 10.0,
+    "PM2_5": 32.0,
+    "PM10": 42.0
   },
   "sub_indices": {
-    "PM1_0": 124.39,
-    "PM2_5": 161.07,
-    "PM10": 78.22
+    "PM2_5": 54.11,
+    "PM10": 42.0
   },
-  "timestamp": "2026-10-03T13:06:49Z",
-  "node_id": "uno-q-001"
+  "timestamp": "2026-11-12T07:15:19.946174Z",
+  "node_id": "node-burst",
+  "data_sufficiency": "INSUFFICIENT_DATA",
+  "is_complete_national_aqi": false,
+  "calculation_method": "CPCB_PM_ESTIMATE",
+  "averaging_window_hours": 24.0,
+  "data_coverage_hours": 1.0,
+  "is_provisional": true
 }
