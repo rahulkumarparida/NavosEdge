@@ -3,7 +3,24 @@ import { OverviewCards } from './components/OverviewCard';
 import { NodeCard } from './components/NodeCard';
 import { LocationComparison } from './components/LocationComparison';
 import { IpConfigCard } from './components/IpConfigCard';
-import { Activity, Radio, RefreshCw, Layers, Globe, Trash2, Filter } from 'lucide-react';
+import { EmergencyPanel } from './components/emergency/EmergencyPanel';
+import { ResidentsPanel } from './components/emergency/ResidentsPanel';
+import { ActuatorsPanel } from './components/emergency/ActuatorsPanel';
+import { NotificationsPanel } from './components/emergency/NotificationsPanel';
+import { getManagerAuth, setManagerAuth } from './api/emergencyApi';
+import {
+  Activity,
+  Radio,
+  RefreshCw,
+  Layers,
+  Globe,
+  Trash2,
+  ShieldAlert,
+  Users,
+  Cpu,
+  Bell,
+  KeyRound,
+} from 'lucide-react';
 
 export default function App() {
   const [data, setData] = useState({
@@ -29,6 +46,9 @@ export default function App() {
   const [showActiveOnly, setShowActiveOnly] = useState(true);
   const [sseConnected, setSseConnected] = useState(false);
   const [lastFetchTime, setLastFetchTime] = useState(new Date().toLocaleTimeString());
+  const [activeTab, setActiveTab] = useState('environment');
+  const [authState, setAuthState] = useState(() => getManagerAuth());
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   // Function to manually fetch overview JSON
   const fetchOverview = async () => {
@@ -195,6 +215,15 @@ export default function App() {
           </div>
 
           <button
+            onClick={() => setShowAuthModal((v) => !v)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg hover:border-slate-700 text-slate-300 text-xs transition"
+            title="Configure Operator Name & Manager API Key"
+          >
+            <KeyRound className="w-3.5 h-3.5 text-cyan-400" />
+            <span>{authState.operator || 'manager'}</span>
+          </button>
+
+          <button
             onClick={() => {
               fetchOverview();
               fetchIpConfig();
@@ -207,8 +236,77 @@ export default function App() {
         </div>
       </header>
 
+      {/* Optional Operator / API Key Bar */}
+      {showAuthModal && (
+        <div className="mb-6 p-4 rounded-xl bg-slate-900 border border-slate-800 flex flex-wrap items-center gap-3 text-xs">
+          <span className="font-bold text-slate-300">Operator Session:</span>
+          <input
+            type="text"
+            placeholder="Operator Name"
+            value={authState.operator}
+            onChange={(e) => {
+              const next = { ...authState, operator: e.target.value };
+              setAuthState(next);
+              setManagerAuth(next);
+            }}
+            className="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-slate-100"
+          />
+          <input
+            type="password"
+            placeholder="Manager API Key (if configured)"
+            value={authState.apiKey}
+            onChange={(e) => {
+              const next = { ...authState, apiKey: e.target.value };
+              setAuthState(next);
+              setManagerAuth(next);
+            }}
+            className="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-slate-100"
+          />
+          <button
+            onClick={() => setShowAuthModal(false)}
+            className="px-3 py-1.5 rounded-lg bg-cyan-500 text-slate-950 font-bold"
+          >
+            Done
+          </button>
+        </div>
+      )}
+
+      {/* Navigation Tabs */}
+      <nav className="flex flex-wrap gap-2 mb-6 border-b border-slate-800/80 pb-3">
+        {[
+          { id: 'environment', label: 'Environment', icon: Activity },
+          { id: 'emergency', label: 'Emergency & Incidents', icon: ShieldAlert },
+          { id: 'residents', label: 'Residents & Contacts', icon: Users },
+          { id: 'actuators', label: 'Devices & Actuators', icon: Cpu },
+          { id: 'notifications', label: 'Notification Centre', icon: Bell },
+        ].map((tab) => {
+          const Icon = tab.icon;
+          const active = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition border ${
+                active
+                  ? 'bg-cyan-500 text-slate-950 border-cyan-400'
+                  : 'bg-slate-900/70 text-slate-300 border-slate-800 hover:border-slate-700'
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+              {tab.label}
+            </button>
+          );
+        })}
+      </nav>
+
       {/* Main Content */}
       <main>
+        {activeTab === 'emergency' && <EmergencyPanel />}
+        {activeTab === 'residents' && <ResidentsPanel />}
+        {activeTab === 'actuators' && <ActuatorsPanel />}
+        {activeTab === 'notifications' && <NotificationsPanel />}
+        {activeTab === 'environment' && (
+          <>
         {/* System Overview Statistics */}
         <OverviewCards data={data} />
 
@@ -309,6 +407,8 @@ export default function App() {
             );
           })()}
         </section>
+          </>
+        )}
       </main>
 
       {/* Footer */}

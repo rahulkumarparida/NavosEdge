@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="420" viewBox="0 0 760 420" style="font-family:Segoe UI,Arial,sans-serif;background:#ffffff;">
+<rect width="760" height="420" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+<text x="24" y="30" font-size="16" font-weight="700" fill="#0f172a">SourceClassifier Per-Class F1-Score (Controlled Scenarios)</text>
+<text x="24" y="50" font-size="11" fill="#475569">Source: SYNTHETIC (seed=42, n=240, Macro-F1=0.404, Abstain=0.4%) | Units: F1 [0-1]</text>
+
+<text x="240" y="103" font-size="11" text-anchor="end" fill="#1e293b">BIOMASS_OR_WASTE_BURNING</text>
+<rect x="250" y="85" width="430" height="28" fill="#f1f5f9" rx="4"/>
+<rect x="250" y="85" width="268.2" height="28" fill="#2563eb" rx="4"/>
+<text x="526.191" y="103" font-size="11" font-weight="600" fill="#0f172a">0.624 (n=30)</text>
+<text x="240" y="141" font-size="11" text-anchor="end" fill="#1e293b">CLEAN_OR_BACKGROUND</text>
+<rect x="250" y="123" width="430" height="28" fill="#f1f5f9" rx="4"/>
+<rect x="250" y="123" width="430.0" height="28" fill="#2563eb" rx="4"/>
+<text x="688.0" y="141" font-size="11" font-weight="600" fill="#0f172a">1.000 (n=30)</text>
+<text x="240" y="179" font-size="11" text-anchor="end" fill="#1e293b">CONSTRUCTION_ACTIVITY</text>
+<rect x="250" y="161" width="430" height="28" fill="#f1f5f9" rx="4"/>
+<rect x="250" y="161" width="270.0" height="28" fill="#2563eb" rx="4"/>
+<text x="527.9970000000001" y="179" font-size="11" font-weight="600" fill="#0f172a">0.628 (n=30)</text>
+<text x="240" y="217" font-size="11" text-anchor="end" fill="#1e293b">COOKING_OR_FUEL_COMBUSTION</text>
+<rect x="250" y="199" width="430" height="28" fill="#f1f5f9" rx="4"/>
+<rect x="250" y="199" width="0.0" height="28" fill="#2563eb" rx="4"/>
+<text x="258.0" y="217" font-size="11" font-weight="600" fill="#0f172a">0.000 (n=30)</text>
+<text x="240" y="255" font-size="11" text-anchor="end" fill="#1e293b">HEAVY_DUST</text>
+<rect x="250" y="237" width="430" height="28" fill="#f1f5f9" rx="4"/>
+<rect x="250" y="237" width="0.0" height="28" fill="#2563eb" rx="4"/>
+<text x="258.0" y="255" font-size="11" font-weight="600" fill="#0f172a">0.000 (n=30)</text>
+<text x="240" y="293" font-size="11" text-anchor="end" fill="#1e293b">INDOOR_ACTIVITY</text>
+<rect x="250" y="275" width="430" height="28" fill="#f1f5f9" rx="4"/>
+<rect x="250" y="275" width="422.7" height="28" fill="#2563eb" rx="4"/>
+<text x="680.733" y="293" font-size="11" font-weight="600" fill="#0f172a">0.983 (n=30)</text>
+<text x="240" y="331" font-size="11" text-anchor="end" fill="#1e293b">INDUSTRIAL_OR_GENERATOR_EMISSIONS</text>
+<rect x="250" y="313" width="430" height="28" fill="#f1f5f9" rx="4"/>
+<rect x="250" y="313" width="0.0" height="28" fill="#2563eb" rx="4"/>
+<text x="258.0" y="331" font-size="11" font-weight="600" fill="#0f172a">0.000 (n=30)</text>
+<text x="240" y="369" font-size="11" text-anchor="end" fill="#1e293b">TRAFFIC</text>
+<rect x="250" y="351" width="430" height="28" fill="#f1f5f9" rx="4"/>
+<rect x="250" y="351" width="0.0" height="28" fill="#2563eb" rx="4"/>
+<text x="258.0" y="369" font-size="11" font-weight="600" fill="#0f172a">0.000 (n=30)</text>
+<text x="380.0" y="404" font-size="11" text-anchor="middle" fill="#64748b">Limitation: Evaluated on ScenarioGenerator synthetic profiles, not field-labeled air.</text>
+</svg>

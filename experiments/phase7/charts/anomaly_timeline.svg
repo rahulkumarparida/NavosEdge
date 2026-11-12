@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="380" viewBox="0 0 820 380" style="font-family:Segoe UI,Arial,sans-serif;background:#ffffff;">
+<rect width="820" height="380" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+<text x="24" y="30" font-size="16" font-weight="700" fill="#0f172a">Anomaly Detection Controlled Sequence Timeline</text>
+<text x="24" y="50" font-size="11" fill="#475569">Source: SYNTHETIC (n=85 steps, Precision=0.806, Recall=0.967, FPR=0.156) | Units: PM2.5 ug/m3</text>
+
+<rect x="410.2" y="85" width="8.6" height="240" fill="#fee2e2"/>
+<rect x="418.9" y="85" width="8.6" height="240" fill="#fee2e2"/>
+<rect x="427.5" y="85" width="8.6" height="240" fill="#fee2e2"/>
+<rect x="436.1" y="85" width="8.6" height="240" fill="#fee2e2"/>
+<rect x="444.8" y="85" width="8.6" height="240" fill="#fee2e2"/>
+<rect x="453.4" y="85" width="8.6" height="240" fill="#fee2e2"/>
+<rect x="462.0" y="85" width="8.6" height="240" fill="#fee2e2"/>
+<rect x="470.7" y="85" width="8.6" height="240" fill="#fee2e2"/>
+<rect x="479.3" y="85" width="8.6" height="240" fill="#fee2e2"/>
+<rect x="487.9" y="85" width="8.6" height="240" fill="#fee2e2"/>
+<rect x="496.5" y="85" width="8.6" height="240" fill="#fee2e2"/>
+<rect x="505.2" y="85" width="8.6" height="240" fill="#fee2e2"/>
+<rect x="513.8" y="85" width="8.6" height="240" fill="#fee2e2"/>
+<rect x="522.4" y="85" width="8.6" height="240" fill="#fee2e2"/>
+<rect x="531.1" y="85" width="8.6" height="240" fill="#fee2e2"/>
+<rect x="669.2" y="85" width="8.6" height="240" fill="#fee2e2"/>
+<rect x="677.8" y="85" width="8.6" height="240" fill="#fee2e2"/>
+<rect x="686.4" y="85" width="8.6" height="240" fill="#fee2e2"/>
+<rect x="695.1" y="85" width="8.6" height="240" fill="#fee2e2"/>
+<rect x="703.7" y="85" width="8.6" height="240" fill="#fee2e2"/>
+<rect x="712.3" y="85" width="8.6" height="240" fill="#fee2e2"/>
+<rect x="721.0" y="85" width="8.6" height="240" fill="#fee2e2"/>
+<rect x="729.6" y="85" width="8.6" height="240" fill="#fee2e2"/>
+<rect x="738.2" y="85" width="8.6" height="240" fill="#fee2e2"/>
+<rect x="746.8" y="85" width="8.6" height="240" fill="#fee2e2"/>
+<rect x="755.5" y="85" width="8.6" height="240" fill="#fee2e2"/>
+<rect x="764.1" y="85" width="8.6" height="240" fill="#fee2e2"/>
+<rect x="772.7" y="85" width="8.6" height="240" fill="#fee2e2"/>
+<rect x="781.4" y="85" width="8.6" height="240" fill="#fee2e2"/>
+<rect x="790.0" y="85" width="8.6" height="240" fill="#fee2e2"/>
+<polyline fill="none" stroke="#1d4ed8" stroke-width="2" points="65.0,319.8 73.6,319.7 82.3,319.8 90.9,319.9 99.5,319.8 108.2,319.6 116.8,319.7 125.4,319.8 134.0,319.5 142.7,319.7 151.3,319.7 159.9,319.5 168.6,319.6 177.2,319.5 185.8,319.6 194.5,319.4 203.1,319.3 211.7,319.4 220.4,319.6 229.0,319.4 237.6,319.7 246.2,319.4 254.9,319.7 263.5,319.3 272.1,319.5 280.8,319.5 289.4,319.4 298.0,319.4 306.7,319.5 315.3,319.5 323.9,319.5 332.6,319.7 341.2,319.7 349.8,318.3 358.5,319.9 367.1,319.8 375.7,319.6 384.3,319.9 393.0,319.7 401.6,319.7 410.2,107.3 418.9,204.5 427.5,120.9 436.1,200.0 444.8,194.6 453.4,195.4 462.0,120.0 470.7,85.0 479.3,187.0 487.9,192.4 496.5,189.6 505.2,188.8 513.8,184.6 522.4,187.9 531.1,180.4 539.7,320.0 548.3,320.2 557.0,320.1 565.6,320.3 574.2,320.2 582.9,320.1 591.5,320.0 600.1,320.0 608.8,320.2 617.4,320.3 626.0,320.2 634.6,320.2 643.3,320.2 651.9,320.4 660.5,320.3 669.2,316.8 677.8,316.6 686.4,316.4 695.1,316.2 703.7,316.1 712.3,315.9 721.0,315.9 729.6,311.4 738.2,315.9 746.8,315.3 755.5,315.6 764.1,311.3 772.7,315.1 781.4,315.0 790.0,315.3"/>
+<circle cx="349.8" cy="318.3" r="3.5" fill="#dc2626"/>
+<circle cx="384.3" cy="319.9" r="3.5" fill="#dc2626"/>
+<circle cx="401.6" cy="319.7" r="3.5" fill="#dc2626"/>
+<circle cx="410.2" cy="107.3" r="3.5" fill="#dc2626"/>
+<circle cx="418.9" cy="204.5" r="3.5" fill="#dc2626"/>
+<circle cx="436.1" cy="200.0" r="3.5" fill="#dc2626"/>
+<circle cx="444.8" cy="194.6" r="3.5" fill="#dc2626"/>
+<circle cx="453.4" cy="195.4" r="3.5" fill="#dc2626"/>
+<circle cx="462.0" cy="120.0" r="3.5" fill="#dc2626"/>
+<circle cx="470.7" cy="85.0" r="3.5" fill="#dc2626"/>
+<circle cx="479.3" cy="187.0" r="3.5" fill="#dc2626"/>
+<circle cx="487.9" cy="192.4" r="3.5" fill="#dc2626"/>
+<circle cx="496.5" cy="189.6" r="3.5" fill="#dc2626"/>
+<circle cx="505.2" cy="188.8" r="3.5" fill="#dc2626"/>
+<circle cx="513.8" cy="184.6" r="3.5" fill="#dc2626"/>
+<circle cx="522.4" cy="187.9" r="3.5" fill="#dc2626"/>
+<circle cx="531.1" cy="180.4" r="3.5" fill="#dc2626"/>
+<circle cx="539.7" cy="320.0" r="3.5" fill="#dc2626"/>
+<circle cx="548.3" cy="320.2" r="3.5" fill="#dc2626"/>
+<circle cx="557.0" cy="320.1" r="3.5" fill="#dc2626"/>
+<circle cx="565.6" cy="320.3" r="3.5" fill="#dc2626"/>
+<circle cx="669.2" cy="316.8" r="3.5" fill="#dc2626"/>
+<circle cx="677.8" cy="316.6" r="3.5" fill="#dc2626"/>
+<circle cx="686.4" cy="316.4" r="3.5" fill="#dc2626"/>
+<circle cx="695.1" cy="316.2" r="3.5" fill="#dc2626"/>
+<circle cx="703.7" cy="316.1" r="3.5" fill="#dc2626"/>
+<circle cx="712.3" cy="315.9" r="3.5" fill="#dc2626"/>
+<circle cx="721.0" cy="315.9" r="3.5" fill="#dc2626"/>
+<circle cx="729.6" cy="311.4" r="3.5" fill="#dc2626"/>
+<circle cx="738.2" cy="315.9" r="3.5" fill="#dc2626"/>
+<circle cx="746.8" cy="315.3" r="3.5" fill="#dc2626"/>
+<circle cx="755.5" cy="315.6" r="3.5" fill="#dc2626"/>
+<circle cx="764.1" cy="311.3" r="3.5" fill="#dc2626"/>
+<circle cx="772.7" cy="315.1" r="3.5" fill="#dc2626"/>
+<circle cx="781.4" cy="315.0" r="3.5" fill="#dc2626"/>
+<circle cx="790.0" cy="315.3" r="3.5" fill="#dc2626"/>
+<line x1="65" y1="325" x2="790" y2="325" stroke="#475569"/>
+<line x1="65" y1="85" x2="65" y2="325" stroke="#475569"/>
+<text x="57" y="95" font-size="10" text-anchor="end" fill="#475569">663</text>
+<text x="57" y="325" font-size="10" text-anchor="end" fill="#475569">0</text>
+<text x="410.0" y="364" font-size="11" text-anchor="middle" fill="#64748b">Pink shade: GT anomaly window | Red dots: Flagged anomaly | Blue line: PM2.5 (ug/m3)</text>
+</svg>

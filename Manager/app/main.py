@@ -9,9 +9,10 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.config import HOST, PORT
+from app.config import HOST, PORT, get_cors_origins
 from app.manager_service import ManagerService
 from app.routes.api import router as api_router
+from app.routes.emergency_proxy import router as emergency_proxy_router
 from app.routes.web import setup_web_dashboard
 
 logging.basicConfig(
@@ -23,7 +24,7 @@ logger = logging.getLogger("ManagerServer")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    from app.config import HOST, PORT, UNO_Q_BASE_URL, UNO_Q_POLL_INTERVAL_S, UNO_Q_POLL_ENABLED
+    from app.config import HOST, PORT, get_cors_origins, UNO_Q_BASE_URL, UNO_Q_POLL_INTERVAL_S, UNO_Q_POLL_ENABLED
     logger.info("Starting NavosEdge Parent Manager Server on http://%s:%s", HOST, PORT)
     if UNO_Q_POLL_ENABLED:
         logger.info("UNO Q Polling enabled — Base URL: %s, Interval: %.1fs", UNO_Q_BASE_URL, UNO_Q_POLL_INTERVAL_S)
@@ -79,15 +80,17 @@ def create_app() -> FastAPI:
 
     app.state.manager_service = ManagerService()
 
+    cors_origins = get_cors_origins()
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=True,
+        allow_origins=cors_origins,
+        allow_credentials=cors_origins != ["*"],
         allow_methods=["*"],
         allow_headers=["*"],
     )
 
     app.include_router(api_router)
+    app.include_router(emergency_proxy_router)
     setup_web_dashboard(app)
 
     return app

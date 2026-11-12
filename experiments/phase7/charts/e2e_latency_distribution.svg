@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="740" height="340" viewBox="0 0 740 340" style="font-family:Segoe UI,Arial,sans-serif;background:#ffffff;">
+<rect width="740" height="340" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+<text x="24" y="30" font-size="16" font-weight="700" fill="#0f172a">End-to-End Request Processing Latency (Desktop Benchmark)</text>
+<text x="24" y="50" font-size="11" fill="#475569">Mode: SYNTHETIC + MOCKED (SIMULATED notifications, loopback/mocked ESP32, Windows desktop) (n_normal=40, n_hazard=5) | Units: milliseconds (ms)</text>
+
+<text x="200" y="107" font-size="11" text-anchor="end" fill="#1e293b">Normal E2E Median</text>
+<rect x="210" y="90" width="430" height="26" fill="#f1f5f9" rx="4"/>
+<rect x="210" y="90" width="266.9" height="26" fill="#2563eb" rx="4"/>
+<text x="484.9496182576858" y="107" font-size="11" font-weight="600" fill="#0f172a">813.38 ms</text>
+<text x="200" y="145" font-size="11" text-anchor="end" fill="#1e293b">Normal E2E P95</text>
+<rect x="210" y="128" width="430" height="26" fill="#f1f5f9" rx="4"/>
+<rect x="210" y="128" width="407.0" height="26" fill="#1d4ed8" rx="4"/>
+<text x="625.0007334886814" y="145" font-size="11" font-weight="600" fill="#0f172a">1240.10 ms</text>
+<text x="200" y="183" font-size="11" text-anchor="end" fill="#1e293b">Normal E2E Max</text>
+<rect x="210" y="166" width="430" height="26" fill="#f1f5f9" rx="4"/>
+<rect x="210" y="166" width="430.0" height="26" fill="#1e40af" rx="4"/>
+<text x="648.0" y="183" font-size="11" font-weight="600" fill="#0f172a">1310.18 ms</text>
+<text x="200" y="221" font-size="11" text-anchor="end" fill="#1e293b">Hazard+Actuator Median</text>
+<rect x="210" y="204" width="430" height="26" fill="#f1f5f9" rx="4"/>
+<rect x="210" y="204" width="254.1" height="26" fill="#ea580c" rx="4"/>
+<text x="472.1133907861305" y="221" font-size="11" font-weight="600" fill="#0f172a">774.26 ms</text>
+<text x="200" y="259" font-size="11" text-anchor="end" fill="#1e293b">Hazard+Actuator P95</text>
+<rect x="210" y="242" width="430" height="26" fill="#f1f5f9" rx="4"/>
+<rect x="210" y="242" width="307.6" height="26" fill="#c2410c" rx="4"/>
+<text x="525.5751902223899" y="259" font-size="11" font-weight="600" fill="#0f172a">937.16 ms</text>
+<text x="200" y="297" font-size="11" text-anchor="end" fill="#1e293b">Hazard+Actuator Max</text>
+<rect x="210" y="280" width="430" height="26" fill="#f1f5f9" rx="4"/>
+<rect x="210" y="280" width="307.6" height="26" fill="#9a3412" rx="4"/>
+<text x="525.5751902223899" y="297" font-size="11" font-weight="600" fill="#0f172a">937.16 ms</text>
+<text x="370.0" y="326" font-size="11" text-anchor="middle" fill="#64748b">Measured via FastAPI TestClient in-process on Windows desktop; not UNO Q LAN hardware timing.</text>
+</svg>

@@ -13,6 +13,8 @@ class ReadinessResponse(BaseModel):
     ready: bool
     storage_ok: bool
     model_loaded: bool
+    emergency_db_ok: bool = True
+    escalation_worker_running: bool = False
     timestamp: datetime
 
 class ReadingAccepted(BaseModel):

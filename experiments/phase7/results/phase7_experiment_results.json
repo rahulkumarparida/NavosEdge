@@ -1,0 +1,1773 @@
+{
+  "seed": 42,
+  "dataset_inventory": {
+    "generated_at": "2026-11-12T19:54:52.152960+00:00",
+    "real_recorded_data": {
+      "DHT22_Dataset": {
+        "provenance": "REAL_RECORDED_DATA",
+        "files": 4,
+        "rows": 3565,
+        "columns": [
+          "timestamp",
+          "session",
+          "esp32_uptime_ms",
+          "temperature_c",
+          "humidity_percent"
+        ],
+        "time_range": [
+          "2026-09-28 00:39:00",
+          "2026-09-28 08:35:39"
+        ],
+        "median_sampling_interval_s": 2.0,
+        "missing_values": {
+          "timestamp": 0,
+          "session": 0,
+          "esp32_uptime_ms": 0,
+          "temperature_c": 0,
+          "humidity_percent": 0
+        },
+        "labeled": false,
+        "numeric_summary": {
+          "session": {
+            "min": 1.0,
+            "median": 3.0,
+            "max": 4.0,
+            "mean": 2.5,
+            "std": 1.119
+          },
+          "esp32_uptime_ms": {
+            "min": 3016.0,
+            "median": 901704.0,
+            "max": 1802398.0,
+            "mean": 902187.238,
+            "std": 519848.593
+          },
+          "temperature_c": {
+            "min": 29.9,
+            "median": 30.2,
+            "max": 30.4,
+            "mean": 30.145,
+            "std": 0.114
+          },
+          "humidity_percent": {
+            "min": 85.8,
+            "median": 86.8,
+            "max": 88.1,
+            "mean": 86.968,
+            "std": 0.469
+          }
+        }
+      },
+      "MPM_10_Dataset": {
+        "provenance": "REAL_RECORDED_DATA",
+        "files": 4,
+        "rows": 3548,
+        "columns": [
+          "timestamp",
+          "pm1_0",
+          "pm2_5",
+          "pm10"
+        ],
+        "time_range": [
+          "2026-09-30 20:29:51",
+          "2026-09-30 23:58:56"
+        ],
+        "median_sampling_interval_s": 2.0,
+        "missing_values": {
+          "timestamp": 0,
+          "pm1_0": 0,
+          "pm2_5": 0,
+          "pm10": 0
+        },
+        "labeled": false,
+        "numeric_summary": {
+          "pm1_0": {
+            "min": 0.0,
+            "median": 107.0,
+            "max": 30208.0,
+            "mean": 161.066,
+            "std": 858.162
+          },
+          "pm2_5": {
+            "min": 0.0,
+            "median": 165.0,
+            "max": 64513.0,
+            "mean": 392.817,
+            "std": 2828.51
+          },
+          "pm10": {
+            "min": 0.0,
+            "median": 183.0,
+            "max": 59648.0,
+            "mean": 529.236,
+            "std": 3585.756
+          }
+        }
+      },
+      "MQ_Dataset": {
+        "provenance": "REAL_RECORDED_DATA",
+        "files": 3,
+        "rows": 2700,
+        "columns": [
+          "timestamp",
+          "session",
+          "esp32_uptime_ms",
+          "mq2_raw_adc",
+          "mq2_ao_voltage",
+          "mq9_raw_adc",
+          "mq9_ao_voltage",
+          "mq135_raw_adc",
+          "mq135_ao_voltage"
+        ],
+        "time_range": [
+          "2026-09-29 09:44:43",
+          "2026-09-29 12:46:13"
+        ],
+        "median_sampling_interval_s": 2.0,
+        "missing_values": {
+          "timestamp": 0,
+          "session": 0,
+          "esp32_uptime_ms": 0,
+          "mq2_raw_adc": 0,
+          "mq2_ao_voltage": 0,
+          "mq9_raw_adc": 0,
+          "mq9_ao_voltage": 0,
+          "mq135_raw_adc": 0,
+          "mq135_ao_voltage": 0
+        },
+        "labeled": false,
+        "numeric_summary": {
+          "session": {
+            "min": 1.0,
+            "median": 2.0,
+            "max": 3.0,
+            "mean": 2.0,
+            "std": 0.817
+          },
+          "esp32_uptime_ms": {
+            "min": 3011.0,
+            "median": 902011.0,
+            "max": 1801011.0,
+            "mean": 902011.0,
+            "std": 519711.173
+          },
+          "mq2_raw_adc": {
+            "min": 37.0,
+            "median": 108.0,
+            "max": 204.0,
+            "mean": 121.214,
+            "std": 34.434
+          },
+          "mq2_ao_voltage": {
+            "min": 0.239,
+            "median": 0.697,
+            "max": 1.316,
+            "mean": 0.782,
+            "std": 0.222
+          },
+          "mq9_raw_adc": {
+            "min": 61.0,
+            "median": 157.0,
+            "max": 300.0,
+            "mean": 179.846,
+            "std": 52.794
+          },
+          "mq9_ao_voltage": {
+            "min": 0.394,
+            "median": 1.013,
+            "max": 1.935,
+            "mean": 1.16,
+            "std": 0.341
+          },
+          "mq135_raw_adc": {
+            "min": 148.0,
+            "median": 234.0,
+            "max": 379.0,
+            "mean": 255.078,
+            "std": 60.212
+          },
+          "mq135_ao_voltage": {
+            "min": 0.955,
+            "median": 1.51,
+            "max": 2.445,
+            "mean": 1.646,
+            "std": 0.388
+          }
+        }
+      }
+    },
+    "external_reference": {
+      "airquality_bhubaneswar_2024-11-01_2024-12-05.json": {
+        "provenance": "EXTERNAL_REFERENCE",
+        "rows": 840,
+        "time_range": [
+          "2024-11-01T00:00",
+          "2024-12-05T23:00"
+        ],
+        "sampling_interval_s": 3600,
+        "features": [
+          "time",
+          "pm10",
+          "pm2_5"
+        ],
+        "pm2_5_summary": {
+          "min": 16.7,
+          "median": 62.4,
+          "max": 147.1,
+          "mean": 66.69
+        },
+        "pm10_summary": {
+          "min": 19.6,
+          "median": 77.1,
+          "max": 160.2,
+          "mean": 77.22
+        },
+        "labeled": false
+      },
+      "airquality_dhenkanal_2024-09-01_2024-10-06.json": {
+        "provenance": "EXTERNAL_REFERENCE",
+        "rows": 864,
+        "time_range": [
+          "2024-09-01T00:00",
+          "2024-10-06T23:00"
+        ],
+        "sampling_interval_s": 3600,
+        "features": [
+          "time",
+          "pm10",
+          "pm2_5"
+        ],
+        "pm2_5_summary": {
+          "min": 2.6,
+          "median": 22.2,
+          "max": 58.0,
+          "mean": 24.25
+        },
+        "pm10_summary": {
+          "min": 3.9,
+          "median": 33.25,
+          "max": 90.3,
+          "mean": 36.72
+        },
+        "labeled": false
+      }
+    },
+    "synthetic": {
+      "Training/mq_synthetic_dataset.csv": {
+        "provenance": "SYNTHETIC",
+        "rows": 12000,
+        "columns": [
+          "sample_id",
+          "timestamp",
+          "MQ2_V",
+          "MQ9_V",
+          "MQ135_V",
+          "temperature_C",
+          "humidity_pct",
+          "gas_label",
+          "concentration_ppm",
+          "safety_status"
+        ],
+        "label_counts": {
+          "CleanAir": 4950,
+          "LPG": 1173,
+          "Smoke": 1086,
+          "Alcohol": 973,
+          "Hydrogen": 968,
+          "CO": 959,
+          "Propane": 958,
+          "Methane": 933
+        },
+        "missing_values": {
+          "sample_id": 0,
+          "timestamp": 0,
+          "MQ2_V": 0,
+          "MQ9_V": 0,
+          "MQ135_V": 0,
+          "temperature_C": 0,
+          "humidity_pct": 0,
+          "gas_label": 0,
+          "concentration_ppm": 0,
+          "safety_status": 0
+        },
+        "labeled": true
+      }
+    },
+    "mixed_test_logs": {
+      "local_dataset": {
+        "provenance": "MIXED_TEST_AND_SIMULATOR_LOGS",
+        "files": 15,
+        "rows": 1143,
+        "distinct_node_ids": 24,
+        "note": "Contains automated pytest/simulator node_ids (e.g., test-node-01, gate-test-01); NOT treated as pure physical hardware field data."
+      }
+    }
+  },
+  "gasnet_evaluation": {
+    "provenance": "SYNTHETIC",
+    "dataset": "test_data/phase2_model_audit/synthetic_tinygasnet_eval_seed_{42,101,777}.json",
+    "n_samples": 1068,
+    "accuracy": 0.9878,
+    "macro_f1": 0.7101,
+    "labels": [
+      "ABSTAIN",
+      "Alcohol",
+      "CO",
+      "CleanAir",
+      "LPG",
+      "SENSOR_FAULT",
+      "Smoke"
+    ],
+    "confusion_matrix": [
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        191,
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        192,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        6,
+        0,
+        0,
+        246,
+        0,
+        3,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        207,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        3,
+        219
+      ]
+    ],
+    "per_class": {
+      "ABSTAIN": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 0
+      },
+      "Alcohol": {
+        "precision": 1.0,
+        "recall": 0.9948,
+        "f1": 0.9974,
+        "support": 192
+      },
+      "CO": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 192
+      },
+      "CleanAir": {
+        "precision": 1.0,
+        "recall": 0.9647,
+        "f1": 0.982,
+        "support": 255
+      },
+      "LPG": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 207
+      },
+      "SENSOR_FAULT": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 0
+      },
+      "Smoke": {
+        "precision": 0.9955,
+        "recall": 0.9865,
+        "f1": 0.991,
+        "support": 222
+      }
+    },
+    "uncertainty_in_dist_mean": 0.0416,
+    "uncertainty_in_dist_p95": 0.1389,
+    "uncertainty_ood_mean": 0.33,
+    "confidence_in_dist_mean": 0.9772,
+    "inference_latency": {
+      "n": 1068,
+      "min_ms": 1.75,
+      "median_ms": 10.119,
+      "mean_ms": 10.895,
+      "p95_ms": 16.697,
+      "max_ms": 143.499
+    },
+    "limitation": "Evaluated on synthetic labeled data; not physical calibrated gas chamber measurements."
+  },
+  "source_classifier_evaluation": {
+    "provenance": "SYNTHETIC",
+    "generator": "Simulator.generator.ScenarioGenerator (seed=42, 30 samples/scenario)",
+    "n_samples": 240,
+    "accuracy": 0.4792,
+    "macro_f1": 0.4043,
+    "uncertainty_flagged_rate": 0.0,
+    "abstention_rate": 0.0042,
+    "eval_labels": [
+      "BIOMASS_OR_WASTE_BURNING",
+      "CLEAN_OR_BACKGROUND",
+      "CONSTRUCTION_ACTIVITY",
+      "COOKING_OR_FUEL_COMBUSTION",
+      "HEAVY_DUST",
+      "INDOOR_ACTIVITY",
+      "INDUSTRIAL_OR_GENERATOR_EMISSIONS",
+      "TRAFFIC"
+    ],
+    "matrix_labels": [
+      "BIOMASS_OR_WASTE_BURNING",
+      "CLEAN_OR_BACKGROUND",
+      "CONSTRUCTION_ACTIVITY",
+      "COOKING_OR_FUEL_COMBUSTION",
+      "HEAVY_DUST",
+      "INDOOR_ACTIVITY",
+      "INDUSTRIAL_OR_GENERATOR_EMISSIONS",
+      "MIXED_POLLUTION",
+      "TRAFFIC",
+      "UNKNOWN"
+    ],
+    "confusion_matrix": [
+      [
+        29,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        30,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        0,
+        27,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0
+      ],
+      [
+        30,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        29,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        29,
+        0,
+        1,
+        0,
+        0
+      ],
+      [
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        28,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        29,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    ],
+    "per_class": {
+      "BIOMASS_OR_WASTE_BURNING": {
+        "precision": 0.4603,
+        "recall": 0.9667,
+        "f1": 0.6237,
+        "support": 30
+      },
+      "CLEAN_OR_BACKGROUND": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 30
+      },
+      "CONSTRUCTION_ACTIVITY": {
+        "precision": 0.4821,
+        "recall": 0.9,
+        "f1": 0.6279,
+        "support": 30
+      },
+      "COOKING_OR_FUEL_COMBUSTION": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 30
+      },
+      "HEAVY_DUST": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 30
+      },
+      "INDOOR_ACTIVITY": {
+        "precision": 1.0,
+        "recall": 0.9667,
+        "f1": 0.9831,
+        "support": 30
+      },
+      "INDUSTRIAL_OR_GENERATOR_EMISSIONS": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 30
+      },
+      "TRAFFIC": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 30
+      }
+    }
+  },
+  "anomaly_evaluation": {
+    "synthetic_controlled": {
+      "provenance": "SYNTHETIC",
+      "n_eval_samples": 75,
+      "tp": 29,
+      "fp": 7,
+      "tn": 38,
+      "fn": 1,
+      "precision": 0.8056,
+      "recall": 0.9667,
+      "false_positive_rate": 0.1556,
+      "false_negative_rate": 0.0333,
+      "pm_spike_detection_delay_samples": 0,
+      "gas_spike_detection_delay_samples": 0,
+      "timeline": [
+        {
+          "step": 0,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.0,
+          "state": "NONE",
+          "pm2_5": 14.27
+        },
+        {
+          "step": 1,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.0,
+          "state": "NONE",
+          "pm2_5": 14.66
+        },
+        {
+          "step": 2,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.0,
+          "state": "NONE",
+          "pm2_5": 14.45
+        },
+        {
+          "step": 3,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.0,
+          "state": "NONE",
+          "pm2_5": 14.21
+        },
+        {
+          "step": 4,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.0,
+          "state": "LOW",
+          "pm2_5": 14.23
+        },
+        {
+          "step": 5,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.0,
+          "state": "LOW",
+          "pm2_5": 14.83
+        },
+        {
+          "step": 6,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.0,
+          "state": "LOW",
+          "pm2_5": 14.67
+        },
+        {
+          "step": 7,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.0,
+          "state": "LOW",
+          "pm2_5": 14.46
+        },
+        {
+          "step": 8,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.0,
+          "state": "LOW",
+          "pm2_5": 15.31
+        },
+        {
+          "step": 9,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.0,
+          "state": "LOW",
+          "pm2_5": 14.71
+        },
+        {
+          "step": 10,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.0,
+          "state": "LOW",
+          "pm2_5": 14.72
+        },
+        {
+          "step": 11,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.0,
+          "state": "LOW",
+          "pm2_5": 15.17
+        },
+        {
+          "step": 12,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.0,
+          "state": "LOW",
+          "pm2_5": 15.02
+        },
+        {
+          "step": 13,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.0,
+          "state": "LOW",
+          "pm2_5": 15.13
+        },
+        {
+          "step": 14,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.0,
+          "state": "LOW",
+          "pm2_5": 15.03
+        },
+        {
+          "step": 15,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.857,
+          "state": "LOW",
+          "pm2_5": 15.5
+        },
+        {
+          "step": 16,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 1.265,
+          "state": "LOW",
+          "pm2_5": 15.67
+        },
+        {
+          "step": 17,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.871,
+          "state": "LOW",
+          "pm2_5": 15.48
+        },
+        {
+          "step": 18,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.773,
+          "state": "LOW",
+          "pm2_5": 15.04
+        },
+        {
+          "step": 19,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.763,
+          "state": "LOW",
+          "pm2_5": 15.44
+        },
+        {
+          "step": 20,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.954,
+          "state": "LOW",
+          "pm2_5": 14.63
+        },
+        {
+          "step": 21,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.921,
+          "state": "LOW",
+          "pm2_5": 15.44
+        },
+        {
+          "step": 22,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.891,
+          "state": "LOW",
+          "pm2_5": 14.68
+        },
+        {
+          "step": 23,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 1.248,
+          "state": "LOW",
+          "pm2_5": 15.84
+        },
+        {
+          "step": 24,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.519,
+          "state": "LOW",
+          "pm2_5": 15.08
+        },
+        {
+          "step": 25,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.583,
+          "state": "LOW",
+          "pm2_5": 15.18
+        },
+        {
+          "step": 26,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.333,
+          "state": "LOW",
+          "pm2_5": 15.54
+        },
+        {
+          "step": 27,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.507,
+          "state": "LOW",
+          "pm2_5": 15.51
+        },
+        {
+          "step": 28,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.664,
+          "state": "LOW",
+          "pm2_5": 15.28
+        },
+        {
+          "step": 29,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.804,
+          "state": "LOW",
+          "pm2_5": 15.06
+        },
+        {
+          "step": 30,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.7,
+          "state": "LOW",
+          "pm2_5": 15.26
+        },
+        {
+          "step": 31,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.743,
+          "state": "LOW",
+          "pm2_5": 14.6
+        },
+        {
+          "step": 32,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.961,
+          "state": "LOW",
+          "pm2_5": 14.72
+        },
+        {
+          "step": 33,
+          "gt_anomaly": 0,
+          "pred_anomaly": 1,
+          "score": 2.811,
+          "state": "MEDIUM",
+          "pm2_5": 18.55
+        },
+        {
+          "step": 34,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.785,
+          "state": "LOW",
+          "pm2_5": 13.98
+        },
+        {
+          "step": 35,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.733,
+          "state": "LOW",
+          "pm2_5": 14.31
+        },
+        {
+          "step": 36,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.874,
+          "state": "LOW",
+          "pm2_5": 14.89
+        },
+        {
+          "step": 37,
+          "gt_anomaly": 0,
+          "pred_anomaly": 1,
+          "score": 1.536,
+          "state": "HIGH",
+          "pm2_5": 14.07
+        },
+        {
+          "step": 38,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 1.082,
+          "state": "LOW",
+          "pm2_5": 14.62
+        },
+        {
+          "step": 39,
+          "gt_anomaly": 0,
+          "pred_anomaly": 1,
+          "score": 1.856,
+          "state": "MEDIUM",
+          "pm2_5": 14.52
+        },
+        {
+          "step": 40,
+          "gt_anomaly": 1,
+          "pred_anomaly": 1,
+          "score": 3.468,
+          "state": "HIGH",
+          "pm2_5": 601.07
+        },
+        {
+          "step": 41,
+          "gt_anomaly": 1,
+          "pred_anomaly": 1,
+          "score": 9.204,
+          "state": "HIGH",
+          "pm2_5": 332.56
+        },
+        {
+          "step": 42,
+          "gt_anomaly": 1,
+          "pred_anomaly": 0,
+          "score": 0.909,
+          "state": "LOW",
+          "pm2_5": 563.3
+        },
+        {
+          "step": 43,
+          "gt_anomaly": 1,
+          "pred_anomaly": 1,
+          "score": 8.474,
+          "state": "HIGH",
+          "pm2_5": 345.15
+        },
+        {
+          "step": 44,
+          "gt_anomaly": 1,
+          "pred_anomaly": 1,
+          "score": 10.463,
+          "state": "HIGH",
+          "pm2_5": 359.85
+        },
+        {
+          "step": 45,
+          "gt_anomaly": 1,
+          "pred_anomaly": 1,
+          "score": 11.626,
+          "state": "HIGH",
+          "pm2_5": 357.87
+        },
+        {
+          "step": 46,
+          "gt_anomaly": 1,
+          "pred_anomaly": 1,
+          "score": 22.186,
+          "state": "HIGH",
+          "pm2_5": 565.84
+        },
+        {
+          "step": 47,
+          "gt_anomaly": 1,
+          "pred_anomaly": 1,
+          "score": 26.341,
+          "state": "HIGH",
+          "pm2_5": 662.51
+        },
+        {
+          "step": 48,
+          "gt_anomaly": 1,
+          "pred_anomaly": 1,
+          "score": 12.677,
+          "state": "HIGH",
+          "pm2_5": 380.99
+        },
+        {
+          "step": 49,
+          "gt_anomaly": 1,
+          "pred_anomaly": 1,
+          "score": 11.645,
+          "state": "HIGH",
+          "pm2_5": 365.91
+        },
+        {
+          "step": 50,
+          "gt_anomaly": 1,
+          "pred_anomaly": 1,
+          "score": 9.861,
+          "state": "HIGH",
+          "pm2_5": 373.75
+        },
+        {
+          "step": 51,
+          "gt_anomaly": 1,
+          "pred_anomaly": 1,
+          "score": 10.823,
+          "state": "HIGH",
+          "pm2_5": 375.98
+        },
+        {
+          "step": 52,
+          "gt_anomaly": 1,
+          "pred_anomaly": 1,
+          "score": 9.64,
+          "state": "HIGH",
+          "pm2_5": 387.57
+        },
+        {
+          "step": 53,
+          "gt_anomaly": 1,
+          "pred_anomaly": 1,
+          "score": 10.498,
+          "state": "HIGH",
+          "pm2_5": 378.45
+        },
+        {
+          "step": 54,
+          "gt_anomaly": 1,
+          "pred_anomaly": 1,
+          "score": 11.514,
+          "state": "HIGH",
+          "pm2_5": 399.04
+        },
+        {
+          "step": 55,
+          "gt_anomaly": 0,
+          "pred_anomaly": 1,
+          "score": 4.434,
+          "state": "HIGH",
+          "pm2_5": 13.72
+        },
+        {
+          "step": 56,
+          "gt_anomaly": 0,
+          "pred_anomaly": 1,
+          "score": 3.884,
+          "state": "HIGH",
+          "pm2_5": 13.38
+        },
+        {
+          "step": 57,
+          "gt_anomaly": 0,
+          "pred_anomaly": 1,
+          "score": 3.49,
+          "state": "HIGH",
+          "pm2_5": 13.5
+        },
+        {
+          "step": 58,
+          "gt_anomaly": 0,
+          "pred_anomaly": 1,
+          "score": 3.241,
+          "state": "HIGH",
+          "pm2_5": 13.1
+        },
+        {
+          "step": 59,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.512,
+          "state": "LOW",
+          "pm2_5": 13.29
+        },
+        {
+          "step": 60,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.635,
+          "state": "LOW",
+          "pm2_5": 13.43
+        },
+        {
+          "step": 61,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.576,
+          "state": "LOW",
+          "pm2_5": 13.7
+        },
+        {
+          "step": 62,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.556,
+          "state": "LOW",
+          "pm2_5": 13.72
+        },
+        {
+          "step": 63,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.597,
+          "state": "LOW",
+          "pm2_5": 13.23
+        },
+        {
+          "step": 64,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.214,
+          "state": "LOW",
+          "pm2_5": 12.99
+        },
+        {
+          "step": 65,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.369,
+          "state": "LOW",
+          "pm2_5": 13.15
+        },
+        {
+          "step": 66,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.328,
+          "state": "LOW",
+          "pm2_5": 13.28
+        },
+        {
+          "step": 67,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.344,
+          "state": "LOW",
+          "pm2_5": 13.21
+        },
+        {
+          "step": 68,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.399,
+          "state": "LOW",
+          "pm2_5": 12.71
+        },
+        {
+          "step": 69,
+          "gt_anomaly": 0,
+          "pred_anomaly": 0,
+          "score": 0.498,
+          "state": "LOW",
+          "pm2_5": 12.84
+        },
+        {
+          "step": 70,
+          "gt_anomaly": 1,
+          "pred_anomaly": 1,
+          "score": 4.5,
+          "state": "HIGH",
+          "pm2_5": 22.7
+        },
+        {
+          "step": 71,
+          "gt_anomaly": 1,
+          "pred_anomaly": 1,
+          "score": 4.338,
+          "state": "HIGH",
+          "pm2_5": 23.26
+        },
+        {
+          "step": 72,
+          "gt_anomaly": 1,
+          "pred_anomaly": 1,
+          "score": 4.085,
+          "state": "HIGH",
+          "pm2_5": 23.79
+        },
+        {
+          "step": 73,
+          "gt_anomaly": 1,
+          "pred_anomaly": 1,
+          "score": 3.392,
+          "state": "HIGH",
+          "pm2_5": 24.18
+        },
+        {
+          "step": 74,
+          "gt_anomaly": 1,
+          "pred_anomaly": 1,
+          "score": 11.119,
+          "state": "HIGH",
+          "pm2_5": 24.56
+        },
+        {
+          "step": 75,
+          "gt_anomaly": 1,
+          "pred_anomaly": 1,
+          "score": 10.553,
+          "state": "HIGH",
+          "pm2_5": 25.22
+        },
+        {
+          "step": 76,
+          "gt_anomaly": 1,
+          "pred_anomaly": 1,
+          "score": 10.376,
+          "state": "HIGH",
+          "pm2_5": 25.15
+        },
+        {
+          "step": 77,
+          "gt_anomaly": 1,
+          "pred_anomaly": 1,
+          "score": 12.0,
+          "state": "HIGH",
+          "pm2_5": 37.44
+        },
+        {
+          "step": 78,
+          "gt_anomaly": 1,
+          "pred_anomaly": 1,
+          "score": 10.556,
+          "state": "HIGH",
+          "pm2_5": 25.16
+        },
+        {
+          "step": 79,
+          "gt_anomaly": 1,
+          "pred_anomaly": 1,
+          "score": 8.236,
+          "state": "HIGH",
+          "pm2_5": 26.76
+        },
+        {
+          "step": 80,
+          "gt_anomaly": 1,
+          "pred_anomaly": 1,
+          "score": 8.253,
+          "state": "HIGH",
+          "pm2_5": 25.9
+        },
+        {
+          "step": 81,
+          "gt_anomaly": 1,
+          "pred_anomaly": 1,
+          "score": 9.108,
+          "state": "HIGH",
+          "pm2_5": 37.75
+        },
+        {
+          "step": 82,
+          "gt_anomaly": 1,
+          "pred_anomaly": 1,
+          "score": 7.623,
+          "state": "HIGH",
+          "pm2_5": 27.2
+        },
+        {
+          "step": 83,
+          "gt_anomaly": 1,
+          "pred_anomaly": 1,
+          "score": 7.758,
+          "state": "HIGH",
+          "pm2_5": 27.66
+        },
+        {
+          "step": 84,
+          "gt_anomaly": 1,
+          "pred_anomaly": 1,
+          "score": 7.478,
+          "state": "HIGH",
+          "pm2_5": 26.9
+        }
+      ]
+    },
+    "real_recorded_replay": {
+      "provenance": "REAL_RECORDED_DATA",
+      "dataset": "dataset/{MPM_10,DHT22,MQ}_Dataset/session_1 (first 300 rows, unlabeled)",
+      "n_samples": 300,
+      "anomaly_flagged_count": 2,
+      "sensor_fault_detected_count": 2,
+      "note": "Unlabeled real recorded sensor session; accuracy is not reported because ground-truth anomaly labels do not exist."
+    }
+  },
+  "forecast_evaluation": {
+    "provenance": "EXTERNAL_REFERENCE",
+    "dataset": "airquality_bhubaneswar_2024-11-01_2024-12-05.json",
+    "target": "PM2_5 (hourly)",
+    "horizons": {
+      "1h": {
+        "n": 127,
+        "ar_mae": 3.719,
+        "ar_rmse": 5.706,
+        "persistence_mae": 4.199,
+        "persistence_rmse": 6.691
+      },
+      "3h": {
+        "n": 127,
+        "ar_mae": 7.141,
+        "ar_rmse": 10.125,
+        "persistence_mae": 8.918,
+        "persistence_rmse": 13.552
+      },
+      "6h": {
+        "n": 127,
+        "ar_mae": 12.779,
+        "ar_rmse": 17.086,
+        "persistence_mae": 15.757,
+        "persistence_rmse": 22.261
+      }
+    },
+    "sample_series_1h": [
+      {
+        "timestamp": "2024-11-04T00:00",
+        "actual_1h": 54.2,
+        "ar_pred_1h": 55.78,
+        "pers_pred_1h": 56.7
+      },
+      {
+        "timestamp": "2024-11-04T06:00",
+        "actual_1h": 55.4,
+        "ar_pred_1h": 53.93,
+        "pers_pred_1h": 55.3
+      },
+      {
+        "timestamp": "2024-11-04T12:00",
+        "actual_1h": 73.3,
+        "ar_pred_1h": 64.51,
+        "pers_pred_1h": 62.2
+      },
+      {
+        "timestamp": "2024-11-04T18:00",
+        "actual_1h": 69.4,
+        "ar_pred_1h": 66.77,
+        "pers_pred_1h": 69.6
+      },
+      {
+        "timestamp": "2024-11-05T00:00",
+        "actual_1h": 67.8,
+        "ar_pred_1h": 67.37,
+        "pers_pred_1h": 68.7
+      },
+      {
+        "timestamp": "2024-11-05T06:00",
+        "actual_1h": 83.6,
+        "ar_pred_1h": 80.61,
+        "pers_pred_1h": 81.0
+      },
+      {
+        "timestamp": "2024-11-05T12:00",
+        "actual_1h": 39.3,
+        "ar_pred_1h": 50.73,
+        "pers_pred_1h": 53.2
+      },
+      {
+        "timestamp": "2024-11-05T18:00",
+        "actual_1h": 22.2,
+        "ar_pred_1h": 26.1,
+        "pers_pred_1h": 25.4
+      },
+      {
+        "timestamp": "2024-11-06T00:00",
+        "actual_1h": 37.7,
+        "ar_pred_1h": 25.58,
+        "pers_pred_1h": 22.9
+      },
+      {
+        "timestamp": "2024-11-06T06:00",
+        "actual_1h": 41.9,
+        "ar_pred_1h": 42.81,
+        "pers_pred_1h": 41.7
+      },
+      {
+        "timestamp": "2024-11-06T12:00",
+        "actual_1h": 50.1,
+        "ar_pred_1h": 27.75,
+        "pers_pred_1h": 27.9
+      },
+      {
+        "timestamp": "2024-11-06T18:00",
+        "actual_1h": 40.4,
+        "ar_pred_1h": 42.3,
+        "pers_pred_1h": 42.7
+      },
+      {
+        "timestamp": "2024-11-07T00:00",
+        "actual_1h": 40.9,
+        "ar_pred_1h": 41.57,
+        "pers_pred_1h": 40.7
+      },
+      {
+        "timestamp": "2024-11-07T06:00",
+        "actual_1h": 28.8,
+        "ar_pred_1h": 28.53,
+        "pers_pred_1h": 29.5
+      },
+      {
+        "timestamp": "2024-11-07T12:00",
+        "actual_1h": 29.6,
+        "ar_pred_1h": 34.92,
+        "pers_pred_1h": 34.3
+      },
+      {
+        "timestamp": "2024-11-07T18:00",
+        "actual_1h": 34.9,
+        "ar_pred_1h": 35.5,
+        "pers_pred_1h": 34.8
+      },
+      {
+        "timestamp": "2024-11-08T00:00",
+        "actual_1h": 44.6,
+        "ar_pred_1h": 42.38,
+        "pers_pred_1h": 42.8
+      },
+      {
+        "timestamp": "2024-11-08T06:00",
+        "actual_1h": 64.7,
+        "ar_pred_1h": 59.81,
+        "pers_pred_1h": 63.8
+      },
+      {
+        "timestamp": "2024-11-08T12:00",
+        "actual_1h": 59.5,
+        "ar_pred_1h": 68.66,
+        "pers_pred_1h": 68.5
+      },
+      {
+        "timestamp": "2024-11-08T18:00",
+        "actual_1h": 55.6,
+        "ar_pred_1h": 55.82,
+        "pers_pred_1h": 56.7
+      },
+      {
+        "timestamp": "2024-11-09T00:00",
+        "actual_1h": 54.0,
+        "ar_pred_1h": 52.19,
+        "pers_pred_1h": 52.5
+      },
+      {
+        "timestamp": "2024-11-09T06:00",
+        "actual_1h": 43.9,
+        "ar_pred_1h": 47.58,
+        "pers_pred_1h": 48.3
+      },
+      {
+        "timestamp": "2024-11-09T12:00",
+        "actual_1h": 36.9,
+        "ar_pred_1h": 35.7,
+        "pers_pred_1h": 35.4
+      },
+      {
+        "timestamp": "2024-11-09T18:00",
+        "actual_1h": 35.7,
+        "ar_pred_1h": 37.15,
+        "pers_pred_1h": 36.6
+      },
+      {
+        "timestamp": "2024-11-10T00:00",
+        "actual_1h": 32.2,
+        "ar_pred_1h": 30.45,
+        "pers_pred_1h": 30.4
+      },
+      {
+        "timestamp": "2024-11-10T06:00",
+        "actual_1h": 23.5,
+        "ar_pred_1h": 24.07,
+        "pers_pred_1h": 24.7
+      },
+      {
+        "timestamp": "2024-11-10T12:00",
+        "actual_1h": 21.8,
+        "ar_pred_1h": 23.21,
+        "pers_pred_1h": 22.5
+      },
+      {
+        "timestamp": "2024-11-10T18:00",
+        "actual_1h": 26.6,
+        "ar_pred_1h": 28.06,
+        "pers_pred_1h": 27.5
+      },
+      {
+        "timestamp": "2024-11-11T00:00",
+        "actual_1h": 20.8,
+        "ar_pred_1h": 20.84,
+        "pers_pred_1h": 21.4
+      },
+      {
+        "timestamp": "2024-11-11T06:00",
+        "actual_1h": 33.9,
+        "ar_pred_1h": 34.2,
+        "pers_pred_1h": 33.6
+      },
+      {
+        "timestamp": "2024-11-11T12:00",
+        "actual_1h": 37.7,
+        "ar_pred_1h": 31.84,
+        "pers_pred_1h": 29.7
+      },
+      {
+        "timestamp": "2024-11-11T18:00",
+        "actual_1h": 27.5,
+        "ar_pred_1h": 28.71,
+        "pers_pred_1h": 29.6
+      },
+      {
+        "timestamp": "2024-11-12T00:00",
+        "actual_1h": 24.3,
+        "ar_pred_1h": 25.37,
+        "pers_pred_1h": 24.9
+      },
+      {
+        "timestamp": "2024-11-12T06:00",
+        "actual_1h": 30.9,
+        "ar_pred_1h": 31.05,
+        "pers_pred_1h": 30.7
+      },
+      {
+        "timestamp": "2024-11-12T12:00",
+        "actual_1h": 31.1,
+        "ar_pred_1h": 35.18,
+        "pers_pred_1h": 36.6
+      },
+      {
+        "timestamp": "2024-11-12T18:00",
+        "actual_1h": 55.9,
+        "ar_pred_1h": 55.63,
+        "pers_pred_1h": 53.8
+      },
+      {
+        "timestamp": "2024-11-13T00:00",
+        "actual_1h": 46.6,
+        "ar_pred_1h": 50.51,
+        "pers_pred_1h": 51.1
+      },
+      {
+        "timestamp": "2024-11-13T06:00",
+        "actual_1h": 41.3,
+        "ar_pred_1h": 39.72,
+        "pers_pred_1h": 39.0
+      },
+      {
+        "timestamp": "2024-11-13T12:00",
+        "actual_1h": 45.6,
+        "ar_pred_1h": 45.69,
+        "pers_pred_1h": 45.2
+      },
+      {
+        "timestamp": "2024-11-13T18:00",
+        "actual_1h": 60.1,
+        "ar_pred_1h": 59.96,
+        "pers_pred_1h": 59.0
+      },
+      {
+        "timestamp": "2024-11-14T00:00",
+        "actual_1h": 56.3,
+        "ar_pred_1h": 54.69,
+        "pers_pred_1h": 55.5
+      },
+      {
+        "timestamp": "2024-11-14T06:00",
+        "actual_1h": 62.4,
+        "ar_pred_1h": 63.71,
+        "pers_pred_1h": 61.5
+      },
+      {
+        "timestamp": "2024-11-14T12:00",
+        "actual_1h": 91.7,
+        "ar_pred_1h": 75.6,
+        "pers_pred_1h": 72.6
+      },
+      {
+        "timestamp": "2024-11-14T18:00",
+        "actual_1h": 111.8,
+        "ar_pred_1h": 110.61,
+        "pers_pred_1h": 106.9
+      },
+      {
+        "timestamp": "2024-11-15T00:00",
+        "actual_1h": 107.1,
+        "ar_pred_1h": 108.25,
+        "pers_pred_1h": 110.4
+      },
+      {
+        "timestamp": "2024-11-15T06:00",
+        "actual_1h": 73.3,
+        "ar_pred_1h": 76.28,
+        "pers_pred_1h": 82.0
+      },
+      {
+        "timestamp": "2024-11-15T12:00",
+        "actual_1h": 74.3,
+        "ar_pred_1h": 80.26,
+        "pers_pred_1h": 76.1
+      },
+      {
+        "timestamp": "2024-11-15T18:00",
+        "actual_1h": 130.9,
+        "ar_pred_1h": 132.28,
+        "pers_pred_1h": 128.5
+      },
+      {
+        "timestamp": "2024-11-16T00:00",
+        "actual_1h": 83.1,
+        "ar_pred_1h": 89.07,
+        "pers_pred_1h": 97.6
+      },
+      {
+        "timestamp": "2024-11-16T06:00",
+        "actual_1h": 71.7,
+        "ar_pred_1h": 75.47,
+        "pers_pred_1h": 68.5
+      },
+      {
+        "timestamp": "2024-11-16T12:00",
+        "actual_1h": 62.6,
+        "ar_pred_1h": 77.97,
+        "pers_pred_1h": 75.2
+      },
+      {
+        "timestamp": "2024-11-16T18:00",
+        "actual_1h": 92.4,
+        "ar_pred_1h": 93.38,
+        "pers_pred_1h": 92.4
+      },
+      {
+        "timestamp": "2024-11-17T00:00",
+        "actual_1h": 83.4,
+        "ar_pred_1h": 87.94,
+        "pers_pred_1h": 89.2
+      },
+      {
+        "timestamp": "2024-11-17T06:00",
+        "actual_1h": 57.7,
+        "ar_pred_1h": 55.68,
+        "pers_pred_1h": 54.2
+      },
+      {
+        "timestamp": "2024-11-17T12:00",
+        "actual_1h": 69.6,
+        "ar_pred_1h": 75.51,
+        "pers_pred_1h": 69.8
+      },
+      {
+        "timestamp": "2024-11-17T18:00",
+        "actual_1h": 118.7,
+        "ar_pred_1h": 118.32,
+        "pers_pred_1h": 116.4
+      },
+      {
+        "timestamp": "2024-11-18T00:00",
+        "actual_1h": 102.2,
+        "ar_pred_1h": 98.04,
+        "pers_pred_1h": 105.0
+      },
+      {
+        "timestamp": "2024-11-18T06:00",
+        "actual_1h": 63.3,
+        "ar_pred_1h": 63.98,
+        "pers_pred_1h": 67.1
+      },
+      {
+        "timestamp": "2024-11-18T12:00",
+        "actual_1h": 59.8,
+        "ar_pred_1h": 72.54,
+        "pers_pred_1h": 68.0
+      },
+      {
+        "timestamp": "2024-11-18T18:00",
+        "actual_1h": 106.6,
+        "ar_pred_1h": 109.91,
+        "pers_pred_1h": 105.7
+      }
+    ]
+  },
+  "e2e_and_benchmarks": {
+    "provenance": "SYNTHETIC + MOCKED (SIMULATED notifications, loopback/mocked ESP32, Windows desktop)",
+    "environment": {
+      "platform": "win32",
+      "python": "3.12.10",
+      "process_rss_mb": null,
+      "process_cpu_time_s": 44.469
+    },
+    "startup_time_ms": 243.33,
+    "e2e_normal_reading_latency": {
+      "n": 40,
+      "min_ms": 567.654,
+      "median_ms": 813.375,
+      "mean_ms": 844.753,
+      "p95_ms": 1240.1,
+      "max_ms": 1310.177
+    },
+    "e2e_hazard_reading_latency": {
+      "n": 5,
+      "min_ms": 705.023,
+      "median_ms": 774.264,
+      "mean_ms": 810.16,
+      "p95_ms": 937.158,
+      "max_ms": 937.158
+    },
+    "clean_background_false_emergencies": 0,
+    "gas_hazard_events_created": 1,
+    "notifications_recorded": 1,
+    "sqlite_db_size_bytes": 4096
+  }
+}

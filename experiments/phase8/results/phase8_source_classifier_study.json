@@ -1,0 +1,1939 @@
+{
+  "phase7_baseline_reproduction": {
+    "original_artifact_sha256": "a22c30ca9b685b469888f391c4f89dd7d4d59962aef5909a56473f4132add59c",
+    "n_samples": 240,
+    "accuracy": 0.4792,
+    "macro_f1": 0.4043,
+    "reproduced_exact": true
+  },
+  "class_overlap_analysis": {
+    "HEAVY_DUST_vs_CONSTRUCTION_ACTIVITY": {
+      "most_overlapping_features": {
+        "temp_c": {
+          "sg_mean_a": 35.781,
+          "sg_mean_b": 35.735,
+          "cohen_d_sg": 0.051,
+          "train_med_a": 34.9012,
+          "train_med_b": 33.846
+        },
+        "pm10": {
+          "sg_mean_a": 273.121,
+          "sg_mean_b": 306.916,
+          "cohen_d_sg": 0.829,
+          "train_med_a": 185.3655,
+          "train_med_b": 203.1565
+        },
+        "pm2_5": {
+          "sg_mean_a": 81.287,
+          "sg_mean_b": 96.595,
+          "cohen_d_sg": 1.348,
+          "train_med_a": 41.8989,
+          "train_med_b": 64.4402
+        },
+        "pm_coarse_ratio": {
+          "sg_mean_a": 3.357,
+          "sg_mean_b": 3.175,
+          "cohen_d_sg": 2.051,
+          "train_med_a": 4.4333,
+          "train_med_b": 3.1841
+        }
+      },
+      "most_separating_features": {
+        "mq_max_v": {
+          "sg_mean_a": 1.263,
+          "sg_mean_b": 1.961,
+          "cohen_d_sg": 5.602,
+          "train_med_a": 1.0855,
+          "train_med_b": 1.4192
+        },
+        "pm_fine_ratio": {
+          "sg_mean_a": 3.62,
+          "sg_mean_b": 3.132,
+          "cohen_d_sg": 6.139,
+          "train_med_a": 2.6357,
+          "train_med_b": 2.9385
+        },
+        "mq9_v": {
+          "sg_mean_a": 1.134,
+          "sg_mean_b": 1.961,
+          "cohen_d_sg": 7.134,
+          "train_med_a": 0.7957,
+          "train_med_b": 1.2702
+        },
+        "mq2_mq9_ratio": {
+          "sg_mean_a": 1.113,
+          "sg_mean_b": 0.818,
+          "cohen_d_sg": 10.82,
+          "train_med_a": 1.2967,
+          "train_med_b": 0.835
+        }
+      }
+    },
+    "COOKING_OR_FUEL_COMBUSTION_vs_BIOMASS_OR_WASTE_BURNING": {
+      "most_overlapping_features": {
+        "mq_mean_v": {
+          "sg_mean_a": 2.953,
+          "sg_mean_b": 2.973,
+          "cohen_d_sg": 0.086,
+          "train_med_a": 1.8466,
+          "train_med_b": 2.4497
+        },
+        "pm10": {
+          "sg_mean_a": 182.72,
+          "sg_mean_b": 190.421,
+          "cohen_d_sg": 0.295,
+          "train_med_a": 91.5317,
+          "train_med_b": 147.8387
+        },
+        "pm_coarse_ratio": {
+          "sg_mean_a": 1.308,
+          "sg_mean_b": 1.294,
+          "cohen_d_sg": 0.387,
+          "train_med_a": 1.1925,
+          "train_med_b": 1.2824
+        },
+        "pm2_5": {
+          "sg_mean_a": 139.617,
+          "sg_mean_b": 147.037,
+          "cohen_d_sg": 0.408,
+          "train_med_a": 68.8544,
+          "train_med_b": 102.8954
+        }
+      },
+      "most_separating_features": {
+        "hum_pct": {
+          "sg_mean_a": 50.472,
+          "sg_mean_b": 52.802,
+          "cohen_d_sg": 1.651,
+          "train_med_a": 55.1835,
+          "train_med_b": 44.9621
+        },
+        "pm_fine_ratio": {
+          "sg_mean_a": 2.005,
+          "sg_mean_b": 1.921,
+          "cohen_d_sg": 1.828,
+          "train_med_a": 1.5197,
+          "train_med_b": 1.658
+        },
+        "mq2_mq9_ratio": {
+          "sg_mean_a": 1.343,
+          "sg_mean_b": 1.511,
+          "cohen_d_sg": 4.233,
+          "train_med_a": 1.5155,
+          "train_med_b": 1.4062
+        },
+        "mq135_mq2_ratio": {
+          "sg_mean_a": 0.851,
+          "sg_mean_b": 0.762,
+          "cohen_d_sg": 4.925,
+          "train_med_a": 0.7788,
+          "train_med_b": 0.8854
+        }
+      }
+    },
+    "TRAFFIC_vs_INDUSTRIAL_OR_GENERATOR_EMISSIONS": {
+      "most_overlapping_features": {
+        "mq2_mq9_ratio": {
+          "sg_mean_a": 0.756,
+          "sg_mean_b": 0.768,
+          "cohen_d_sg": 0.551,
+          "train_med_a": 0.7889,
+          "train_med_b": 0.7367
+        },
+        "temp_c": {
+          "sg_mean_a": 33.108,
+          "sg_mean_b": 33.587,
+          "cohen_d_sg": 0.592,
+          "train_med_a": 32.754,
+          "train_med_b": 33.4539
+        },
+        "mq9_v": {
+          "sg_mean_a": 2.325,
+          "sg_mean_b": 2.508,
+          "cohen_d_sg": 1.03,
+          "train_med_a": 1.7285,
+          "train_med_b": 2.4043
+        },
+        "mq2_v": {
+          "sg_mean_a": 1.758,
+          "sg_mean_b": 1.925,
+          "cohen_d_sg": 1.088,
+          "train_med_a": 1.3997,
+          "train_med_b": 1.7689
+        }
+      },
+      "most_separating_features": {
+        "mq_mean_v": {
+          "sg_mean_a": 2.02,
+          "sg_mean_b": 2.593,
+          "cohen_d_sg": 3.178,
+          "train_med_a": 1.5844,
+          "train_med_b": 2.1684
+        },
+        "mq_max_v": {
+          "sg_mean_a": 2.325,
+          "sg_mean_b": 3.345,
+          "cohen_d_sg": 4.548,
+          "train_med_a": 1.8729,
+          "train_med_b": 2.6188
+        },
+        "mq135_v": {
+          "sg_mean_a": 1.977,
+          "sg_mean_b": 3.345,
+          "cohen_d_sg": 6.216,
+          "train_med_a": 1.5705,
+          "train_med_b": 2.3082
+        },
+        "mq135_mq2_ratio": {
+          "sg_mean_a": 1.126,
+          "sg_mean_b": 1.738,
+          "cohen_d_sg": 18.161,
+          "train_med_a": 1.1387,
+          "train_med_b": 1.3319
+        }
+      }
+    }
+  },
+  "dataset_splits": {
+    "train_seed_42_non_ambiguous": 360,
+    "val_seed_101_non_ambiguous": 360,
+    "test_seed_777_non_ambiguous": 360,
+    "cross_gen_sg_seed_999": 320,
+    "features": [
+      "mq2_v",
+      "mq9_v",
+      "mq135_v",
+      "temp_c",
+      "hum_pct",
+      "pm1_0",
+      "pm2_5",
+      "pm10",
+      "pm_coarse_ratio",
+      "pm_fine_ratio",
+      "mq_mean_v",
+      "mq_max_v",
+      "mq2_mq9_ratio",
+      "mq135_mq2_ratio"
+    ],
+    "labels": [
+      "BIOMASS_OR_WASTE_BURNING",
+      "CLEAN_OR_BACKGROUND",
+      "CONSTRUCTION_ACTIVITY",
+      "COOKING_OR_FUEL_COMBUSTION",
+      "HEAVY_DUST",
+      "INDOOR_ACTIVITY",
+      "INDUSTRIAL_OR_GENERATOR_EMISSIONS",
+      "TRAFFIC"
+    ]
+  },
+  "candidate_comparison": {
+    "Original_Artifact_DT": {
+      "model_sha256": "a22c30ca9b685b469888f391c4f89dd7d4d59962aef5909a56473f4132add59c",
+      "size_kb": 21.49,
+      "test_seed777": {
+        "accuracy": 0.5889,
+        "macro_f1": 0.5816,
+        "ece": 0.3576,
+        "infer_ms_per_sample": 0.0004,
+        "ci_95": {
+          "accuracy_95ci": [
+            0.5402,
+            0.6417
+          ],
+          "macro_f1_95ci": [
+            0.5326,
+            0.6236
+          ]
+        }
+      },
+      "cross_gen_sg999": {
+        "accuracy": 0.6188,
+        "macro_f1": 0.5069,
+        "ece": 0.3554,
+        "infer_ms_per_sample": 0.0009,
+        "ci_95": {
+          "accuracy_95ci": [
+            0.5563,
+            0.6625
+          ],
+          "macro_f1_95ci": [
+            0.4771,
+            0.5336
+          ]
+        }
+      }
+    },
+    "DecisionTree_d8": {
+      "train_time_ms": 74.4,
+      "size_kb": 4.12,
+      "val_seed101": {
+        "accuracy": 0.9778,
+        "macro_f1": 0.9758,
+        "ece": 0.0222,
+        "infer_ms_per_sample": 0.0006,
+        "ci_95": {
+          "accuracy_95ci": [
+            0.9639,
+            0.9917
+          ],
+          "macro_f1_95ci": [
+            0.9588,
+            0.9912
+          ]
+        },
+        "per_class_recall": {
+          "BIOMASS_OR_WASTE_BURNING": 0.95,
+          "CLEAN_OR_BACKGROUND": 1.0,
+          "CONSTRUCTION_ACTIVITY": 1.0,
+          "COOKING_OR_FUEL_COMBUSTION": 1.0,
+          "HEAVY_DUST": 1.0,
+          "INDOOR_ACTIVITY": 0.85,
+          "INDUSTRIAL_OR_GENERATOR_EMISSIONS": 1.0,
+          "TRAFFIC": 1.0
+        },
+        "confusion_matrix": [
+          [
+            38,
+            0,
+            0,
+            0,
+            0,
+            0,
+            2,
+            0
+          ],
+          [
+            0,
+            40,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            40,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            50,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            50,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            2,
+            3,
+            1,
+            0,
+            34,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            60,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            40
+          ]
+        ]
+      },
+      "test_seed777": {
+        "accuracy": 0.9917,
+        "macro_f1": 0.9911,
+        "ece": 0.0083,
+        "infer_ms_per_sample": 0.0005,
+        "ci_95": {
+          "accuracy_95ci": [
+            0.9806,
+            1.0
+          ],
+          "macro_f1_95ci": [
+            0.9801,
+            1.0
+          ]
+        },
+        "per_class_recall": {
+          "BIOMASS_OR_WASTE_BURNING": 1.0,
+          "CLEAN_OR_BACKGROUND": 1.0,
+          "CONSTRUCTION_ACTIVITY": 1.0,
+          "COOKING_OR_FUEL_COMBUSTION": 1.0,
+          "HEAVY_DUST": 1.0,
+          "INDOOR_ACTIVITY": 0.925,
+          "INDUSTRIAL_OR_GENERATOR_EMISSIONS": 1.0,
+          "TRAFFIC": 1.0
+        },
+        "confusion_matrix": [
+          [
+            40,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            40,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            40,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            50,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            50,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            2,
+            0,
+            37,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            60,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            40
+          ]
+        ]
+      },
+      "cross_gen_sg999": {
+        "accuracy": 0.3438,
+        "macro_f1": 0.2559,
+        "ece": 0.6562,
+        "infer_ms_per_sample": 0.0006,
+        "ci_95": {
+          "accuracy_95ci": [
+            0.2938,
+            0.3985
+          ],
+          "macro_f1_95ci": [
+            0.2271,
+            0.2845
+          ]
+        },
+        "per_class_recall": {
+          "BIOMASS_OR_WASTE_BURNING": 1.0,
+          "CLEAN_OR_BACKGROUND": 0.125,
+          "CONSTRUCTION_ACTIVITY": 0.0,
+          "COOKING_OR_FUEL_COMBUSTION": 0.0,
+          "HEAVY_DUST": 0.0,
+          "INDOOR_ACTIVITY": 0.0,
+          "INDUSTRIAL_OR_GENERATOR_EMISSIONS": 1.0,
+          "TRAFFIC": 0.625
+        },
+        "confusion_matrix": [
+          [
+            40,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            5,
+            0,
+            0,
+            0,
+            35,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            2,
+            38
+          ],
+          [
+            40,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            37,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          [
+            32,
+            0,
+            8,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            40,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            15,
+            25
+          ]
+        ]
+      }
+    },
+    "RandomForest_100": {
+      "train_time_ms": 130.94,
+      "size_kb": 353.53,
+      "val_seed101": {
+        "accuracy": 0.9944,
+        "macro_f1": 0.9937,
+        "ece": 0.0608,
+        "infer_ms_per_sample": 0.0112,
+        "ci_95": {
+          "accuracy_95ci": [
+            0.9861,
+            1.0
+          ],
+          "macro_f1_95ci": [
+            0.9836,
+            1.0
+          ]
+        },
+        "per_class_recall": {
+          "BIOMASS_OR_WASTE_BURNING": 1.0,
+          "CLEAN_OR_BACKGROUND": 1.0,
+          "CONSTRUCTION_ACTIVITY": 1.0,
+          "COOKING_OR_FUEL_COMBUSTION": 1.0,
+          "HEAVY_DUST": 1.0,
+          "INDOOR_ACTIVITY": 0.95,
+          "INDUSTRIAL_OR_GENERATOR_EMISSIONS": 1.0,
+          "TRAFFIC": 1.0
+        },
+        "confusion_matrix": [
+          [
+            40,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            40,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            40,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            50,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            50,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            2,
+            0,
+            0,
+            0,
+            38,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            60,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            40
+          ]
+        ]
+      },
+      "test_seed777": {
+        "accuracy": 0.9972,
+        "macro_f1": 0.9969,
+        "ece": 0.0561,
+        "infer_ms_per_sample": 0.0124,
+        "ci_95": {
+          "accuracy_95ci": [
+            0.9917,
+            1.0
+          ],
+          "macro_f1_95ci": [
+            0.99,
+            1.0
+          ]
+        },
+        "per_class_recall": {
+          "BIOMASS_OR_WASTE_BURNING": 1.0,
+          "CLEAN_OR_BACKGROUND": 1.0,
+          "CONSTRUCTION_ACTIVITY": 1.0,
+          "COOKING_OR_FUEL_COMBUSTION": 1.0,
+          "HEAVY_DUST": 1.0,
+          "INDOOR_ACTIVITY": 0.975,
+          "INDUSTRIAL_OR_GENERATOR_EMISSIONS": 1.0,
+          "TRAFFIC": 1.0
+        },
+        "confusion_matrix": [
+          [
+            40,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            40,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            40,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            50,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            50,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0,
+            0,
+            39,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            60,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            40
+          ]
+        ]
+      },
+      "cross_gen_sg999": {
+        "accuracy": 0.2969,
+        "macro_f1": 0.2367,
+        "ece": 0.3402,
+        "infer_ms_per_sample": 0.0127,
+        "ci_95": {
+          "accuracy_95ci": [
+            0.2531,
+            0.3423
+          ],
+          "macro_f1_95ci": [
+            0.1988,
+            0.2741
+          ]
+        },
+        "per_class_recall": {
+          "BIOMASS_OR_WASTE_BURNING": 1.0,
+          "CLEAN_OR_BACKGROUND": 0.125,
+          "CONSTRUCTION_ACTIVITY": 0.35,
+          "COOKING_OR_FUEL_COMBUSTION": 0.0,
+          "HEAVY_DUST": 0.0,
+          "INDOOR_ACTIVITY": 0.075,
+          "INDUSTRIAL_OR_GENERATOR_EMISSIONS": 0.175,
+          "TRAFFIC": 0.65
+        },
+        "confusion_matrix": [
+          [
+            40,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            5,
+            0,
+            0,
+            0,
+            35,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            14,
+            0,
+            0,
+            0,
+            0,
+            24
+          ],
+          [
+            40,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            40,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            20,
+            17,
+            0,
+            3,
+            0,
+            0
+          ],
+          [
+            33,
+            0,
+            0,
+            0,
+            0,
+            0,
+            7,
+            0
+          ],
+          [
+            14,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            26
+          ]
+        ]
+      }
+    },
+    "ExtraTrees_100": {
+      "train_time_ms": 68.88,
+      "size_kb": 982.65,
+      "val_seed101": {
+        "accuracy": 0.9917,
+        "macro_f1": 0.9906,
+        "ece": 0.1133,
+        "infer_ms_per_sample": 0.0151,
+        "ci_95": {
+          "accuracy_95ci": [
+            0.9806,
+            1.0
+          ],
+          "macro_f1_95ci": [
+            0.9784,
+            1.0
+          ]
+        },
+        "per_class_recall": {
+          "BIOMASS_OR_WASTE_BURNING": 1.0,
+          "CLEAN_OR_BACKGROUND": 1.0,
+          "CONSTRUCTION_ACTIVITY": 1.0,
+          "COOKING_OR_FUEL_COMBUSTION": 1.0,
+          "HEAVY_DUST": 1.0,
+          "INDOOR_ACTIVITY": 0.925,
+          "INDUSTRIAL_OR_GENERATOR_EMISSIONS": 1.0,
+          "TRAFFIC": 1.0
+        },
+        "confusion_matrix": [
+          [
+            40,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            40,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            40,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            50,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            50,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            3,
+            0,
+            0,
+            0,
+            37,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            60,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            40
+          ]
+        ]
+      },
+      "test_seed777": {
+        "accuracy": 1.0,
+        "macro_f1": 1.0,
+        "ece": 0.1153,
+        "infer_ms_per_sample": 0.0136,
+        "ci_95": {
+          "accuracy_95ci": [
+            1.0,
+            1.0
+          ],
+          "macro_f1_95ci": [
+            1.0,
+            1.0
+          ]
+        },
+        "per_class_recall": {
+          "BIOMASS_OR_WASTE_BURNING": 1.0,
+          "CLEAN_OR_BACKGROUND": 1.0,
+          "CONSTRUCTION_ACTIVITY": 1.0,
+          "COOKING_OR_FUEL_COMBUSTION": 1.0,
+          "HEAVY_DUST": 1.0,
+          "INDOOR_ACTIVITY": 1.0,
+          "INDUSTRIAL_OR_GENERATOR_EMISSIONS": 1.0,
+          "TRAFFIC": 1.0
+        },
+        "confusion_matrix": [
+          [
+            40,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            40,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            40,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            50,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            50,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            40,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            60,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            40
+          ]
+        ]
+      },
+      "cross_gen_sg999": {
+        "accuracy": 0.4313,
+        "macro_f1": 0.3076,
+        "ece": 0.342,
+        "infer_ms_per_sample": 0.0137,
+        "ci_95": {
+          "accuracy_95ci": [
+            0.3671,
+            0.4829
+          ],
+          "macro_f1_95ci": [
+            0.2694,
+            0.3421
+          ]
+        },
+        "per_class_recall": {
+          "BIOMASS_OR_WASTE_BURNING": 1.0,
+          "CLEAN_OR_BACKGROUND": 0.175,
+          "CONSTRUCTION_ACTIVITY": 0.325,
+          "COOKING_OR_FUEL_COMBUSTION": 0.0,
+          "HEAVY_DUST": 0.0,
+          "INDOOR_ACTIVITY": 0.975,
+          "INDUSTRIAL_OR_GENERATOR_EMISSIONS": 0.0,
+          "TRAFFIC": 0.975
+        },
+        "confusion_matrix": [
+          [
+            40,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            7,
+            0,
+            0,
+            0,
+            33,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            13,
+            0,
+            0,
+            0,
+            0,
+            25
+          ],
+          [
+            40,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            40,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            39,
+            0,
+            1
+          ],
+          [
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            39
+          ],
+          [
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            39
+          ]
+        ]
+      }
+    },
+    "HistGradientBoosting": {
+      "train_time_ms": 398.67,
+      "size_kb": 725.7,
+      "val_seed101": {
+        "accuracy": 0.9972,
+        "macro_f1": 0.9969,
+        "ece": 0.012,
+        "infer_ms_per_sample": 0.0207,
+        "ci_95": {
+          "accuracy_95ci": [
+            0.9889,
+            1.0
+          ],
+          "macro_f1_95ci": [
+            0.9889,
+            1.0
+          ]
+        },
+        "per_class_recall": {
+          "BIOMASS_OR_WASTE_BURNING": 1.0,
+          "CLEAN_OR_BACKGROUND": 1.0,
+          "CONSTRUCTION_ACTIVITY": 1.0,
+          "COOKING_OR_FUEL_COMBUSTION": 1.0,
+          "HEAVY_DUST": 1.0,
+          "INDOOR_ACTIVITY": 1.0,
+          "INDUSTRIAL_OR_GENERATOR_EMISSIONS": 1.0,
+          "TRAFFIC": 0.975
+        },
+        "confusion_matrix": [
+          [
+            40,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            40,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            40,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            50,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            50,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            40,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            60,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            39
+          ]
+        ]
+      },
+      "test_seed777": {
+        "accuracy": 0.9917,
+        "macro_f1": 0.9908,
+        "ece": 0.0151,
+        "infer_ms_per_sample": 0.0242,
+        "ci_95": {
+          "accuracy_95ci": [
+            0.9819,
+            1.0
+          ],
+          "macro_f1_95ci": [
+            0.9799,
+            1.0
+          ]
+        },
+        "per_class_recall": {
+          "BIOMASS_OR_WASTE_BURNING": 1.0,
+          "CLEAN_OR_BACKGROUND": 1.0,
+          "CONSTRUCTION_ACTIVITY": 1.0,
+          "COOKING_OR_FUEL_COMBUSTION": 1.0,
+          "HEAVY_DUST": 1.0,
+          "INDOOR_ACTIVITY": 1.0,
+          "INDUSTRIAL_OR_GENERATOR_EMISSIONS": 1.0,
+          "TRAFFIC": 0.925
+        },
+        "confusion_matrix": [
+          [
+            40,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            40,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            40,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            50,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            50,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            40,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            60,
+            0
+          ],
+          [
+            0,
+            0,
+            2,
+            1,
+            0,
+            0,
+            0,
+            37
+          ]
+        ]
+      },
+      "cross_gen_sg999": {
+        "accuracy": 0.3688,
+        "macro_f1": 0.25,
+        "ece": 0.4749,
+        "infer_ms_per_sample": 0.0383,
+        "ci_95": {
+          "accuracy_95ci": [
+            0.3156,
+            0.4235
+          ],
+          "macro_f1_95ci": [
+            0.2231,
+            0.2741
+          ]
+        },
+        "per_class_recall": {
+          "BIOMASS_OR_WASTE_BURNING": 1.0,
+          "CLEAN_OR_BACKGROUND": 0.025,
+          "CONSTRUCTION_ACTIVITY": 0.95,
+          "COOKING_OR_FUEL_COMBUSTION": 0.0,
+          "HEAVY_DUST": 0.0,
+          "INDOOR_ACTIVITY": 0.0,
+          "INDUSTRIAL_OR_GENERATOR_EMISSIONS": 0.0,
+          "TRAFFIC": 0.975
+        },
+        "confusion_matrix": [
+          [
+            40,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0,
+            0,
+            39,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            38,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            40,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            40,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            39,
+            0
+          ],
+          [
+            1,
+            0,
+            3,
+            0,
+            0,
+            0,
+            0,
+            36
+          ],
+          [
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            39
+          ]
+        ]
+      }
+    },
+    "SVC_RBF_Calibrated": {
+      "train_time_ms": 124.68,
+      "size_kb": 72.8,
+      "val_seed101": {
+        "accuracy": 0.9972,
+        "macro_f1": 0.9972,
+        "ece": 0.2317,
+        "infer_ms_per_sample": 0.0368,
+        "ci_95": {
+          "accuracy_95ci": [
+            0.9917,
+            1.0
+          ],
+          "macro_f1_95ci": [
+            0.9911,
+            1.0
+          ]
+        },
+        "per_class_recall": {
+          "BIOMASS_OR_WASTE_BURNING": 0.975,
+          "CLEAN_OR_BACKGROUND": 1.0,
+          "CONSTRUCTION_ACTIVITY": 1.0,
+          "COOKING_OR_FUEL_COMBUSTION": 1.0,
+          "HEAVY_DUST": 1.0,
+          "INDOOR_ACTIVITY": 1.0,
+          "INDUSTRIAL_OR_GENERATOR_EMISSIONS": 1.0,
+          "TRAFFIC": 1.0
+        },
+        "confusion_matrix": [
+          [
+            39,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            40,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            40,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            50,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            50,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            40,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            60,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            40
+          ]
+        ]
+      },
+      "test_seed777": {
+        "accuracy": 0.9972,
+        "macro_f1": 0.9972,
+        "ece": 0.2367,
+        "infer_ms_per_sample": 0.0284,
+        "ci_95": {
+          "accuracy_95ci": [
+            0.9917,
+            1.0
+          ],
+          "macro_f1_95ci": [
+            0.9917,
+            1.0
+          ]
+        },
+        "per_class_recall": {
+          "BIOMASS_OR_WASTE_BURNING": 0.975,
+          "CLEAN_OR_BACKGROUND": 1.0,
+          "CONSTRUCTION_ACTIVITY": 1.0,
+          "COOKING_OR_FUEL_COMBUSTION": 1.0,
+          "HEAVY_DUST": 1.0,
+          "INDOOR_ACTIVITY": 1.0,
+          "INDUSTRIAL_OR_GENERATOR_EMISSIONS": 1.0,
+          "TRAFFIC": 1.0
+        },
+        "confusion_matrix": [
+          [
+            39,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            40,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            40,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            50,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            50,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            40,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            60,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            40
+          ]
+        ]
+      },
+      "cross_gen_sg999": {
+        "accuracy": 0.6406,
+        "macro_f1": 0.5691,
+        "ece": 0.2422,
+        "infer_ms_per_sample": 0.0305,
+        "ci_95": {
+          "accuracy_95ci": [
+            0.5844,
+            0.6875
+          ],
+          "macro_f1_95ci": [
+            0.5324,
+            0.5978
+          ]
+        },
+        "per_class_recall": {
+          "BIOMASS_OR_WASTE_BURNING": 1.0,
+          "CLEAN_OR_BACKGROUND": 0.875,
+          "CONSTRUCTION_ACTIVITY": 0.95,
+          "COOKING_OR_FUEL_COMBUSTION": 0.0,
+          "HEAVY_DUST": 0.0,
+          "INDOOR_ACTIVITY": 0.975,
+          "INDUSTRIAL_OR_GENERATOR_EMISSIONS": 0.35,
+          "TRAFFIC": 0.975
+        },
+        "confusion_matrix": [
+          [
+            40,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            35,
+            0,
+            0,
+            0,
+            5,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            38,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            40,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            38,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            1,
+            0,
+            39,
+            0,
+            0
+          ],
+          [
+            26,
+            0,
+            0,
+            0,
+            0,
+            0,
+            14,
+            0
+          ],
+          [
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            39
+          ]
+        ]
+      }
+    }
+  },
+  "abstention_curve_rf_seed777": [
+    {
+      "threshold": 0.3,
+      "coverage": 1.0,
+      "selective_accuracy": 0.9972
+    },
+    {
+      "threshold": 0.4,
+      "coverage": 1.0,
+      "selective_accuracy": 0.9972
+    },
+    {
+      "threshold": 0.5,
+      "coverage": 1.0,
+      "selective_accuracy": 0.9972
+    },
+    {
+      "threshold": 0.6,
+      "coverage": 1.0,
+      "selective_accuracy": 0.9972
+    },
+    {
+      "threshold": 0.7,
+      "coverage": 0.9778,
+      "selective_accuracy": 1.0
+    },
+    {
+      "threshold": 0.8,
+      "coverage": 0.9444,
+      "selective_accuracy": 1.0
+    }
+  ]
+}

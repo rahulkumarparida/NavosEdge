@@ -29,6 +29,9 @@ logger = logging.getLogger(__name__)
 
 
 from app.aqi.service import AQIService
+from app.emergency.actuator_service import ActuatorService
+from app.emergency.notification_service import EmergencyNotificationService
+from app.emergency.response_policy import HazardPolicyService
 
 
 class ProcessingService:
@@ -43,6 +46,9 @@ class ProcessingService:
         forecast_plugin: ForecastPlugin | None = None,
         aqi_service: AQIService | None = None,
         local_dataset_logger: LocalDatasetLogger | None = None,
+        hazard_policy_service: HazardPolicyService | None = None,
+        actuator_service: ActuatorService | None = None,
+        notification_service: EmergencyNotificationService | None = None,
     ) -> None:
         self.inference_adapter = inference_adapter
         self.node_registry = node_registry
@@ -53,6 +59,9 @@ class ProcessingService:
         self.forecast_plugin = forecast_plugin
         self.aqi_service = aqi_service
         self.local_dataset_logger = local_dataset_logger or LocalDatasetLogger()
+        self.hazard_policy_service = hazard_policy_service
+        self.actuator_service = actuator_service
+        self.notification_service = notification_service
         self.pipeline = ModularPipeline()
         self._latest_results: dict[str, IntelligenceResult] = {}
         # Track which nodes have been history-primed
@@ -239,6 +248,47 @@ class ProcessingService:
                     "AQI service error for node %s: %s", node_id, e, exc_info=True
                 )
         print("[INTELLIGENCE] AQI calculated", flush=True)
+
+        # --- Phase 2, 3 & 4: Hazard Evaluation, Actuator & Notification Orchestration ---
+        if self.hazard_policy_service is not None:
+            policy_decision = None
+            try:
+                policy_decision = self.hazard_policy_service.evaluate_and_decide(
+                    payload=payload,
+                    inference=inference_result,
+                    anomaly_report=pipeline_results.anomaly_report,
+                    source_result=pipeline_results.source_classification,
+                    aqi_result=aqi_result,
+                )
+            except Exception as e:
+                logger.error(
+                    "Emergency hazard evaluation error for node %s: %s",
+                    node_id,
+                    e,
+                    exc_info=True,
+                )
+
+            if policy_decision is not None:
+                if self.actuator_service is not None:
+                    try:
+                        await self.actuator_service.apply_policy_decision(policy_decision)
+                    except Exception as e:
+                        logger.error(
+                            "Actuator dispatch error for node %s (notifications unaffected): %s",
+                            node_id,
+                            e,
+                            exc_info=True,
+                        )
+                if self.notification_service is not None:
+                    try:
+                        self.notification_service.enqueue_policy_notification(policy_decision)
+                    except Exception as e:
+                        logger.error(
+                            "Notification enqueue error for node %s: %s",
+                            node_id,
+                            e,
+                            exc_info=True,
+                        )
 
         # Publish SSE event
         summary = {

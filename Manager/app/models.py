@@ -84,6 +84,7 @@ class SystemHealthResponse(BaseModel):
     active_nodes: int
     inactive_nodes: int
     total_nodes: int
+    uno_q_url: Optional[str] = None
 
 
 class IPConfigRequest(BaseModel):

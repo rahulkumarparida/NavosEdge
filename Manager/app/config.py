@@ -48,6 +48,13 @@ STATE_FILE = DATA_DIR / STATE_FILENAME
 HOST = os.getenv(ENV_HOST_KEY, HOST_DEFAULT)
 PORT = int(os.getenv(ENV_PORT_KEY, str(PORT_DEFAULT)))
 
+CORS_ORIGINS_RAW = os.getenv("NAVOS_CORS_ORIGINS", "*")
+
+
+def get_cors_origins() -> list[str]:
+    origins = [item.strip() for item in CORS_ORIGINS_RAW.split(",") if item.strip()]
+    return origins or ["*"]
+
 AQI_STANDARD = os.getenv(ENV_AQI_STANDARD_KEY, DEFAULT_AQI_STANDARD).upper()
 
 # ------------------------------------------------------------------

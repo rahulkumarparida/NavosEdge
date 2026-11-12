@@ -28,6 +28,8 @@ router = APIRouter()
 @router.get("/health", response_model=SystemHealthResponse)
 @router.get("/api/v1/health", response_model=SystemHealthResponse)
 async def health_check(request: Request):
+    from app.config import get_uno_q_base_url
+
     manager_service = request.app.state.manager_service
     overview = manager_service.get_overview()
     return SystemHealthResponse(
@@ -37,6 +39,7 @@ async def health_check(request: Request):
         active_nodes=overview.active_nodes,
         inactive_nodes=overview.inactive_nodes,
         total_nodes=overview.total_nodes,
+        uno_q_url=get_uno_q_base_url(),
     )
 
 

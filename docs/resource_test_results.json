@@ -1,0 +1,32 @@
+{
+  "startup": {
+    "import_time_ms": 237.5,
+    "mem_before_mb": -1.0,
+    "mem_after_import_mb": -1.0
+  },
+  "model_loading": {
+    "backend": "numpy",
+    "load_time_ms": 90.4,
+    "mem_delta_mb": 0.0,
+    "loaded": true
+  },
+  "inference": {
+    "backend": "numpy",
+    "single_ms": 13.06,
+    "avg_100_ms": 1.03,
+    "total_100_ms": 102.9
+  },
+  "storage": {
+    "artifacts_mb": 0.11,
+    "code_mb": 1.7,
+    "data_mb": 0.17
+  },
+  "memory_stability": {
+    "iterations": 360,
+    "elapsed_s": 0.4,
+    "mem_start_mb": -1.0,
+    "mem_end_mb": -1.0,
+    "mem_growth_mb": 0.0,
+    "leak_suspected": false
+  }
+}

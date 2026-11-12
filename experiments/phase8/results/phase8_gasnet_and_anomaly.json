@@ -1,0 +1,292 @@
+{
+  "gasnet_validation": {
+    "weights_sha256": "6514290f5c11df9a159a1c80dfc71280832002ae18721fc02f4ea91a1b777744",
+    "reproduced_baseline": {
+      "n_samples": 1068,
+      "accuracy": 0.9878,
+      "macro_f1_5class": 0.9941,
+      "mean_uncertainty": 0.0416,
+      "duplicate_overlaps": {
+        "42_vs_101": 4,
+        "42_vs_777": 4,
+        "101_vs_777": 4
+      }
+    },
+    "perturbation_stability_seed777": {
+      "gaussian_5pct": {
+        "accuracy": 0.9944,
+        "macro_f1_5class": 0.9976,
+        "mean_uncertainty": 0.0369
+      },
+      "gaussian_15pct": {
+        "accuracy": 0.9579,
+        "macro_f1_5class": 0.961,
+        "mean_uncertainty": 0.0611
+      }
+    },
+    "legacy_csv_diagnosis": {
+      "file": "Training/mq_synthetic_dataset.csv",
+      "n_rows": 12000,
+      "legacy_classes": [
+        "Alcohol",
+        "CO",
+        "CleanAir",
+        "Hydrogen",
+        "LPG",
+        "Methane",
+        "Propane",
+        "Smoke"
+      ],
+      "model_classes": [
+        "Alcohol",
+        "CO",
+        "CleanAir",
+        "LPG",
+        "Smoke"
+      ],
+      "rows_below_safety_gate_0_100V": 4584,
+      "pct_below_safety_gate": 38.2,
+      "rows_above_safety_gate_4_900V": 0,
+      "clean_air_mean_voltages": {
+        "MQ2_V": 1.692,
+        "MQ9_V": 1.326,
+        "MQ135_V": 0.89
+      },
+      "co_mean_voltages": {
+        "MQ2_V": 0.225,
+        "MQ9_V": 0.209,
+        "MQ135_V": 0.072
+      },
+      "conclusion": "Incompatible legacy schema: 8 classes vs 5 classes, inverted voltage polarity (CleanAir > CO), and majority of rows < 0.100V trigger SensorSafetyGate."
+    }
+  },
+  "anomaly_validation": {
+    "controlled_85step_diagnosis": {
+      "n_eval": 75,
+      "fp_count": 7,
+      "fn_count": 1,
+      "fp_details": [
+        {
+          "step": 33,
+          "score": 2.807,
+          "severity": "MEDIUM",
+          "is_hardware_fault": false,
+          "top_features": [
+            {
+              "feature": "MQ2_raw_adc",
+              "score": 6.388,
+              "actual": 212.0,
+              "expected": 180.0578
+            },
+            {
+              "feature": "MQ135_raw_adc",
+              "score": 5.734,
+              "actual": 206.0,
+              "expected": 177.3313
+            },
+            {
+              "feature": "MQ9_raw_adc",
+              "score": 4.405,
+              "actual": 178.0,
+              "expected": 155.9737
+            }
+          ]
+        },
+        {
+          "step": 37,
+          "score": 1.534,
+          "severity": "HIGH",
+          "is_hardware_fault": true,
+          "top_features": [
+            {
+              "feature": "MQ2_raw_adc",
+              "score": 3.685,
+              "actual": 182.0,
+              "expected": 163.5766
+            },
+            {
+              "feature": "MQ2_voltage_V",
+              "score": 1.795,
+              "actual": 0.891,
+              "expected": 0.8013
+            },
+            {
+              "feature": "MQ135_raw_adc",
+              "score": 1.162,
+              "actual": 171.0,
+              "expected": 165.1877
+            }
+          ]
+        },
+        {
+          "step": 39,
+          "score": 1.851,
+          "severity": "MEDIUM",
+          "is_hardware_fault": false,
+          "top_features": [
+            {
+              "feature": "MQ2_raw_adc",
+              "score": 4.172,
+              "actual": 176.0,
+              "expected": 153.1992
+            },
+            {
+              "feature": "MQ135_raw_adc",
+              "score": 2.26,
+              "actual": 171.0,
+              "expected": 159.6995
+            },
+            {
+              "feature": "MQ2_voltage_V",
+              "score": 2.193,
+              "actual": 0.861,
+              "expected": 0.7513
+            }
+          ]
+        },
+        {
+          "step": 55,
+          "score": 4.433,
+          "severity": "HIGH",
+          "is_hardware_fault": false,
+          "top_features": [
+            {
+              "feature": "MQ9_voltage_V",
+              "score": 4.635,
+              "actual": 0.751,
+              "expected": 0.3113
+            },
+            {
+              "feature": "MQ9_raw_adc",
+              "score": 4.469,
+              "actual": 154.0,
+              "expected": 63.7808
+            },
+            {
+              "feature": "MQ2_raw_adc",
+              "score": 4.24,
+              "actual": 179.0,
+              "expected": 60.5426
+            }
+          ]
+        },
+        {
+          "step": 56,
+          "score": 3.883,
+          "severity": "HIGH",
+          "is_hardware_fault": false,
+          "top_features": [
+            {
+              "feature": "MQ9_voltage_V",
+              "score": 3.75,
+              "actual": 0.708,
+              "expected": 0.3448
+            },
+            {
+              "feature": "MQ9_raw_adc",
+              "score": 3.677,
+              "actual": 145.0,
+              "expected": 70.6184
+            },
+            {
+              "feature": "MQ2_raw_adc",
+              "score": 3.504,
+              "actual": 175.0,
+              "expected": 73.886
+            }
+          ]
+        },
+        {
+          "step": 57,
+          "score": 3.491,
+          "severity": "HIGH",
+          "is_hardware_fault": false,
+          "top_features": [
+            {
+              "feature": "temperature_C",
+              "score": 3.567,
+              "actual": 24.51,
+              "expected": 17.9671
+            },
+            {
+              "feature": "MQ9_voltage_V",
+              "score": 3.157,
+              "actual": 0.721,
+              "expected": 0.4089
+            },
+            {
+              "feature": "MQ9_raw_adc",
+              "score": 3.139,
+              "actual": 147.0,
+              "expected": 83.3695
+            }
+          ]
+        },
+        {
+          "step": 58,
+          "score": 3.238,
+          "severity": "HIGH",
+          "is_hardware_fault": false,
+          "top_features": [
+            {
+              "feature": "temperature_C",
+              "score": 3.251,
+              "actual": 23.69,
+              "expected": 17.5402
+            },
+            {
+              "feature": "MQ9_raw_adc",
+              "score": 2.805,
+              "actual": 144.0,
+              "expected": 80.0616
+            },
+            {
+              "feature": "MQ135_voltage_V",
+              "score": 2.766,
+              "actual": 0.822,
+              "expected": 0.3326
+            }
+          ]
+        }
+      ],
+      "fn_details": [
+        {
+          "step": 42,
+          "score": 0.911,
+          "pm2_5": 563.3
+        }
+      ]
+    },
+    "diurnal_6hour_normal_run": {
+      "n_samples": 360,
+      "post_warmup_samples": 350,
+      "simulated_hours": 5.833333333333333,
+      "false_positives": 67,
+      "false_positives_per_hour": 11.486
+    },
+    "real_session1_flagged_events": [
+      {
+        "row_index": 98,
+        "timestamp": "2026-09-30 20:33:07",
+        "pm1_0": 174.0,
+        "pm2_5": 64513.0,
+        "pm10": 4864.0,
+        "detected": true,
+        "is_hardware_fault": true,
+        "score": 5.0,
+        "severity": "HIGH"
+      },
+      {
+        "row_index": 190,
+        "timestamp": "2026-09-30 20:36:15",
+        "pm1_0": 192.0,
+        "pm2_5": 302.0,
+        "pm10": 22784.0,
+        "detected": true,
+        "is_hardware_fault": true,
+        "score": 5.0,
+        "severity": "HIGH"
+      }
+    ]
+  }
+}

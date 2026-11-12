@@ -88,7 +88,7 @@ def test_startup():
 
     # Import core modules
     from app.core.config import get_settings
-    from app.services.inference import TinyGasNetAdapter, TORCH_AVAILABLE
+    from app.services.inference import TinyGasNetAdapter
 
     settings = get_settings()
 
@@ -99,7 +99,7 @@ def test_startup():
     print(f"  Memory before:        {mem_before:.1f} MB")
     print(f"  Memory after import:  {mem_after_import:.1f} MB")
     print(f"  Memory delta:         {mem_after_import - mem_before:.1f} MB")
-    print(f"  TORCH_AVAILABLE:      {TORCH_AVAILABLE}")
+    print("  TORCH_AVAILABLE:      False (pure NumPy edge backend)")
 
     return {
         "import_time_ms": round(t_import * 1000, 1),
