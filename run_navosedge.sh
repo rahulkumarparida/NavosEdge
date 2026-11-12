@@ -22,6 +22,7 @@ SCENARIO="${NAVOS_SCENARIO:-traffic}"
 INTERVAL="${NAVOS_INTERVAL:-3}"
 SENSOR_MODE=""
 DO_FLASH=false
+NGROK_MODE="auto"
 
 # Parse command line flags/arguments
 while [[ $# -gt 0 ]]; do
@@ -58,6 +59,14 @@ while [[ $# -gt 0 ]]; do
       DO_FLASH=true
       shift
       ;;
+    --ngrok)
+      NGROK_MODE="on"
+      shift
+      ;;
+    --no-ngrok)
+      NGROK_MODE="off"
+      shift
+      ;;
     *)
       shift
       ;;
@@ -89,6 +98,22 @@ MANAGER_HOST="${NAVOS_MANAGER_HOST:-127.0.0.1}"
 MANAGER_PORT="${NAVOS_MANAGER_PORT:-8430}"
 
 PIDS=()
+
+# Optional ngrok public HTTPS tunnel for Twilio webhooks (when LIVE or --ngrok)
+if [ "$NGROK_MODE" = "on" ] || { [ "$NGROK_MODE" = "auto" ] && [ "${NAVOS_TWILIO_MODE:-SIMULATED}" = "LIVE" ]; }; then
+    if [ -f "$SCRIPT_DIR/scripts/start_ngrok_tunnel.sh" ]; then
+        NGROK_OUT="$(bash "$SCRIPT_DIR/scripts/start_ngrok_tunnel.sh" "$INTEL_PORT" | tee /dev/stderr | tail -n 1)"
+        NGROK_PID="${NGROK_OUT%%|*}"
+        NGROK_URL="${NGROK_OUT#*|}"
+        if [ -n "$NGROK_PID" ] && [ "$NGROK_URL" != "$NGROK_OUT" ] && [[ "$NGROK_URL" == https://* ]]; then
+            PIDS+=("$NGROK_PID")
+            export NAVOS_PUBLIC_WEBHOOK_BASE_URL="$NGROK_URL"
+            echo "[NAVOS] Exported NAVOS_PUBLIC_WEBHOOK_BASE_URL=$NAVOS_PUBLIC_WEBHOOK_BASE_URL"
+        else
+            echo "[NAVOS] WARNING: ngrok tunnel did not start; continuing offline/local mode."
+        fi
+    fi
+fi
 
 cleanup() {
     echo ""
