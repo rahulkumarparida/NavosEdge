@@ -327,7 +327,16 @@ class TwilioNotificationProvider(NotificationProvider):
         if status_callback_url:
             form["StatusCallback"] = status_callback_url
             form["StatusCallbackEvent"] = "completed"
-        return await self._post_form("Calls.json", form)
+        result = await self._post_form("Calls.json", form)
+        if (
+            not result.success
+            and result.failure_reason
+            and ("trial" in result.failure_reason.lower() or "disallowed parameters" in result.failure_reason.lower())
+        ):
+            logger.info("Twilio rejected MachineDetection on trial account; retrying voice call without MachineDetection.")
+            form.pop("MachineDetection", None)
+            result = await self._post_form("Calls.json", form)
+        return result
 
 
 def map_twilio_status(twilio_status: str) -> NotificationDeliveryStatus:

@@ -62,7 +62,7 @@ def main() -> int:
             res = client.post(
                 f"{base}/api/v1/emergency/residents",
                 headers=headers,
-                json={"full_name": "Demo Resident", "room_label": "Living Room"},
+                json={"full_name": "Demo Resident", "address_location": "Living Room"},
             )
             res.raise_for_status()
             rid = res.json()["resident_id"]
@@ -72,20 +72,24 @@ def main() -> int:
                 headers=headers,
                 json={
                     "resident_id": rid,
-                    "name": "Primary Caregiver",
+                    "full_name": "Primary Caregiver",
                     "relationship": "Family",
                     "phone_number": args.to,
-                    "priority_tier": 1,
-                    "notify_sms": True,
-                    "notify_call": True,
+                    "priority": 1,
                 },
             ).raise_for_status()
 
-            client.post(
+            node_resp = client.post(
                 f"{base}/api/v1/emergency/nodes",
                 headers=headers,
-                json={"node_id": "uno-q-001", "node_name": "UNO Q Edge Node"},
+                json={
+                    "node_id": "uno-q-001",
+                    "node_name": "UNO Q Edge Node",
+                    "location": "Living Room",
+                },
             )
+            if node_resp.status_code not in (200, 201, 409):
+                node_resp.raise_for_status()
             client.post(
                 f"{base}/api/v1/emergency/nodes/uno-q-001/associate",
                 headers=headers,
