@@ -91,9 +91,16 @@ async def lifespan(app: FastAPI):
             auth_token=settings.TWILIO_AUTH_TOKEN,
             from_number=settings.TWILIO_FROM_NUMBER,
             timeout_s=settings.TWILIO_TIMEOUT_S,
+            max_retries=settings.TWILIO_MAX_RETRIES,
+            retry_backoff_s=settings.TWILIO_RETRY_BACKOFF_S,
+            trial_mode=settings.TWILIO_TRIAL_MODE,
+            verified_numbers=settings.twilio_verified_numbers_list,
+            studio_flow_sid=settings.TWILIO_STUDIO_FLOW_SID,
         )
     else:
-        notification_provider = SimulatedNotificationProvider()
+        notification_provider = SimulatedNotificationProvider(
+            trial_mode=settings.TWILIO_TRIAL_MODE,
+        )
 
     notification_service = EmergencyNotificationService(
         emergency_db=emergency_db,
@@ -103,6 +110,8 @@ async def lifespan(app: FastAPI):
         ack_timeout_s=settings.ESCALATION_ACK_TIMEOUT_S,
         demo_ack_timeout_s=settings.ESCALATION_DEMO_TIMEOUT_S,
         demo_mode=settings.ESCALATION_DEMO_MODE,
+        dispatch_mode=settings.TWILIO_DISPATCH_MODE,
+        studio_flow_sid=settings.TWILIO_STUDIO_FLOW_SID,
     )
     escalation_worker = EscalationWorker(notification_service=notification_service)
     escalation_worker.start()

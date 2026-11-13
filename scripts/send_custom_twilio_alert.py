@@ -28,10 +28,30 @@ DEFAULT_MESSAGE = (
 def main() -> int:
     parser = argparse.ArgumentParser(description="Send custom NavosEdge Twilio alert or surge demo.")
     parser.add_argument("--server", default=os.getenv("NAVOS_SERVER_URL", "http://127.0.0.1:8420"))
-    parser.add_argument("--to", required=True, help="Recipient E.164 phone number, e.g. +919876543210")
+    parser.add_argument(
+        "--to",
+        default=os.getenv("NAVOS_TWILIO_TEST_RECIPIENT") or None,
+        help="Recipient E.164 phone number, e.g. +919876543210 (optional if NAVOS_TWILIO_TEST_RECIPIENT set)",
+    )
+    parser.add_argument(
+        "--secondary",
+        default=os.getenv("NAVOS_TWILIO_SECONDARY_RECIPIENT") or None,
+        help="Optional secondary escalation recipient E.164 phone number for --workflow",
+    )
     parser.add_argument("--channel", choices=["SMS", "VOICE_CALL", "CALL", "BOTH"], default="BOTH")
     parser.add_argument("--message", default=DEFAULT_MESSAGE)
     parser.add_argument("--api-key", default=os.getenv("NAVOS_MANAGER_API_KEY", ""))
+    parser.add_argument(
+        "--workflow",
+        action="store_true",
+        help="Trigger single-request complete verification workflow (/api/v1/notifications/test-workflow)",
+    )
+    parser.add_argument(
+        "--dispatch-mode",
+        choices=["REST", "STUDIO"],
+        default=None,
+        help="Optional dispatch mode override (REST or STUDIO) when using --workflow",
+    )
     parser.add_argument("--simulate-surge", action="store_true", help="Also run full synthetic surge flow")
     args = parser.parse_args()
 
@@ -40,19 +60,48 @@ def main() -> int:
         headers["X-Navos-Manager-Key"] = args.api_key
 
     base = args.server.rstrip("/")
-    if args.channel == "BOTH":
-        channels = ["SMS", "VOICE_CALL"]
-    elif args.channel == "CALL":
-        channels = ["VOICE_CALL"]
-    else:
-        channels = [args.channel]
 
     with httpx.Client(timeout=20.0) as client:
-        for ch in channels:
+        if args.workflow:
+            wf_payload = {
+                "custom_message": args.message,
+                "track_in_db": True,
+            }
+            if args.to:
+                wf_payload["phone_number"] = args.to
+            if args.secondary:
+                wf_payload["secondary_phone_number"] = args.secondary
+            if args.dispatch_mode:
+                wf_payload["dispatch_mode"] = args.dispatch_mode
+            resp = client.post(
+                f"{base}/api/v1/notifications/test-workflow",
+                headers=headers,
+                json=wf_payload,
+            )
+            print(f"[WORKFLOW] HTTP {resp.status_code}: {resp.text}")
+            if resp.status_code >= 400:
+                return 1
+        elif args.channel == "BOTH":
+            payload = {"channel": "BOTH", "message": args.message}
+            if args.to:
+                payload["phone_number"] = args.to
             resp = client.post(
                 f"{base}/api/v1/notifications/test",
                 headers=headers,
-                json={"phone_number": args.to, "channel": ch, "message": args.message},
+                json=payload,
+            )
+            print(f"[BOTH] HTTP {resp.status_code}: {resp.text}")
+            if resp.status_code >= 400:
+                return 1
+        else:
+            ch = "VOICE_CALL" if args.channel == "CALL" else args.channel
+            payload = {"channel": ch, "message": args.message}
+            if args.to:
+                payload["phone_number"] = args.to
+            resp = client.post(
+                f"{base}/api/v1/notifications/test",
+                headers=headers,
+                json=payload,
             )
             print(f"[{ch}] HTTP {resp.status_code}: {resp.text}")
             if resp.status_code >= 400:

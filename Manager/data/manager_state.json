@@ -6,66 +6,66 @@
       "ip": "10.81.210.140",
       "port": 8420,
       "status": "active",
-      "last_seen": "2026-11-13T07:06:26.445900+00:00",
-      "aqi": 33.0,
+      "last_seen": "2026-11-13T08:08:49.431918+00:00",
+      "aqi": 178.91,
       "pm": {
-        "PM1_0": 13.43,
-        "PM2_5": 20.15,
-        "PM10": 27.87
+        "PM1_0": 48.0,
+        "PM2_5": 82.0,
+        "PM10": 95.0
       },
-      "temperature_C": 30.5,
-      "humidity_pct": 68.59,
-      "source_prediction": "COOKING_OR_FUEL_COMBUSTION",
-      "source_confidence": 0.7836,
+      "temperature_C": 31.4,
+      "humidity_pct": 50.5,
+      "source_prediction": "HEAVY_DUST",
+      "source_confidence": 0.6667,
       "predictions": {
         "source": {
-          "value": "COOKING_OR_FUEL_COMBUSTION",
-          "confidence": 0.7836
+          "value": "HEAVY_DUST",
+          "confidence": 0.6667
         },
         "forecast": {
           "value": {
             "status": "ok",
             "PM1_0": [
-              15.07,
-              17.01,
-              17.73,
-              18.38,
-              18.83,
-              18.99,
-              19.01,
-              18.92,
-              18.72,
-              18.45,
-              18.14,
-              17.8
+              47.95,
+              47.91,
+              47.89,
+              47.87,
+              47.85,
+              47.84,
+              47.83,
+              47.83,
+              47.83,
+              47.83,
+              47.84,
+              47.85
             ],
             "PM2_5": [
-              23.95,
-              21.9,
-              23.6,
-              25.32,
-              26.34,
-              27.59,
-              28.16,
-              28.58,
-              28.77,
-              28.67,
-              28.43,
-              28.03
+              81.92,
+              81.86,
+              81.8,
+              81.75,
+              81.72,
+              81.69,
+              81.68,
+              81.67,
+              81.67,
+              81.68,
+              81.69,
+              81.71
             ],
             "PM10": [
-              32.16,
-              32.81,
-              34.45,
-              35.98,
-              36.88,
-              37.65,
-              38.03,
-              38.1,
-              37.95,
-              37.6,
-              37.11,
-              36.53
+              94.92,
+              94.85,
+              94.8,
+              94.75,
+              94.71,
+              94.68,
+              94.67,
+              94.66,
+              94.66,
+              94.67,
+              94.68,
+              94.7
             ]
           },
           "confidence": 1.0
@@ -73,14 +73,13 @@
       },
       "advisory": {
         "severity": "HIGH",
-        "advice": "Provisional PM assessment indicates acceptable particulate levels across available readings.",
+        "advice": "Provisional PM assessment shows elevated particulates. Sensitive individuals should take care.",
         "actions": [
-          "[ACTIVITY] Limit intense training; prefer early morning sessions.",
-          "[HOME] Keep road-facing windows closed; run indoor air circulation.",
-          "[HEALTH] Children and seniors should reduce strenuous outdoor time.",
-          "[GAS ALERT] Move away from dense smoke and protect airways."
+          "[ACTIVITY] Avoid visibly dusty routes and construction zones.",
+          "[HOME] Close windows during traffic peaks; filter indoor air.",
+          "[HEALTH] Asthmatics and elderly keep rescue inhalers accessible."
         ],
-        "weather_advice": "The weather is at a comfortable level. Have a good day outside."
+        "weather_advice": "Conditions are very pleasant. A great time to spend some time outside."
       }
     }
   }

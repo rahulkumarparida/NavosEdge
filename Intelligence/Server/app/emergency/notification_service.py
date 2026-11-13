@@ -20,28 +20,51 @@ from app.emergency.decision_schemas import PolicyDecisionResult, ResponseCategor
 from app.emergency.notification_provider import (
     NotificationDispatchResult,
     NotificationProvider,
+    build_custom_test_voice_twiml,
     build_voice_twiml,
     create_ack_token,
     format_emergency_sms,
 )
-from app.emergency.response_policy import is_actuator_filtration_capable
+from app.emergency.response_policy import (
+    is_actuator_alert_light,
+    is_actuator_filtration_capable,
+)
 from app.emergency.schemas import (
     ActuatorConnectionStatus,
     ActuatorState,
     ConsentStatus,
+    EmergencyContactCreate,
     EmergencyContactResponse,
+    EmergencyContactUpdate,
+    EmergencyEventCreate,
     EmergencyEventResponse,
     EmergencyEventStatus,
+    EmergencySeverity,
     HumanAcknowledgementStatus,
+    NodeOperationalStatus,
+    NodeRegistration,
     NotificationChannel,
     NotificationCreate,
     NotificationDeliveryStatus,
     NotificationResponse,
+    ResidentCreate,
+    ResidentUpdate,
     ensure_utc,
     utc_now,
 )
 
 logger = logging.getLogger(__name__)
+
+
+def mask_phone_number(phone: Optional[str]) -> Optional[str]:
+    """Mask phone number for safe logs/summaries while retaining country prefix and last 4 digits."""
+    if not phone:
+        return None
+    cleaned = str(phone).strip()
+    if len(cleaned) <= 6:
+        return "***"
+    prefix = cleaned[:2] if cleaned.startswith("+") else cleaned[:1]
+    return f"{prefix}{'*' * (len(cleaned) - len(prefix) - 4)}{cleaned[-4:]}"
 
 
 def _group_contacts_by_escalation_level(
@@ -84,6 +107,8 @@ class EmergencyNotificationService:
         ack_timeout_s: float = 120.0,
         demo_ack_timeout_s: float = 30.0,
         demo_mode: bool = False,
+        dispatch_mode: str = "REST",
+        studio_flow_sid: Optional[str] = None,
     ) -> None:
         self.db = emergency_db
         self.provider = provider
@@ -94,6 +119,8 @@ class EmergencyNotificationService:
         self.ack_timeout_s = ack_timeout_s
         self.demo_ack_timeout_s = demo_ack_timeout_s
         self.demo_mode = demo_mode
+        self.dispatch_mode = (dispatch_mode or "REST").strip().upper()
+        self.studio_flow_sid = (studio_flow_sid or "").strip() or None
         self._background_tasks: Set[asyncio.Task[Any]] = set()
 
     @property
@@ -114,6 +141,11 @@ class EmergencyNotificationService:
             if act.connection_status != ActuatorConnectionStatus.ONLINE:
                 summaries.append(
                     f"{act.device_name} ({act.actuator_id}): OFFLINE/UNAVAILABLE"
+                )
+            elif is_actuator_alert_light(act.actuator_type):
+                summaries.append(
+                    f"{act.device_name} ({act.actuator_id}): Visual alert light & buzzer "
+                    f"(state={act.current_state.value}; visual alarm active)"
                 )
             elif not is_actuator_filtration_capable(act.actuator_type):
                 summaries.append(
@@ -150,12 +182,16 @@ class EmergencyNotificationService:
         event_id: str,
         *,
         escalation_level: Optional[int] = None,
+        dispatch_mode: Optional[str] = None,
     ) -> List[NotificationResponse]:
         """
         Dispatch SMS and/or Voice notifications for an emergency event at the
         specified escalation level (defaults to the event's current level).
         Prevents duplicate dispatches for the same `(event_id, contact_id, channel)`.
         """
+        effective_dispatch_mode = (
+            dispatch_mode or self.dispatch_mode or "REST"
+        ).strip().upper()
         event = self.db.get_emergency_event(event_id)
         if event is None:
             raise RecordNotFoundError(f"EmergencyEvent '{event_id}' not found")
@@ -202,77 +238,102 @@ class EmergencyNotificationService:
         }
 
         supp = event.supporting_measurements or {}
-        pm25 = supp.get("pm2_5")
-        pm10 = supp.get("pm10")
-        gas_status = str(supp.get("gas_identity_candidate") or "UNESTABLISHED")
+        meta = event.event_metadata or {}
+        pm25 = supp.get("pm2_5") if supp.get("pm2_5") is not None else supp.get("PM2_5")
+        pm10 = supp.get("pm10") if supp.get("pm10") is not None else supp.get("PM10")
+        gas_status = str(
+            supp.get("gas_identity_candidate")
+            or meta.get("gas_identity_candidate")
+            or "UNESTABLISHED"
+        )
         system_response = self.describe_actuator_status_for_node(event.associated_node_id)
         location = resident.address_location or (node.location if node else None)
         detected_str = ensure_utc(event.detected_at).strftime("%Y-%m-%d %H:%M UTC")  # type: ignore[union-attr]
 
         dispatched: List[NotificationResponse] = []
         now = utc_now()
+        studio_execution_sids: List[str] = []
 
-        for contact in target_contacts:
-            for channel in contact.preferred_channels:
-                if (contact.contact_id, channel) in already_sent:
+        if effective_dispatch_mode == "STUDIO":
+            for contact in target_contacts:
+                channels = contact.preferred_channels or [
+                    NotificationChannel.SMS,
+                    NotificationChannel.VOICE_CALL,
+                ]
+                if all((contact.contact_id, ch) in already_sent for ch in channels):
                     continue
 
                 ntf_id = f"ntf-{uuid.uuid4().hex[:12]}"
                 ack_url, status_url, gather_url = self._build_callback_urls(
                     ntf_id, event_id
                 )
-
-                # Persist initial QUEUED record before external I/O
                 self.db.create_notification(
                     NotificationCreate(
                         notification_id=ntf_id,
                         event_id=event_id,
                         contact_id=contact.contact_id,
-                        notification_channel=channel,
+                        notification_channel=NotificationChannel.VOICE_CALL,
                         provider=self.provider.provider_name,
                         delivery_status=NotificationDeliveryStatus.QUEUED,
                         acknowledgement_status=HumanAcknowledgementStatus.PENDING,
                     )
                 )
 
+                sms_body = format_emergency_sms(
+                    hazard_classification=event.event_type,
+                    severity=event.severity.value,
+                    pm25=pm25,
+                    pm10=pm10,
+                    gas_status=gas_status,
+                    system_response=system_response,
+                    event_id=event_id,
+                    location=location,
+                    detected_at_str=detected_str,
+                    ack_url=ack_url,
+                )
+                twiml = build_voice_twiml(
+                    hazard_classification=event.event_type,
+                    severity=event.severity.value,
+                    system_response=system_response,
+                    gather_action_url=gather_url,
+                    location=location,
+                )
+                studio_params: Dict[str, Any] = {
+                    "event_id": event_id,
+                    "notification_id": ntf_id,
+                    "node_id": event.associated_node_id,
+                    "hazard_classification": event.event_type,
+                    "severity": event.severity.value,
+                    "location": location or "",
+                    "detected_at": detected_str,
+                    "pm2_5": pm25,
+                    "pm10": pm10,
+                    "gas_status": gas_status,
+                    "system_response": system_response,
+                    "sms_body": sms_body,
+                    "voice_twiml": twiml,
+                    "ack_url": ack_url or "",
+                    "status_callback_url": status_url or "",
+                    "gather_action_url": gather_url or "",
+                    "caregiver_name": contact.full_name,
+                    "contact_id": contact.contact_id,
+                    "escalation_level": target_level,
+                    "webhook_base_url": self.public_webhook_base_url or "",
+                }
+
                 try:
-                    if channel == NotificationChannel.SMS:
-                        sms_body = format_emergency_sms(
-                            hazard_classification=event.event_type,
-                            severity=event.severity.value,
-                            pm25=pm25,
-                            pm10=pm10,
-                            gas_status=gas_status,
-                            system_response=system_response,
-                            event_id=event_id,
-                            location=location,
-                            detected_at_str=detected_str,
-                            ack_url=ack_url,
-                        )
-                        result = await self.provider.send_sms(
-                            to_number=contact.phone_number,
-                            body=sms_body,
-                            status_callback_url=status_url,
-                        )
-                    else:  # VOICE_CALL
-                        twiml = build_voice_twiml(
-                            hazard_classification=event.event_type,
-                            severity=event.severity.value,
-                            system_response=system_response,
-                            gather_action_url=gather_url,
-                            location=location,
-                        )
-                        result = await self.provider.make_voice_call(
-                            to_number=contact.phone_number,
-                            twiml=twiml,
-                            status_callback_url=status_url,
-                        )
+                    result = await self.provider.trigger_studio_workflow(
+                        to_number=contact.phone_number,
+                        parameters=studio_params,
+                        flow_sid=self.studio_flow_sid,
+                    )
                 except Exception as exc:
                     result = NotificationDispatchResult(
                         success=False,
                         provider=self.provider.provider_name,
                         delivery_status=NotificationDeliveryStatus.FAILED,
-                        failure_reason=f"Unexpected dispatch error: {type(exc).__name__}",
+                        failure_reason=f"Unexpected Studio dispatch error: {type(exc).__name__}",
+                        dispatch_mode="STUDIO",
                     )
 
                 updated = self.db.update_notification_delivery(
@@ -282,13 +343,94 @@ class EmergencyNotificationService:
                     sent_at=now if result.success else None,
                     failure_reason=result.failure_reason,
                 )
+                if result.provider_reference_id:
+                    studio_execution_sids.append(result.provider_reference_id)
                 dispatched.append(updated)
-                already_sent.add((contact.contact_id, channel))
+                for ch in channels:
+                    already_sent.add((contact.contact_id, ch))
+        else:
+            for contact in target_contacts:
+                for channel in contact.preferred_channels:
+                    if (contact.contact_id, channel) in already_sent:
+                        continue
+
+                    ntf_id = f"ntf-{uuid.uuid4().hex[:12]}"
+                    ack_url, status_url, gather_url = self._build_callback_urls(
+                        ntf_id, event_id
+                    )
+
+                    # Persist initial QUEUED record before external I/O
+                    self.db.create_notification(
+                        NotificationCreate(
+                            notification_id=ntf_id,
+                            event_id=event_id,
+                            contact_id=contact.contact_id,
+                            notification_channel=channel,
+                            provider=self.provider.provider_name,
+                            delivery_status=NotificationDeliveryStatus.QUEUED,
+                            acknowledgement_status=HumanAcknowledgementStatus.PENDING,
+                        )
+                    )
+
+                    try:
+                        if channel == NotificationChannel.SMS:
+                            sms_body = format_emergency_sms(
+                                hazard_classification=event.event_type,
+                                severity=event.severity.value,
+                                pm25=pm25,
+                                pm10=pm10,
+                                gas_status=gas_status,
+                                system_response=system_response,
+                                event_id=event_id,
+                                location=location,
+                                detected_at_str=detected_str,
+                                ack_url=ack_url,
+                            )
+                            result = await self.provider.send_sms(
+                                to_number=contact.phone_number,
+                                body=sms_body,
+                                status_callback_url=status_url,
+                            )
+                        else:  # VOICE_CALL
+                            twiml = build_voice_twiml(
+                                hazard_classification=event.event_type,
+                                severity=event.severity.value,
+                                system_response=system_response,
+                                gather_action_url=gather_url,
+                                location=location,
+                            )
+                            result = await self.provider.make_voice_call(
+                                to_number=contact.phone_number,
+                                twiml=twiml,
+                                status_callback_url=status_url,
+                            )
+                    except Exception as exc:
+                        result = NotificationDispatchResult(
+                            success=False,
+                            provider=self.provider.provider_name,
+                            delivery_status=NotificationDeliveryStatus.FAILED,
+                            failure_reason=f"Unexpected dispatch error: {type(exc).__name__}",
+                        )
+
+                    updated = self.db.update_notification_delivery(
+                        notification_id=ntf_id,
+                        delivery_status=result.delivery_status,
+                        provider_reference_id=result.provider_reference_id,
+                        sent_at=now if result.success else None,
+                        failure_reason=result.failure_reason,
+                    )
+                    dispatched.append(updated)
+                    already_sent.add((contact.contact_id, channel))
 
         # Update event status & escalation metadata
         meta = dict(event.event_metadata or {})
         meta[f"level_{target_level}_dispatched_at"] = now.isoformat()
         meta["last_notification_dispatch_at"] = now.isoformat()
+        meta["dispatch_mode"] = effective_dispatch_mode
+        if studio_execution_sids:
+            existing_sids = list(meta.get("studio_execution_sids") or [])
+            existing_sids.extend(studio_execution_sids)
+            meta["studio_execution_sids"] = existing_sids[-20:]
         new_status = (
             EmergencyEventStatus.ESCALATING
             if target_level > 1
@@ -301,6 +443,262 @@ class EmergencyNotificationService:
             event_metadata=meta,
         )
         return dispatched
+
+    def _ensure_virtual_test_contacts(
+        self,
+        *,
+        to_number: str,
+        secondary_number: Optional[str],
+        location: str,
+    ) -> Tuple[str, str]:
+        """Idempotently provision/update isolated test entities without impacting real hardware nodes."""
+        test_node_id = "twilio-test-virtual"
+        test_resident_id = "res-twilio-test"
+        if self.db.get_node(test_node_id) is None:
+            self.db.register_node(
+                NodeRegistration(
+                    node_id=test_node_id,
+                    node_name="Twilio Verification Virtual Node",
+                    location=location,
+                    operational_status=NodeOperationalStatus.ONLINE,
+                )
+            )
+        existing_res = self.db.get_resident(test_resident_id)
+        if existing_res is None:
+            self.db.create_resident(
+                ResidentCreate(
+                    resident_id=test_resident_id,
+                    full_name="NavosEdge Verification Test",
+                    address_location=location,
+                    associated_node_id=test_node_id,
+                    consent_status=ConsentStatus.GRANTED,
+                    active_status=True,
+                )
+            )
+        elif existing_res.address_location != location:
+            self.db.update_resident(
+                test_resident_id,
+                ResidentUpdate(address_location=location),
+            )
+
+        primary_cid = "cnt-twilio-test-1"
+        if self.db.get_contact(primary_cid) is None:
+            self.db.create_contact(
+                EmergencyContactCreate(
+                    contact_id=primary_cid,
+                    resident_id=test_resident_id,
+                    full_name="Primary Test Caregiver",
+                    phone_number=to_number,
+                    relationship="Test Primary",
+                    priority=1,
+                    preferred_channels=[
+                        NotificationChannel.SMS,
+                        NotificationChannel.VOICE_CALL,
+                    ],
+                    consent_status=ConsentStatus.GRANTED,
+                    active_status=True,
+                )
+            )
+        else:
+            self.db.update_contact(
+                primary_cid,
+                EmergencyContactUpdate(
+                    phone_number=to_number,
+                    priority=1,
+                    consent_status=ConsentStatus.GRANTED,
+                    active_status=True,
+                ),
+            )
+
+        secondary_cid = "cnt-twilio-test-2"
+        existing_secondary = self.db.get_contact(secondary_cid)
+        if secondary_number:
+            if existing_secondary is None:
+                self.db.create_contact(
+                    EmergencyContactCreate(
+                        contact_id=secondary_cid,
+                        resident_id=test_resident_id,
+                        full_name="Secondary Test Caregiver",
+                        phone_number=secondary_number,
+                        relationship="Test Secondary",
+                        priority=2,
+                        preferred_channels=[
+                            NotificationChannel.SMS,
+                            NotificationChannel.VOICE_CALL,
+                        ],
+                        consent_status=ConsentStatus.GRANTED,
+                        active_status=True,
+                    )
+                )
+            else:
+                self.db.update_contact(
+                    secondary_cid,
+                    EmergencyContactUpdate(
+                        phone_number=secondary_number,
+                        priority=2,
+                        consent_status=ConsentStatus.GRANTED,
+                        active_status=True,
+                    ),
+                )
+        elif existing_secondary is not None and existing_secondary.active_status:
+            self.db.deactivate_contact(secondary_cid)
+
+        # Resolve older virtual test events cleanly so repeated verification tests
+        # do not leave stale unresolved test items accumulating in EscalationWorker.
+        for evt in self.db.list_unresolved_emergency_events():
+            if evt.associated_node_id == test_node_id:
+                self.db.update_emergency_event_status(
+                    evt.event_id,
+                    EmergencyEventStatus.RESOLVED,
+                    resolved_at=utc_now(),
+                )
+        return test_node_id, test_resident_id
+
+    async def dispatch_test_workflow(
+        self,
+        *,
+        to_number: str,
+        secondary_number: Optional[str] = None,
+        hazard_type: str = "SUDDEN_SMOKE_OR_PARTICULATE_SPIKE",
+        severity: EmergencySeverity = EmergencySeverity.CRITICAL,
+        pm2_5: Optional[float] = 185.0,
+        pm10: Optional[float] = 240.0,
+        gas_status: str = "POSSIBLE_SMOKE_OR_VOC_SPIKE",
+        location: str = "Test Monitoring Zone",
+        custom_message: Optional[str] = None,
+        dispatch_mode: Optional[str] = None,
+        track_in_db: bool = True,
+    ) -> Dict[str, Any]:
+        """
+        Execute a complete end-to-end Twilio verification workflow (SMS + Voice TwiML
+        <Gather> DTMF + callbacks + optional secondary escalation setup) without
+        requiring a physical sensor emergency or triggering UNO Q hardware actuators.
+        """
+        effective_mode = (dispatch_mode or self.dispatch_mode or "REST").strip().upper()
+        is_sim = self.provider.is_simulated
+        mode_label = "SIMULATED" if is_sim else "LIVE"
+
+        if track_in_db:
+            node_id, resident_id = self._ensure_virtual_test_contacts(
+                to_number=to_number,
+                secondary_number=secondary_number,
+                location=location,
+            )
+            test_event_id = f"evt-test-{uuid.uuid4().hex[:10]}"
+            note_suffix = f" Note: {custom_message.strip()}" if custom_message else ""
+            self.db.create_emergency_event(
+                EmergencyEventCreate(
+                    event_id=test_event_id,
+                    associated_node_id=node_id,
+                    resident_id=resident_id,
+                    event_type=hazard_type,
+                    severity=severity,
+                    event_status=EmergencyEventStatus.DETECTED,
+                    escalation_level=1,
+                    decision_reason=f"Manual Twilio test workflow verification.{note_suffix}",
+                    supporting_measurements={
+                        "PM2_5": pm2_5,
+                        "PM10": pm10,
+                        "gas_identity_candidate": gas_status,
+                    },
+                    human_intervention_required=True,
+                    event_metadata={
+                        "is_test_workflow": True,
+                        "dispatch_mode": effective_mode,
+                        "gas_identity_candidate": gas_status,
+                    },
+                )
+            )
+            notifications = await self.dispatch_for_event(
+                test_event_id,
+                escalation_level=1,
+                dispatch_mode=effective_mode,
+            )
+            return {
+                "event_id": test_event_id,
+                "mode": mode_label,
+                "is_simulated": is_sim,
+                "trial_mode": self.provider.trial_mode,
+                "dispatch_mode": effective_mode,
+                "provider": self.provider.provider_name,
+                "tracked_in_db": True,
+                "recipient_masked": mask_phone_number(to_number),
+                "secondary_configured": bool(secondary_number),
+                "notifications": [n.model_dump(mode="json") for n in notifications],
+            }
+
+        # Stateless complete workflow execution (no DB rows written)
+        ephemeral_event_id = f"test-{uuid.uuid4().hex[:10]}"
+        detected_str = utc_now().strftime("%Y-%m-%d %H:%M UTC")
+        system_response = "Test mode only (virtual node; physical actuators unaffected)"
+        if custom_message:
+            system_response = f"{system_response}. {custom_message.strip()}"
+
+        sms_body = format_emergency_sms(
+            hazard_classification=hazard_type,
+            severity=severity.value,
+            pm25=pm2_5,
+            pm10=pm10,
+            gas_status=gas_status,
+            system_response=system_response,
+            event_id=ephemeral_event_id,
+            location=location,
+            detected_at_str=detected_str,
+            ack_url=None,
+        )
+        twiml = (
+            build_custom_test_voice_twiml(message=custom_message)
+            if custom_message
+            else build_voice_twiml(
+                hazard_classification=hazard_type,
+                severity=severity.value,
+                system_response=system_response,
+                gather_action_url=None,
+                location=location,
+            )
+        )
+
+        if effective_mode == "STUDIO":
+            studio_res = await self.provider.trigger_studio_workflow(
+                to_number=to_number,
+                parameters={
+                    "event_id": ephemeral_event_id,
+                    "hazard_classification": hazard_type,
+                    "severity": severity.value,
+                    "location": location,
+                    "pm2_5": pm2_5,
+                    "pm10": pm10,
+                    "gas_status": gas_status,
+                    "system_response": system_response,
+                    "sms_body": sms_body,
+                    "voice_twiml": twiml,
+                    "is_test": True,
+                },
+                flow_sid=self.studio_flow_sid,
+            )
+            results = [studio_res.model_dump(mode="json")]
+        else:
+            sms_res = await self.provider.send_sms(to_number=to_number, body=sms_body)
+            call_res = await self.provider.make_voice_call(
+                to_number=to_number, twiml=twiml
+            )
+            results = [
+                {"channel": "SMS", **sms_res.model_dump(mode="json")},
+                {"channel": "VOICE_CALL", **call_res.model_dump(mode="json")},
+            ]
+
+        return {
+            "event_id": ephemeral_event_id,
+            "mode": mode_label,
+            "is_simulated": is_sim,
+            "trial_mode": self.provider.trial_mode,
+            "dispatch_mode": effective_mode,
+            "provider": self.provider.provider_name,
+            "tracked_in_db": False,
+            "recipient_masked": mask_phone_number(to_number),
+            "secondary_configured": bool(secondary_number),
+            "results": results,
+        }
 
     def enqueue_policy_notification(
         self, decision: PolicyDecisionResult

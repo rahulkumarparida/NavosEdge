@@ -98,6 +98,16 @@ def _iso_to_dt(val: Optional[str]) -> Optional[datetime]:
     return dt.astimezone(timezone.utc)
 
 
+def _parse_json_dict(raw: Optional[str]) -> Dict[str, Any]:
+    if not raw:
+        return {}
+    try:
+        parsed = json.loads(raw)
+        return parsed if isinstance(parsed, dict) else {}
+    except (TypeError, ValueError):
+        return {}
+
+
 # ---------------------------------------------------------------------------
 # Schema DDL (Migration v1)
 # ---------------------------------------------------------------------------
@@ -1366,6 +1376,74 @@ class EmergencyDatabase:
             ).fetchone()
             return self._row_to_event(row)
 
+    def merge_emergency_event_metadata(
+        self,
+        event_id: str,
+        updates: Dict[str, Any],
+    ) -> EmergencyEventResponse:
+        """Atomically merge key-value metadata updates into `emergency_events.event_metadata`."""
+        with self.transaction() as conn:
+            existing = conn.execute(
+                "SELECT * FROM emergency_events WHERE event_id = ?;",
+                (event_id,),
+            ).fetchone()
+            if existing is None:
+                raise RecordNotFoundError(f"EmergencyEvent '{event_id}' not found")
+            current = _parse_json_dict(existing["event_metadata"])
+            current.update(updates)
+            conn.execute(
+                "UPDATE emergency_events SET event_metadata = ? WHERE event_id = ?;",
+                (json.dumps(current), event_id),
+            )
+            row = conn.execute(
+                "SELECT * FROM emergency_events WHERE event_id = ?;",
+                (event_id,),
+            ).fetchone()
+            return self._row_to_event(row)
+
+    def record_event_dtmf_response(
+        self,
+        *,
+        event_id: str,
+        notification_id: str,
+        digit: str,
+        acknowledged: bool,
+        call_sid: Optional[str] = None,
+    ) -> EmergencyEventResponse:
+        """
+        Persist a Twilio voice DTMF keypad response entry into
+        `emergency_events.event_metadata['dtmf_responses']` atomically.
+        """
+        with self.transaction() as conn:
+            existing = conn.execute(
+                "SELECT * FROM emergency_events WHERE event_id = ?;",
+                (event_id,),
+            ).fetchone()
+            if existing is None:
+                raise RecordNotFoundError(f"EmergencyEvent '{event_id}' not found")
+            current = _parse_json_dict(existing["event_metadata"])
+            responses = list(current.get("dtmf_responses") or [])
+            responses.append(
+                {
+                    "notification_id": notification_id,
+                    "digit": str(digit).strip(),
+                    "acknowledged": bool(acknowledged),
+                    "call_sid": call_sid,
+                    "recorded_at": _dt_to_iso(utc_now()),
+                }
+            )
+            current["dtmf_responses"] = responses[-20:]
+            current["last_dtmf_digit"] = str(digit).strip()
+            conn.execute(
+                "UPDATE emergency_events SET event_metadata = ? WHERE event_id = ?;",
+                (json.dumps(current), event_id),
+            )
+            row = conn.execute(
+                "SELECT * FROM emergency_events WHERE event_id = ?;",
+                (event_id,),
+            ).fetchone()
+            return self._row_to_event(row)
+
     # ------------------------------------------------------------------
     # 6. Emergency Notifications CRUD
     # ------------------------------------------------------------------
@@ -1669,7 +1747,7 @@ class EmergencyDatabase:
                 """
                 SELECT * FROM actuator_command_logs
                 WHERE actuator_id = ?
-                ORDER BY requested_at DESC, command_id ASC;
+                ORDER BY requested_at DESC, rowid DESC;
                 """,
                 (actuator_id,),
             ).fetchall()

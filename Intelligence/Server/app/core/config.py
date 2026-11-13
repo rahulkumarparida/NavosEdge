@@ -83,6 +83,26 @@ class Settings(BaseSettings):
     ESCALATION_ACK_TIMEOUT_S: float = 120.0
     ESCALATION_DEMO_TIMEOUT_S: float = 30.0
     ESCALATION_DEMO_MODE: bool = False
+    TWILIO_TRIAL_MODE: bool = True
+    TWILIO_VERIFIED_NUMBERS: Optional[str] = None
+    TWILIO_TEST_RECIPIENT: Optional[str] = None
+    TWILIO_SECONDARY_RECIPIENT: Optional[str] = None
+    TWILIO_MAX_RETRIES: int = 2
+    TWILIO_RETRY_BACKOFF_S: float = 0.25
+    TWILIO_DISPATCH_MODE: Literal["REST", "STUDIO"] = "REST"
+    TWILIO_STUDIO_FLOW_SID: Optional[str] = None
+    TWILIO_VALIDATE_WEBHOOK_SIGNATURE: bool = True
+
+    @property
+    def twilio_verified_numbers_list(self) -> list[str]:
+        """Return configured E.164 verified numbers for Twilio Trial allowlist checks."""
+        if not self.TWILIO_VERIFIED_NUMBERS:
+            return []
+        return [
+            item.strip()
+            for item in str(self.TWILIO_VERIFIED_NUMBERS).split(",")
+            if item.strip()
+        ]
 
     # Phase 5 — Manager & Operator Authorization
     MANAGER_API_KEY: Optional[str] = None
@@ -138,6 +158,12 @@ def validate_production_config(settings: Settings) -> None:
         elif not str(settings.PUBLIC_WEBHOOK_BASE_URL).strip().startswith(("https://", "http://")):
             errors.append(
                 "NAVOS_PUBLIC_WEBHOOK_BASE_URL must start with https:// (or http:// for local tunnel)."
+            )
+        if settings.TWILIO_DISPATCH_MODE == "STUDIO" and (
+            not settings.TWILIO_STUDIO_FLOW_SID or not str(settings.TWILIO_STUDIO_FLOW_SID).strip()
+        ):
+            errors.append(
+                "NAVOS_TWILIO_DISPATCH_MODE=STUDIO requires NAVOS_TWILIO_STUDIO_FLOW_SID."
             )
 
     if errors:

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Bell, RefreshCw, RotateCcw } from 'lucide-react';
+import { Bell, PhoneCall, RefreshCw, RotateCcw, Send } from 'lucide-react';
 import { apiFetch } from '../../api/emergencyApi';
 
 const FILTER_OPTIONS = [
@@ -17,6 +17,13 @@ export function NotificationsPanel() {
   const [filter, setFilter] = useState('ALL');
   const [error, setError] = useState('');
   const [busyId, setBusyId] = useState(null);
+  const [integrationStatus, setIntegrationStatus] = useState(null);
+  const [testOpen, setTestOpen] = useState(false);
+  const [testPhone, setTestPhone] = useState('');
+  const [testSecondaryPhone, setTestSecondaryPhone] = useState('');
+  const [testNote, setTestNote] = useState('');
+  const [testBusy, setTestBusy] = useState(false);
+  const [testResult, setTestResult] = useState(null);
 
   const loadNotifications = async () => {
     try {
@@ -26,8 +33,12 @@ export function NotificationsPanel() {
       } else if (filter.startsWith('ACK:')) {
         query = `?acknowledgement_status=${encodeURIComponent(filter.replace('ACK:', ''))}`;
       }
-      const data = await apiFetch(`/api/v1/emergency/notifications${query}`);
+      const [data, statusData] = await Promise.all([
+        apiFetch(`/api/v1/emergency/notifications${query}`),
+        apiFetch('/api/v1/notifications/status').catch(() => null),
+      ]);
       setNotifications(data || []);
+      if (statusData) setIntegrationStatus(statusData);
       setError('');
     } catch (err) {
       setError(err.message);
@@ -37,6 +48,31 @@ export function NotificationsPanel() {
   useEffect(() => {
     loadNotifications();
   }, [filter]);
+
+  const handleRunTestWorkflow = async (e) => {
+    e.preventDefault();
+    setTestBusy(true);
+    setTestResult(null);
+    setError('');
+    try {
+      const body = {
+        track_in_db: true,
+        custom_message: testNote.trim() || undefined,
+      };
+      if (testPhone.trim()) body.phone_number = testPhone.trim();
+      if (testSecondaryPhone.trim()) body.secondary_phone_number = testSecondaryPhone.trim();
+      const res = await apiFetch('/api/v1/notifications/test-workflow', {
+        method: 'POST',
+        body: JSON.stringify(body),
+      });
+      setTestResult(res);
+      await loadNotifications();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setTestBusy(false);
+    }
+  };
 
   const handleRetry = async (notificationId) => {
     setBusyId(notificationId);
@@ -60,19 +96,105 @@ export function NotificationsPanel() {
           <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2">
             <Bell className="w-5 h-5 text-emerald-400" />
             Notification Centre & Escalation Log
+            {integrationStatus && (
+              <span
+                className={`ml-1 px-2 py-0.5 rounded-full text-[10px] font-mono border ${
+                  integrationStatus.is_simulated
+                    ? 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+                    : 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+                }`}
+              >
+                {integrationStatus.mode}
+                {integrationStatus.trial_mode ? ' · TRIAL' : ''} · {integrationStatus.dispatch_mode}
+              </span>
+            )}
           </h2>
           <p className="text-xs text-slate-400">
             Delivery receipts and human acknowledgements are tracked independently
           </p>
         </div>
 
-        <button
-          onClick={loadNotifications}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-cyan-300"
-        >
-          <RefreshCw className="w-3.5 h-3.5" /> Refresh
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setTestOpen((v) => !v)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-xs text-cyan-300 font-semibold"
+          >
+            <PhoneCall className="w-3.5 h-3.5" /> Test Twilio Workflow
+          </button>
+          <button
+            onClick={loadNotifications}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-cyan-300"
+          >
+            <RefreshCw className="w-3.5 h-3.5" /> Refresh
+          </button>
+        </div>
       </div>
+
+      {testOpen && (
+        <form
+          onSubmit={handleRunTestWorkflow}
+          className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-3"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="text-xs font-semibold text-slate-200">
+              End-to-End Twilio Test Workflow (SMS + Automated Voice DTMF Call)
+            </div>
+            {integrationStatus && (
+              <span className="text-[11px] text-slate-400">
+                Mode: <strong className="text-slate-200">{integrationStatus.mode}</strong>
+                {integrationStatus.is_simulated
+                  ? ' (no external Twilio charges)'
+                  : ' (live Twilio dispatch)'}
+              </span>
+            )}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+            <input
+              type="text"
+              value={testPhone}
+              onChange={(e) => setTestPhone(e.target.value)}
+              placeholder={
+                integrationStatus?.test_recipient_configured
+                  ? 'Primary E.164 (optional: uses NAVOS_TWILIO_TEST_RECIPIENT)'
+                  : 'Primary Recipient E.164 (e.g. +919876543210)'
+              }
+              className="px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-slate-100"
+            />
+            <input
+              type="text"
+              value={testSecondaryPhone}
+              onChange={(e) => setTestSecondaryPhone(e.target.value)}
+              placeholder="Secondary Escalation E.164 (optional)"
+              className="px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-slate-100"
+            />
+            <input
+              type="text"
+              value={testNote}
+              onChange={(e) => setTestNote(e.target.value)}
+              placeholder="Optional verification note"
+              className="px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-slate-100"
+            />
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-[11px] text-slate-400">
+              Uses an isolated virtual test node so ESP32 alert hardware on UNO Q is not triggered.
+            </p>
+            <button
+              type="submit"
+              disabled={testBusy}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-cyan-500 text-slate-950 text-xs font-bold hover:bg-cyan-400 disabled:opacity-50"
+            >
+              <Send className="w-3.5 h-3.5" />
+              {testBusy ? 'Dispatching...' : 'Trigger Test Workflow'}
+            </button>
+          </div>
+          {testResult && (
+            <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800 text-[11px] text-slate-300 font-mono">
+              Event {testResult.event_id} · Mode={testResult.mode} · Dispatch={testResult.dispatch_mode} · Dispatched={testResult.notifications?.length ?? 0} channel(s)
+            </div>
+          )}
+        </form>
+      )}
 
       {/* Filters */}
       <div className="flex flex-wrap gap-2">

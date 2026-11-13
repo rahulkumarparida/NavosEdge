@@ -1,0 +1,251 @@
+{
+  "description": "NavosEdge Emergency SMS + Automated Voice DTMF Escalation Studio Flow",
+  "states": [
+    {
+      "name": "Trigger",
+      "type": "trigger",
+      "transitions": [
+        {
+          "next": "send_emergency_sms",
+          "event": "incomingRequest"
+        },
+        {
+          "event": "incomingMessage"
+        },
+        {
+          "event": "incomingCall"
+        },
+        {
+          "event": "incomingConversationMessage"
+        },
+        {
+          "event": "incomingParent"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 0,
+          "y": 0
+        }
+      }
+    },
+    {
+      "name": "send_emergency_sms",
+      "type": "send-message",
+      "transitions": [
+        {
+          "next": "call_and_gather_dtmf",
+          "event": "sent"
+        },
+        {
+          "next": "call_and_gather_dtmf",
+          "event": "failed"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 0,
+          "y": 220
+        },
+        "service": "{{trigger.message.InstanceSid}}",
+        "channel": "{{trigger.message.ChannelSid}}",
+        "from": "{{flow.channel.address}}",
+        "to": "{{contact.channel.address}}",
+        "body": "{{flow.data.sms_body}}"
+      }
+    },
+    {
+      "name": "call_and_gather_dtmf",
+      "type": "gather-input-on-call",
+      "transitions": [
+        {
+          "next": "split_dtmf_digit",
+          "event": "keypress"
+        },
+        {
+          "next": "report_dtmf_callback",
+          "event": "timeout"
+        },
+        {
+          "next": "report_dtmf_callback",
+          "event": "speech"
+        }
+      ],
+      "properties": {
+        "voice": "alice",
+        "speech_timeout": "auto",
+        "offset": {
+          "x": 0,
+          "y": 460
+        },
+        "loop": 1,
+        "finish_on_key": "#",
+        "say": "Hello, this is NavosEdge automated emergency alert. A {{flow.data.severity}} environmental emergency has been detected at {{flow.data.location}}. Hazard detected: {{flow.data.hazard_classification}}. Confirmed system response: {{flow.data.system_response}}. Please press 1 on your keypad to acknowledge this alert, or press 2 if you cannot respond.",
+        "language": "en-US",
+        "stop_gather": true,
+        "gather_language": "en-US",
+        "profanity_filter": "true",
+        "timeout": 10,
+        "number_of_digits": 1
+      }
+    },
+    {
+      "name": "split_dtmf_digit",
+      "type": "split-based-on",
+      "transitions": [
+        {
+          "next": "report_dtmf_callback",
+          "event": "noMatch"
+        },
+        {
+          "next": "report_dtmf_callback",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "Pressed 1 Acknowledge",
+              "arguments": [
+                "{{widgets.call_and_gather_dtmf.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "1"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "input": "{{widgets.call_and_gather_dtmf.Digits}}",
+        "offset": {
+          "x": 0,
+          "y": 720
+        }
+      }
+    },
+    {
+      "name": "report_dtmf_callback",
+      "type": "make-http-request",
+      "transitions": [
+        {
+          "next": "check_acknowledged_reply",
+          "event": "success"
+        },
+        {
+          "next": "check_acknowledged_reply",
+          "event": "failed"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 0,
+          "y": 980
+        },
+        "method": "POST",
+        "content_type": "application/x-www-form-urlencoded;charset=utf-8",
+        "url": "{{flow.data.webhook_base_url}}/api/v1/webhooks/twilio/studio",
+        "parameters": [
+          {
+            "key": "notification_id",
+            "value": "{{flow.data.notification_id}}"
+          },
+          {
+            "key": "event_id",
+            "value": "{{flow.data.event_id}}"
+          },
+          {
+            "key": "ExecutionSid",
+            "value": "{{flow.sid}}"
+          },
+          {
+            "key": "CallSid",
+            "value": "{{widgets.call_and_gather_dtmf.CallSid}}"
+          },
+          {
+            "key": "MessageSid",
+            "value": "{{widgets.send_emergency_sms.Sid}}"
+          },
+          {
+            "key": "Digits",
+            "value": "{{widgets.call_and_gather_dtmf.Digits}}"
+          },
+          {
+            "key": "Status",
+            "value": "{{widgets.call_and_gather_dtmf.CallStatus}}"
+          }
+        ]
+      }
+    },
+    {
+      "name": "check_acknowledged_reply",
+      "type": "split-based-on",
+      "transitions": [
+        {
+          "next": "say_not_acknowledged",
+          "event": "noMatch"
+        },
+        {
+          "next": "say_acknowledged",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "Acknowledged",
+              "arguments": [
+                "{{widgets.call_and_gather_dtmf.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "1"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "input": "{{widgets.call_and_gather_dtmf.Digits}}",
+        "offset": {
+          "x": 0,
+          "y": 1220
+        }
+      }
+    },
+    {
+      "name": "say_acknowledged",
+      "type": "say-play",
+      "transitions": [
+        {
+          "event": "audioComplete"
+        }
+      ],
+      "properties": {
+        "voice": "alice",
+        "offset": {
+          "x": -180,
+          "y": 1480
+        },
+        "loop": 1,
+        "say": "Thank you. Your acknowledgement has been recorded. Escalation has been stopped. Goodbye.",
+        "language": "en-US"
+      }
+    },
+    {
+      "name": "say_not_acknowledged",
+      "type": "say-play",
+      "transitions": [
+        {
+          "event": "audioComplete"
+        }
+      ],
+      "properties": {
+        "voice": "alice",
+        "offset": {
+          "x": 180,
+          "y": 1480
+        },
+        "loop": 1,
+        "say": "Acknowledgement was not confirmed. NavosEdge will continue escalating this alert. Goodbye.",
+        "language": "en-US"
+      }
+    }
+  ],
+  "initial_state": "Trigger",
+  "flags": {
+    "allow_concurrent_calls": true
+  }
+}
+
