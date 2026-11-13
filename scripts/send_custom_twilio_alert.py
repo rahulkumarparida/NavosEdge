@@ -29,7 +29,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Send custom NavosEdge Twilio alert or surge demo.")
     parser.add_argument("--server", default=os.getenv("NAVOS_SERVER_URL", "http://127.0.0.1:8420"))
     parser.add_argument("--to", required=True, help="Recipient E.164 phone number, e.g. +919876543210")
-    parser.add_argument("--channel", choices=["SMS", "CALL", "BOTH"], default="BOTH")
+    parser.add_argument("--channel", choices=["SMS", "VOICE_CALL", "CALL", "BOTH"], default="BOTH")
     parser.add_argument("--message", default=DEFAULT_MESSAGE)
     parser.add_argument("--api-key", default=os.getenv("NAVOS_MANAGER_API_KEY", ""))
     parser.add_argument("--simulate-surge", action="store_true", help="Also run full synthetic surge flow")
@@ -40,7 +40,12 @@ def main() -> int:
         headers["X-Navos-Manager-Key"] = args.api_key
 
     base = args.server.rstrip("/")
-    channels = ["SMS", "CALL"] if args.channel == "BOTH" else [args.channel]
+    if args.channel == "BOTH":
+        channels = ["SMS", "VOICE_CALL"]
+    elif args.channel == "CALL":
+        channels = ["VOICE_CALL"]
+    else:
+        channels = [args.channel]
 
     with httpx.Client(timeout=20.0) as client:
         for ch in channels:
