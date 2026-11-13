@@ -2,6 +2,7 @@
 NavosEdge Intelligence Server — FastAPI application entry point.
 """
 
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
@@ -184,6 +185,25 @@ async def lifespan(app: FastAPI):
     app.state.forecast_plugin = forecast_plugin
     app.state.aqi_service = aqi_service
 
+    async def _stale_actuator_monitor() -> None:
+        while True:
+            try:
+                await asyncio.sleep(30.0)
+                stale = actuator_service.mark_stale_actuators_offline()
+                if stale:
+                    logger.warning(
+                        "Marked %d stale actuator(s) OFFLINE after >%.0fs without heartbeat: %s",
+                        len(stale),
+                        settings.ACTUATOR_HEARTBEAT_STALE_S,
+                        [a.actuator_id for a in stale],
+                    )
+            except asyncio.CancelledError:
+                raise
+            except Exception as exc:
+                logger.warning("Stale actuator monitor tick error: %s", exc)
+
+    stale_actuator_task = asyncio.create_task(_stale_actuator_monitor())
+
     logger.info(
         "Startup complete — model loaded: %s, source classifier loaded: %s, forecast plugin: %s, emergency db: %s",
         inference_adapter._loaded,
@@ -193,6 +213,11 @@ async def lifespan(app: FastAPI):
     )
     yield
     # Shutdown
+    stale_actuator_task.cancel()
+    try:
+        await stale_actuator_task
+    except asyncio.CancelledError:
+        pass
     await escalation_worker.stop()
     await notification_service.drain_background_tasks(timeout_s=5.0)
     if forecast_plugin.is_initialized:

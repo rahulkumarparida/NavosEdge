@@ -32,6 +32,7 @@ from app.aqi.service import AQIService
 from app.emergency.actuator_service import ActuatorService
 from app.emergency.notification_service import EmergencyNotificationService
 from app.emergency.response_policy import HazardPolicyService
+from app.emergency.schemas import NodeRegistration
 
 
 class ProcessingService:
@@ -253,6 +254,27 @@ class ProcessingService:
         if self.hazard_policy_service is not None:
             policy_decision = None
             try:
+                if node_id == "uno-q-001":
+                    emergency_db = getattr(
+                        getattr(self.hazard_policy_service, "policy_engine", None),
+                        "db",
+                        None,
+                    ) or getattr(self.actuator_service, "db", None)
+                    if (
+                        emergency_db is not None
+                        and getattr(emergency_db, "is_initialized", False)
+                        and emergency_db.get_node(node_id) is None
+                    ):
+                        emergency_db.register_node(
+                            NodeRegistration(
+                                node_id="uno-q-001",
+                                node_name="Arduino UNO Q Primary Node",
+                                location="Local Edge Node",
+                            )
+                        )
+                        logger.info(
+                            "Auto-registered primary UNO Q node 'uno-q-001' on incoming telemetry"
+                        )
                 policy_decision = self.hazard_policy_service.evaluate_and_decide(
                     payload=payload,
                     inference=inference_result,

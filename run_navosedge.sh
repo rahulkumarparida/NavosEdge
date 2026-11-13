@@ -17,7 +17,7 @@ cd "$SCRIPT_DIR"
 
 CUSTOM_IP=""
 AUTO_IP=true
-NODE_ID="${NAVOS_NODE_ID:-navos-01}"
+NODE_ID="${NAVOS_NODE_ID:-uno-q-001}"
 SCENARIO="${NAVOS_SCENARIO:-traffic}"
 INTERVAL="${NAVOS_INTERVAL:-3}"
 SENSOR_MODE=""
@@ -199,10 +199,14 @@ PIDS+=($INTEL_PID)
 cd "$SCRIPT_DIR"
 
 # Wait for Python Intelligence Server health/readiness
-echo "[NAVOS] Waiting for Intelligence Server readiness on http://$INTEL_HOST:$INTEL_PORT/health ..."
+HEALTH_CHECK_HOST="$INTEL_HOST"
+if [ "$HEALTH_CHECK_HOST" = "0.0.0.0" ]; then
+    HEALTH_CHECK_HOST="127.0.0.1"
+fi
+echo "[NAVOS] Waiting for Intelligence Server readiness on http://$HEALTH_CHECK_HOST:$INTEL_PORT/health ..."
 READY=0
 for i in {1..30}; do
-    if curl -s "http://$INTEL_HOST:$INTEL_PORT/health" > /dev/null 2>&1; then
+    if curl -s "http://$HEALTH_CHECK_HOST:$INTEL_PORT/health" > /dev/null 2>&1; then
         READY=1
         echo "[NAVOS] Intelligence Server is READY!"
         break

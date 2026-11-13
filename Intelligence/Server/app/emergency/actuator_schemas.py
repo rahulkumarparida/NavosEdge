@@ -26,6 +26,8 @@ class ActuatorCommandType(str, Enum):
 
     FAN_ON = "FAN_ON"
     FAN_OFF = "FAN_OFF"
+    LIGHT_ON = "LIGHT_ON"
+    LIGHT_OFF = "LIGHT_OFF"
     GET_STATUS = "GET_STATUS"
     EMERGENCY_STOP = "EMERGENCY_STOP"
 
@@ -171,7 +173,7 @@ class ActuatorHeartbeatRequest(BaseModel):
         default=ActuatorPhysicalOutputState.OFF
     )
     physical_driver_verified: bool = False
-    gpio_pin: int = Field(default=18, ge=0, le=39)
+    gpio_pin: int = Field(default=25, ge=0, le=39)
     firmware_version: Optional[str] = Field(default=None, max_length=64)
     timestamp: datetime = Field(default_factory=utc_now)
 
@@ -186,6 +188,17 @@ class ActuatorHeartbeatRequest(BaseModel):
         normalized = ensure_utc(v)
         assert normalized is not None
         return normalized
+
+
+class ActuatorHeartbeatResponse(ActuatorResponse):
+    """Heartbeat response returning registration info plus authoritative alert light state."""
+
+    system_ready: bool = True
+    desired_state: ActuatorPhysicalOutputState = ActuatorPhysicalOutputState.OFF
+    active_event_id: Optional[str] = None
+    active_event_count: int = 0
+    severity: Optional[str] = None
+    alert_type: Optional[str] = None
 
 
 class ActuatorDispatchResult(BaseModel):

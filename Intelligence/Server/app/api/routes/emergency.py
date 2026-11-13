@@ -75,7 +75,7 @@ class EventActionRequest(BaseModel):
 
 class DemoSimulateRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    node_id: str = Field(default="node-01", min_length=1, max_length=64)
+    node_id: str = Field(default="uno-q-001", min_length=1, max_length=64)
     pm2_5: float = Field(default=195.0, ge=0.0, le=1000.0)
     pm10: float = Field(default=280.0, ge=0.0, le=1500.0)
     mq2_v: float = Field(default=1.1, ge=0.0, le=5.0)
@@ -644,13 +644,29 @@ async def resolve_event_by_manager(
 ):
     ntf_service = request.app.state.notification_service
     try:
-        return ntf_service.resolve_event_manually(
+        resolved = ntf_service.resolve_event_manually(
             event_id,
             resolved_by=operator,
             notes=payload.notes if payload else None,
         )
     except RecordNotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+
+    actuator_service = getattr(request.app.state, "actuator_service", None)
+    if actuator_service is not None:
+        try:
+            await actuator_service.sync_light_for_node(
+                resolved.associated_node_id,
+                event_id=resolved.event_id,
+                reason=f"Emergency event '{resolved.event_id}' manually resolved by {operator}",
+            )
+        except Exception as exc:
+            logger.warning(
+                "Failed to sync alert light after resolving event %s: %s",
+                resolved.event_id,
+                exc,
+            )
+    return resolved
 
 
 # ---------------------------------------------------------------------------

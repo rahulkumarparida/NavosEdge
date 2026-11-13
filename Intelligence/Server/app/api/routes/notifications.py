@@ -259,13 +259,29 @@ async def resolve_emergency_event(
     """Manually resolve an emergency incident."""
     service = request.app.state.notification_service
     try:
-        return service.resolve_event_manually(
+        resolved = service.resolve_event_manually(
             event_id, resolved_by=payload.resolved_by, notes=payload.notes
         )
     except RecordNotFoundError as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)
         ) from exc
+
+    actuator_service = getattr(request.app.state, "actuator_service", None)
+    if actuator_service is not None:
+        try:
+            await actuator_service.sync_light_for_node(
+                resolved.associated_node_id,
+                event_id=resolved.event_id,
+                reason=f"Emergency event '{resolved.event_id}' manually resolved",
+            )
+        except Exception as exc:
+            logger.warning(
+                "Failed to sync alert light after resolving event %s: %s",
+                resolved.event_id,
+                exc,
+            )
+    return resolved
 
 
 # ---------------------------------------------------------------------------

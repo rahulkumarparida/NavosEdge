@@ -1,14 +1,21 @@
 /*
- * NavosEdge Phase 3 — NodeMCU ESP-32S V1.1 Wireless Actuator Firmware
+ * NavosEdge — NodeMCU ESP-32S V1.1 Alert Light Firmware
  *
  * Protocol: HTTP REST JSON over Wi-Fi LAN (port 8080)
- * Output Pin: GPIO25 (P25) -> External NPN Low-Side Transistor Driver
+ * Output Pin: GPIO25 (P25) -> 3.3V Indicator LED + Current-Limiting Resistor -> GND
  *
- * Safety Guarantees:
- *   1. GPIO25 is configured as OUTPUT and driven LOW immediately at boot.
- *   2. PHYSICAL_DRIVER_VERIFIED defaults to false (SAFE_LOCKED_OFF).
- *   3. Lease watchdog automatically forces GPIO25 LOW (FAILSAFE_OFF) if
- *      communication with the UNO Q Intelligence Server is lost.
+ * Safety & Recovery Guarantees:
+ *   1. GPIO25 is configured as OUTPUT and driven LOW immediately at boot before
+ *      Serial or Wi-Fi initialization.
+ *   2. Only light-control commands (LIGHT_ON, LIGHT_OFF, GET_STATUS,
+ *      EMERGENCY_STOP) are executed; legacy fan commands (FAN_ON/FAN_OFF) are
+ *      explicitly rejected with HTTP 400.
+ *   3. Every 15s heartbeat parses UNO Q's authoritative `desired_state` and
+ *      `system_ready` flags so reboots, missed commands, and reconnects stay
+ *      synchronized with active environmental alerts.
+ *   4. Communication-loss watchdog forces GPIO25 LOW (FAILSAFE_OFF) only if
+ *      UNO Q becomes unreachable for longer than STALE_COMM_TIMEOUT_MS (75s),
+ *      preventing premature shutoff during sustained active hazards.
  */
 
 #include <WiFi.h>
@@ -18,13 +25,20 @@
 
 WebServer server(ACTUATOR_HTTP_PORT);
 
-// Runtime Actuator State
-static bool fanLogicalOn = false;
-static bool failsafeTriggered = false;
-static unsigned long activeLeaseMs = DEFAULT_LEASE_SECONDS * 1000UL;
-static unsigned long lastLeaseRenewMs = 0;
+// Runtime Alert Light State
+static bool lightLogicalOn = false;
+static bool commLossTriggered = false;
+static bool hasBackendContact = false;
+static bool lastSystemReady = false;
+static bool wasWifiConnected = false;
+
+static unsigned long lastBackendContactMs = 0;
 static unsigned long lastHeartbeatMs = 0;
 static unsigned long lastWifiRetryMs = 0;
+
+static String activeEventId = "";
+static String activeSeverity = "";
+static String activeAlertType = "";
 
 // Ring buffer for duplicate command_id protection
 struct CommandCacheEntry {
@@ -34,21 +48,23 @@ struct CommandCacheEntry {
 static CommandCacheEntry commandCache[COMMAND_HISTORY_RING_SIZE];
 static size_t commandCacheIndex = 0;
 
+// Forward declaration
+static void sendHeartbeatToUnoQ(bool allowFollowupSync = true);
+
 // ---------------------------------------------------------------------------
 // Hardware Output Control
 // ---------------------------------------------------------------------------
 
 static void applyHardwareOutput(bool turnOn) {
 #if PHYSICAL_DRIVER_VERIFIED
-  digitalWrite(FAN_CONTROL_GPIO, turnOn ? HIGH : LOW);
-  fanLogicalOn = turnOn;
+  digitalWrite(ALERT_LIGHT_GPIO, turnOn ? HIGH : LOW);
+  lightLogicalOn = turnOn;
   if (turnOn) {
-    failsafeTriggered = false;
+    commLossTriggered = false;
   }
 #else
-  // Hardware safety interlock: keep GPIO25 strictly LOW until bench verified
-  digitalWrite(FAN_CONTROL_GPIO, LOW);
-  fanLogicalOn = false;
+  digitalWrite(ALERT_LIGHT_GPIO, LOW);
+  lightLogicalOn = false;
 #endif
 }
 
@@ -56,48 +72,125 @@ static const char* currentOutputStateString() {
 #if !PHYSICAL_DRIVER_VERIFIED
   return "SAFE_LOCKED_OFF";
 #else
-  if (failsafeTriggered) {
+  if (commLossTriggered) {
     return "FAILSAFE_OFF";
   }
-  return fanLogicalOn ? "ON" : "OFF";
+  return lightLogicalOn ? "ON" : "OFF";
 #endif
 }
 
 // ---------------------------------------------------------------------------
-// Minimal Self-Contained JSON Helpers (no external JSON library required)
+// Self-Contained JSON Helpers (handles strings, nulls, booleans, and integers)
 // ---------------------------------------------------------------------------
 
-static String extractJsonString(const String& body, const char* key) {
+static int findJsonValueStart(const String& body, const char* key) {
   String pattern = String("\"") + key + "\"";
-  int keyIdx = body.indexOf(pattern);
-  if (keyIdx < 0) return "";
-  int colonIdx = body.indexOf(':', keyIdx + pattern.length());
-  if (colonIdx < 0) return "";
-  int firstQuote = body.indexOf('"', colonIdx + 1);
-  if (firstQuote < 0) return "";
-  int secondQuote = body.indexOf('"', firstQuote + 1);
-  if (secondQuote < 0) return "";
-  return body.substring(firstQuote + 1, secondQuote);
+  int searchFrom = 0;
+  while (searchFrom < (int)body.length()) {
+    int keyIdx = body.indexOf(pattern, searchFrom);
+    if (keyIdx < 0) {
+      return -1;
+    }
+
+    // Ensure key token boundary on the left
+    if (keyIdx > 0) {
+      char prevCh = body[keyIdx - 1];
+      if (prevCh != '{' && prevCh != ',' && prevCh != ' ' &&
+          prevCh != '\t' && prevCh != '\r' && prevCh != '\n') {
+        searchFrom = keyIdx + pattern.length();
+        continue;
+      }
+    }
+
+    int afterKey = keyIdx + pattern.length();
+    while (afterKey < (int)body.length() &&
+           (body[afterKey] == ' ' || body[afterKey] == '\t' ||
+            body[afterKey] == '\r' || body[afterKey] == '\n')) {
+      afterKey++;
+    }
+    if (afterKey >= (int)body.length() || body[afterKey] != ':') {
+      searchFrom = afterKey;
+      continue;
+    }
+
+    int valStart = afterKey + 1;
+    while (valStart < (int)body.length() &&
+           (body[valStart] == ' ' || body[valStart] == '\t' ||
+            body[valStart] == '\r' || body[valStart] == '\n')) {
+      valStart++;
+    }
+    return valStart < (int)body.length() ? valStart : -1;
+  }
+  return -1;
 }
 
-static unsigned long extractJsonULong(const String& body, const char* key, unsigned long fallback) {
-  String pattern = String("\"") + key + "\"";
-  int keyIdx = body.indexOf(pattern);
-  if (keyIdx < 0) return fallback;
-  int colonIdx = body.indexOf(':', keyIdx + pattern.length());
-  if (colonIdx < 0) return fallback;
-  int start = colonIdx + 1;
-  while (start < (int)body.length() && (body[start] == ' ' || body[start] == '\t')) {
-    start++;
+static String extractJsonString(const String& body, const char* key) {
+  int valStart = findJsonValueStart(body, key);
+  if (valStart < 0 || body[valStart] != '"') {
+    return "";
+  }
+  String out = "";
+  for (int i = valStart + 1; i < (int)body.length(); ++i) {
+    char ch = body[i];
+    if (ch == '\\' && (i + 1) < (int)body.length()) {
+      out += body[++i];
+      continue;
+    }
+    if (ch == '"') {
+      return out;
+    }
+    out += ch;
+  }
+  return "";
+}
+
+static bool extractJsonBool(const String& body, const char* key, bool fallback) {
+  int valStart = findJsonValueStart(body, key);
+  if (valStart < 0) {
+    return fallback;
+  }
+  if (body.substring(valStart, min((int)body.length(), valStart + 4)) == "true") {
+    return true;
+  }
+  if (body.substring(valStart, min((int)body.length(), valStart + 5)) == "false") {
+    return false;
+  }
+  return fallback;
+}
+
+static unsigned long extractJsonULong(
+    const String& body, const char* key, unsigned long fallback) {
+  int valStart = findJsonValueStart(body, key);
+  if (valStart < 0 || !isDigit(body[valStart])) {
+    return fallback;
   }
   String numStr = "";
-  while (start < (int)body.length() && isDigit(body[start])) {
-    numStr += body[start];
-    start++;
+  int idx = valStart;
+  while (idx < (int)body.length() && isDigit(body[idx])) {
+    numStr += body[idx];
+    idx++;
   }
-  if (numStr.length() == 0) return fallback;
-  unsigned long val = strtoul(numStr.c_str(), nullptr, 10);
-  return val > 0 ? val : fallback;
+  if (numStr.length() == 0) {
+    return fallback;
+  }
+  return strtoul(numStr.c_str(), nullptr, 10);
+}
+
+static String jsonEscape(const String& raw) {
+  String out = "";
+  out.reserve(raw.length());
+  for (int i = 0; i < (int)raw.length(); ++i) {
+    char ch = raw[i];
+    if (ch == '"' || ch == '\\') {
+      out += '\\';
+      out += ch;
+    } else if (ch == '\n' || ch == '\r' || ch == '\t') {
+      out += ' ';
+    } else {
+      out += ch;
+    }
+  }
+  return out;
 }
 
 static String buildAckJson(
@@ -106,16 +199,25 @@ static String buildAckJson(
     const char* outputStateStr,
     const String& errorDetails = "") {
   String json = "{";
-  json += "\"command_id\":\"" + commandId + "\",";
+  json += "\"command_id\":\"" + jsonEscape(commandId) + "\",";
   json += "\"actuator_id\":\"" + String(ACTUATOR_ID) + "\",";
+  json += "\"actuator_type\":\"" + String(ACTUATOR_TYPE) + "\",";
   json += "\"status\":\"" + String(statusStr) + "\",";
   json += "\"output_state\":\"" + String(outputStateStr) + "\",";
   json += "\"physical_driver_verified\":" + String(PHYSICAL_DRIVER_VERIFIED ? "true" : "false") + ",";
-  json += "\"uptime_ms\":" + String(millis());
-  if (errorDetails.length() > 0) {
-    json += ",\"error_details\":\"" + errorDetails + "\"";
+  json += "\"gpio_pin\":" + String(ALERT_LIGHT_GPIO) + ",";
+  json += "\"wifi_connected\":" + String(WiFi.status() == WL_CONNECTED ? "true" : "false") + ",";
+  json += "\"system_ready\":" + String(lastSystemReady ? "true" : "false") + ",";
+  json += "\"uptime_ms\":" + String(millis()) + ",";
+  if (activeEventId.length() > 0) {
+    json += "\"active_event_id\":\"" + jsonEscape(activeEventId) + "\",";
   } else {
-    json += ",\"error_details\":null";
+    json += "\"active_event_id\":null,";
+  }
+  if (errorDetails.length() > 0) {
+    json += "\"error_details\":\"" + jsonEscape(errorDetails) + "\"";
+  } else {
+    json += "\"error_details\":null";
   }
   json += "}";
   return json;
@@ -156,11 +258,12 @@ static void handlePostCommand() {
   String commandId = extractJsonString(body, "command_id");
   String targetActuatorId = extractJsonString(body, "actuator_id");
   String command = extractJsonString(body, "command");
-  unsigned long leaseSec = extractJsonULong(body, "lease_seconds", DEFAULT_LEASE_SECONDS);
+  String eventId = extractJsonString(body, "event_id");
 
   if (commandId.length() == 0 || command.length() == 0) {
     server.send(400, "application/json",
-                buildAckJson("unknown", "REJECTED", currentOutputStateString(), "Missing command_id or command"));
+                buildAckJson("unknown", "REJECTED", currentOutputStateString(),
+                             "Missing command_id or command"));
     return;
   }
 
@@ -169,9 +272,14 @@ static void handlePostCommand() {
     Serial.printf("[ACTUATOR] Rejected command %s: actuator_id mismatch (%s)\n",
                   commandId.c_str(), targetActuatorId.c_str());
     server.send(403, "application/json",
-                buildAckJson(commandId, "REJECTED", currentOutputStateString(), "actuator_id mismatch"));
+                buildAckJson(commandId, "REJECTED", currentOutputStateString(),
+                             "actuator_id mismatch"));
     return;
   }
+
+  // Refresh UNO Q contact clock on authenticated command arrival
+  hasBackendContact = true;
+  lastBackendContactMs = millis();
 
   // Duplicate command_id idempotency check
   String cached = findCachedAck(commandId);
@@ -182,28 +290,45 @@ static void handlePostCommand() {
   }
 
   String ackJson;
-  if (command == "FAN_ON") {
-    activeLeaseMs = leaseSec * 1000UL;
-    lastLeaseRenewMs = millis();
+  if (command == "LIGHT_ON") {
+    commLossTriggered = false;
+    if (eventId.length() > 0) {
+      activeEventId = eventId;
+    }
     applyHardwareOutput(true);
 #if PHYSICAL_DRIVER_VERIFIED
-    Serial.printf("[ACTUATOR] EXECUTED FAN_ON (GPIO%d HIGH, lease=%lus)\n", FAN_CONTROL_GPIO, leaseSec);
+    Serial.printf("[ACTUATOR] EXECUTED LIGHT_ON (GPIO%d HIGH, event=%s)\n",
+                  ALERT_LIGHT_GPIO,
+                  activeEventId.length() > 0 ? activeEventId.c_str() : "none");
     ackJson = buildAckJson(commandId, "EXECUTED", currentOutputStateString());
 #else
-    Serial.printf("[ACTUATOR] ACKNOWLEDGED FAN_ON (SAFE_LOCKED_OFF: PHYSICAL_DRIVER_VERIFIED=false)\n");
+    Serial.println("[ACTUATOR] ACKNOWLEDGED LIGHT_ON (SAFE_LOCKED_OFF: PHYSICAL_DRIVER_VERIFIED=false)");
     ackJson = buildAckJson(commandId, "ACKNOWLEDGED", "SAFE_LOCKED_OFF",
-                           "Hardware output locked OFF pending NPN transistor/current bench verification");
+                           "Hardware output locked OFF because PHYSICAL_DRIVER_VERIFIED=false");
 #endif
-  } else if (command == "FAN_OFF" || command == "EMERGENCY_STOP") {
+  } else if (command == "LIGHT_OFF" || command == "EMERGENCY_STOP") {
+    commLossTriggered = false;
     applyHardwareOutput(false);
-    failsafeTriggered = false;
-    Serial.printf("[ACTUATOR] EXECUTED %s (GPIO%d LOW)\n", command.c_str(), FAN_CONTROL_GPIO);
+    activeEventId = "";
+    activeSeverity = "";
+    activeAlertType = "";
+    Serial.printf("[ACTUATOR] EXECUTED %s (GPIO%d LOW)\n", command.c_str(), ALERT_LIGHT_GPIO);
     ackJson = buildAckJson(commandId, "EXECUTED", currentOutputStateString());
   } else if (command == "GET_STATUS") {
     ackJson = buildAckJson(commandId, "EXECUTED", currentOutputStateString());
+  } else if (command == "FAN_ON" || command == "FAN_OFF") {
+    Serial.printf("[ACTUATOR] Rejected non-light command %s on %s\n",
+                  command.c_str(), ACTUATOR_TYPE);
+    ackJson = buildAckJson(commandId, "REJECTED", currentOutputStateString(),
+                           "Unsupported fan command on ESP32_ALERT_LIGHT");
+    cacheAck(commandId, ackJson);
+    server.send(400, "application/json", ackJson);
+    return;
   } else {
     Serial.printf("[ACTUATOR] Unknown command: %s\n", command.c_str());
-    ackJson = buildAckJson(commandId, "REJECTED", currentOutputStateString(), "Unsupported command");
+    ackJson = buildAckJson(commandId, "REJECTED", currentOutputStateString(),
+                           "Unsupported command");
+    cacheAck(commandId, ackJson);
     server.send(400, "application/json", ackJson);
     return;
   }
@@ -213,10 +338,10 @@ static void handlePostCommand() {
 }
 
 // ---------------------------------------------------------------------------
-// UNO Q Registration & Heartbeat
+// UNO Q Registration, Heartbeat & Desired-State Sync
 // ---------------------------------------------------------------------------
 
-static void sendHeartbeatToUnoQ() {
+static void sendHeartbeatToUnoQ(bool allowFollowupSync) {
   if (WiFi.status() != WL_CONNECTED) {
     return;
   }
@@ -226,7 +351,8 @@ static void sendHeartbeatToUnoQ() {
                "/api/v1/actuators/heartbeat";
   http.begin(url);
   http.addHeader("Content-Type", "application/json");
-  http.setTimeout(3000);
+  http.setConnectTimeout(HTTP_TIMEOUT_MS);
+  http.setTimeout(HTTP_TIMEOUT_MS);
 
   String payload = "{";
   payload += "\"actuator_id\":\"" + String(ACTUATOR_ID) + "\",";
@@ -236,25 +362,87 @@ static void sendHeartbeatToUnoQ() {
   payload += "\"ip_address\":\"" + WiFi.localIP().toString() + "\",";
   payload += "\"output_state\":\"" + String(currentOutputStateString()) + "\",";
   payload += "\"physical_driver_verified\":" + String(PHYSICAL_DRIVER_VERIFIED ? "true" : "false") + ",";
-  payload += "\"gpio_pin\":" + String(FAN_CONTROL_GPIO) + ",";
+  payload += "\"gpio_pin\":" + String(ALERT_LIGHT_GPIO) + ",";
   payload += "\"firmware_version\":\"" + String(FIRMWARE_VERSION) + "\"";
   payload += "}";
 
   int code = http.POST(payload);
-  if (code > 0) {
+  String respBody = (code == 200) ? http.getString() : "";
+  http.end();
+
+  if (code == 200) {
+    hasBackendContact = true;
+    lastBackendContactMs = millis();
+
+    bool systemReady = extractJsonBool(respBody, "system_ready", false);
+    String desiredState = extractJsonString(respBody, "desired_state");
+    String eventId = extractJsonString(respBody, "active_event_id");
+    unsigned long activeCount = extractJsonULong(respBody, "active_event_count", 0);
+    String severity = extractJsonString(respBody, "severity");
+    String alertType = extractJsonString(respBody, "alert_type");
+
+    lastSystemReady = systemReady;
+
+    if (desiredState == "ON" || desiredState == "OFF") {
+      String prevStateStr = String(currentOutputStateString());
+      bool shouldBeOn = (systemReady && desiredState == "ON");
+
+      if (shouldBeOn) {
+        activeEventId = eventId;
+        activeSeverity = severity;
+        activeAlertType = alertType;
+      } else {
+        activeEventId = "";
+        activeSeverity = "";
+        activeAlertType = "";
+        commLossTriggered = false;
+      }
+
+      if (shouldBeOn != lightLogicalOn) {
+        applyHardwareOutput(shouldBeOn);
+        Serial.printf("[SYNC] Desired state applied via heartbeat -> GPIO%d %s (ready=%s, events=%lu, id=%s, sev=%s)\n",
+                      ALERT_LIGHT_GPIO,
+                      currentOutputStateString(),
+                      systemReady ? "true" : "false",
+                      activeCount,
+                      activeEventId.length() > 0 ? activeEventId.c_str() : "none",
+                      activeSeverity.length() > 0 ? activeSeverity.c_str() : "none");
+      } else {
+        commLossTriggered = false;
+      }
+
+      if (allowFollowupSync && String(currentOutputStateString()) != prevStateStr) {
+        sendHeartbeatToUnoQ(false);
+      }
+    }
+
+    Serial.printf("[HEARTBEAT] UNO Q HTTP 200 (state=%s, desired=%s, ready=%s, events=%lu)\n",
+                  currentOutputStateString(),
+                  desiredState.length() > 0 ? desiredState.c_str() : "unknown",
+                  systemReady ? "true" : "false",
+                  activeCount);
+  } else if (code > 0) {
     Serial.printf("[HEARTBEAT] UNO Q responded HTTP %d (state=%s)\n",
                   code, currentOutputStateString());
   } else {
     Serial.printf("[HEARTBEAT] Failed to reach UNO Q: %s\n",
                   http.errorToString(code).c_str());
   }
-  http.end();
 }
 
 static void ensureWifiConnected() {
   if (WiFi.status() == WL_CONNECTED) {
+    if (!wasWifiConnected) {
+      wasWifiConnected = true;
+      Serial.printf("[WIFI] Connected! IP=%s — resyncing with UNO Q\n",
+                    WiFi.localIP().toString().c_str());
+      sendHeartbeatToUnoQ(true);
+      lastHeartbeatMs = millis();
+    }
     return;
   }
+
+  wasWifiConnected = false;
   unsigned long now = millis();
   if (now - lastWifiRetryMs < WIFI_RECONNECT_INTERVAL_MS) {
     return;
@@ -270,41 +458,49 @@ static void ensureWifiConnected() {
 // ---------------------------------------------------------------------------
 
 void setup() {
-  // 1. Safe GPIO initialization BEFORE anything else
-  pinMode(FAN_CONTROL_GPIO, OUTPUT);
-  digitalWrite(FAN_CONTROL_GPIO, LOW);
-  fanLogicalOn = false;
+  // 1. Safe GPIO initialization BEFORE Serial or Wi-Fi
+  pinMode(ALERT_LIGHT_GPIO, OUTPUT);
+  digitalWrite(ALERT_LIGHT_GPIO, LOW);
+  lightLogicalOn = false;
+  commLossTriggered = false;
 
   Serial.begin(115200);
   delay(200);
   Serial.println();
   Serial.println("====================================================");
-  Serial.println(" NavosEdge Phase 3 — NodeMCU ESP-32S V1.1 Actuator");
-  Serial.printf(" Actuator ID: %s | Node: %s | GPIO: %d\n",
-                ACTUATOR_ID, ASSOCIATED_NODE_ID, FAN_CONTROL_GPIO);
-  Serial.printf(" PHYSICAL_DRIVER_VERIFIED: %s\n",
+  Serial.println(" NavosEdge — NodeMCU ESP-32S V1.1 Alert Light");
+  Serial.printf(" Actuator ID: %s | Node: %s | Type: %s\n",
+                ACTUATOR_ID, ASSOCIATED_NODE_ID, ACTUATOR_TYPE);
+  Serial.printf(" GPIO: %d | PHYSICAL_DRIVER_VERIFIED: %s\n",
+                ALERT_LIGHT_GPIO,
                 PHYSICAL_DRIVER_VERIFIED ? "true (ARMED)" : "false (SAFE_LOCKED_OFF)");
   Serial.println("====================================================");
 
-  ensureWifiConnected();
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  lastWifiRetryMs = millis();
+
   unsigned long startWait = millis();
   while (WiFi.status() != WL_CONNECTED && millis() - startWait < 10000UL) {
     delay(250);
     Serial.print(".");
   }
   Serial.println();
+
   if (WiFi.status() == WL_CONNECTED) {
+    wasWifiConnected = true;
     Serial.printf("[WIFI] Connected! IP=%s\n", WiFi.localIP().toString().c_str());
   } else {
     Serial.println("[WIFI] Initial connection pending; will retry in loop()");
   }
 
   server.on("/actuator/status", HTTP_GET, handleGetStatus);
+  server.on("/health", HTTP_GET, handleGetStatus);
   server.on("/actuator/command", HTTP_POST, handlePostCommand);
   server.begin();
-  Serial.printf("[HTTP] Actuator server listening on port %d\n", ACTUATOR_HTTP_PORT);
+  Serial.printf("[HTTP] Alert light server listening on port %d\n", ACTUATOR_HTTP_PORT);
 
-  sendHeartbeatToUnoQ();
+  sendHeartbeatToUnoQ(true);
   lastHeartbeatMs = millis();
 }
 
@@ -314,17 +510,18 @@ void loop() {
 
   unsigned long now = millis();
 
-  // Lease watchdog: revert fan OFF if lease expires without renewal
-  if (fanLogicalOn && (now - lastLeaseRenewMs > activeLeaseMs)) {
-    Serial.println("[WATCHDOG] Command lease expired — forcing GPIO25 LOW (FAILSAFE_OFF)");
+  // Communication-loss watchdog: only force LOW if UNO Q has been unreachable > 75s
+  if (lightLogicalOn && hasBackendContact &&
+      (now - lastBackendContactMs > STALE_COMM_TIMEOUT_MS)) {
+    Serial.printf("[WATCHDOG] UNO Q unreachable for >%lus — forcing GPIO%d LOW (FAILSAFE_OFF)\n",
+                  STALE_COMM_TIMEOUT_MS / 1000UL, ALERT_LIGHT_GPIO);
     applyHardwareOutput(false);
-    failsafeTriggered = true;
+    commLossTriggered = true;
   }
 
-  // Periodic heartbeat to UNO Q
+  // Periodic heartbeat & desired-state sync with UNO Q
   if (now - lastHeartbeatMs >= HEARTBEAT_INTERVAL_MS) {
     lastHeartbeatMs = now;
-    sendHeartbeatToUnoQ();
+    sendHeartbeatToUnoQ(true);
   }
 }
-

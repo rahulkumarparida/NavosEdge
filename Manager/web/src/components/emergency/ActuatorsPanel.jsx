@@ -43,10 +43,14 @@ export function ActuatorsPanel() {
   }, []);
 
   const handleManualCommand = async (actuator, command) => {
-    const isTurnOn = command === 'FAN_ON';
+    const isTurnOn = command === 'FAN_ON' || command === 'LIGHT_ON';
     if (isTurnOn) {
+      const safetyNote =
+        actuator.actuator_type === 'ESP32_ALERT_LIGHT'
+          ? 'This will drive GPIO25 HIGH on the ESP32 alert light LED circuit until cleared or stopped.'
+          : 'Note: Unfiltered 5V fans are NEVER air purifiers, and GPIO25 remains hardware-locked LOW if PHYSICAL_DRIVER_VERIFIED=false.';
       const confirmed = window.confirm(
-        `EXPLICIT DEMO CONFIRMATION REQUIRED:\n\nSend ${command} in DEMO_MODE to ${actuator.actuator_id} (${actuator.actuator_type})?\n\nNote: Unfiltered 5V fans are NEVER air purifiers, and GPIO25 remains hardware-locked LOW if PHYSICAL_DRIVER_VERIFIED=false.`
+        `EXPLICIT DEMO CONFIRMATION REQUIRED:\n\nSend ${command} in DEMO_MODE to ${actuator.actuator_id} (${actuator.actuator_type})?\n\n${safetyNote}`
       );
       if (!confirmed) return;
     }
@@ -146,7 +150,10 @@ export function ActuatorsPanel() {
           actuators.map((act) => {
             const cmds = commandHistory[act.actuator_id] || [];
             const lastCmd = cmds[0];
+            const isAlertLight = act.actuator_type === 'ESP32_ALERT_LIGHT';
             const isUnfiltered = act.actuator_type === 'ESP32_FAN_5V_UNFILTERED';
+            const onCommand = isAlertLight ? 'LIGHT_ON' : 'FAN_ON';
+            const offCommand = isAlertLight ? 'LIGHT_OFF' : 'FAN_OFF';
             return (
               <div key={act.actuator_id} className="bg-slate-950/60 border border-slate-800 rounded-xl p-4 space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
@@ -205,16 +212,16 @@ export function ActuatorsPanel() {
 
                 <div className="flex flex-wrap gap-2 pt-1">
                   <button
-                    onClick={() => handleManualCommand(act, 'FAN_ON')}
+                    onClick={() => handleManualCommand(act, onCommand)}
                     className="inline-flex items-center gap-1 px-3 py-1.5 rounded bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-300 text-xs font-semibold"
                   >
-                    <Play className="w-3.5 h-3.5" /> Test FAN_ON (Demo Mode)
+                    <Play className="w-3.5 h-3.5" /> Test {onCommand} (Demo Mode)
                   </button>
                   <button
-                    onClick={() => handleManualCommand(act, 'FAN_OFF')}
+                    onClick={() => handleManualCommand(act, offCommand)}
                     className="inline-flex items-center gap-1 px-3 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold"
                   >
-                    <Square className="w-3.5 h-3.5" /> FAN_OFF
+                    <Square className="w-3.5 h-3.5" /> {offCommand}
                   </button>
                   <button
                     onClick={() => handleManualCommand(act, 'EMERGENCY_STOP')}

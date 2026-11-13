@@ -43,6 +43,15 @@ _DIAGNOSTIC_HAZARD_TYPES = {
     HazardType.CONFLICTING_READINGS,
     HazardType.UNCERTAIN_PREDICTION,
 }
+_DIAGNOSTIC_HAZARD_TYPE_VALUES = {ht.value for ht in _DIAGNOSTIC_HAZARD_TYPES}
+
+
+def is_diagnostic_hazard_type(hazard_type: Any) -> bool:
+    """Return True if `hazard_type` represents a diagnostic-only fault/uncertainty condition."""
+    if hazard_type is None:
+        return False
+    value = hazard_type.value if isinstance(hazard_type, HazardType) else str(hazard_type)
+    return value in _DIAGNOSTIC_HAZARD_TYPE_VALUES
 
 
 def is_actuator_filtration_capable(actuator_type: Optional[str]) -> bool:
@@ -63,6 +72,42 @@ def is_actuator_filtration_capable(actuator_type: Optional[str]) -> bool:
         token in upper
         for token in ("HEPA", "PURIFIER", "FILTRATION", "FILTER_EQUIPPED", "FILTERED")
     )
+
+
+def is_actuator_alert_light(actuator_type: Optional[str]) -> bool:
+    """Return True if an actuator represents an ESP32 alert indicator light."""
+    if not actuator_type:
+        return False
+    upper = actuator_type.strip().upper()
+    return upper == "ESP32_ALERT_LIGHT" or "ALERT_LIGHT" in upper or upper == "ESP32_LIGHT"
+
+
+def is_qualifying_environmental_hazard(
+    evaluation: HazardEvaluationResult,
+    *,
+    allow_diagnostic: bool = False,
+) -> bool:
+    """
+    Determine whether `evaluation` represents an active hazard qualifying for
+    ESP32 alert-light activation.
+
+    Diagnostic-only faults, sensor conflicts, stale/missing telemetry, and
+    uncertain predictions are excluded unless `allow_diagnostic=True`.
+    """
+    if evaluation.hazard_type in (HazardType.NONE, HazardType.ENVIRONMENTAL_RECOVERY):
+        return False
+    if SEVERITY_RANK.get(evaluation.severity, 0) < SEVERITY_RANK[HazardSeverity.WARNING]:
+        return False
+    is_diagnostic = (
+        is_diagnostic_hazard_type(evaluation.hazard_type)
+        or evaluation.has_hardware_fault
+        or evaluation.has_sensor_conflict
+        or evaluation.has_missing_data
+        or evaluation.is_stale_data
+    )
+    if is_diagnostic and not allow_diagnostic:
+        return False
+    return True
 
 
 def _map_to_db_severity(sev: HazardSeverity) -> EmergencySeverity:
@@ -99,9 +144,11 @@ class ResponsePolicyEngine:
         self,
         emergency_db: Optional[EmergencyDatabase] = None,
         persist_diagnostic_events: bool = False,
+        alert_light_on_diagnostic: bool = False,
     ) -> None:
         self.emergency_db = emergency_db
         self.persist_diagnostic_events = persist_diagnostic_events
+        self.alert_light_on_diagnostic = alert_light_on_diagnostic
 
     def decide(
         self,
@@ -207,11 +254,22 @@ class ResponsePolicyEngine:
           - Rule 3 & 4: Do not treat every gas detection as an instruction to activate a fan.
           - Rule 5 & 6: Do not trigger physical actions on uncertain or conflicting data.
         """
-        # Prefer a filtration-capable actuator if one is registered; otherwise inspect first actuator
+        # Prefer a filtration-capable actuator if registered, then alert light, then first actuator
         filtration_actuators = [
             a for a in actuators if is_actuator_filtration_capable(a.actuator_type)
         ]
-        selected = filtration_actuators[0] if filtration_actuators else (actuators[0] if actuators else None)
+        alert_light_actuators = [
+            a for a in actuators if is_actuator_alert_light(a.actuator_type)
+        ]
+        selected = (
+            filtration_actuators[0]
+            if filtration_actuators
+            else (
+                alert_light_actuators[0]
+                if alert_light_actuators
+                else (actuators[0] if actuators else None)
+            )
+        )
 
         if selected is None:
             return ActuatorPolicyRecommendation(
@@ -225,7 +283,58 @@ class ResponsePolicyEngine:
             )
 
         is_filt = is_actuator_filtration_capable(selected.actuator_type)
+        is_light = is_actuator_alert_light(selected.actuator_type)
         is_avail = selected.connection_status == ActuatorConnectionStatus.ONLINE
+
+        if is_light:
+            is_diagnostic_condition = (
+                evaluation.has_hardware_fault
+                or evaluation.has_sensor_conflict
+                or evaluation.has_missing_data
+                or evaluation.is_stale_data
+                or is_diagnostic_hazard_type(evaluation.hazard_type)
+            )
+            if is_diagnostic_condition and not self.alert_light_on_diagnostic:
+                return ActuatorPolicyRecommendation(
+                    actuator_id=selected.actuator_id,
+                    actuator_type=selected.actuator_type,
+                    is_filtration_capable=False,
+                    is_available=is_avail,
+                    recommended_action="INHIBITED_UNCERTAIN_OR_CONFLICT",
+                    execution_state=ActionExecutionState.INHIBITED_BY_SAFETY_RULE,
+                    rationale=(
+                        "Alert-light activation is inhibited on diagnostic-only sensor faults, "
+                        "conflicting channels, stale/missing telemetry, or uncertain predictions."
+                    ),
+                )
+            if is_qualifying_environmental_hazard(
+                evaluation, allow_diagnostic=self.alert_light_on_diagnostic
+            ):
+                return ActuatorPolicyRecommendation(
+                    actuator_id=selected.actuator_id,
+                    actuator_type=selected.actuator_type,
+                    is_filtration_capable=False,
+                    is_available=is_avail,
+                    recommended_action="ACTIVATE_ALERT_LIGHT",
+                    execution_state=(
+                        ActionExecutionState.RECOMMENDED
+                        if is_avail
+                        else ActionExecutionState.UNAVAILABLE
+                    ),
+                    rationale=(
+                        f"Actuator '{selected.actuator_id}' ({selected.actuator_type}) is "
+                        f"recommended for visual hazard alert ({evaluation.hazard_type.value})."
+                    ),
+                )
+            return ActuatorPolicyRecommendation(
+                actuator_id=selected.actuator_id,
+                actuator_type=selected.actuator_type,
+                is_filtration_capable=False,
+                is_available=is_avail,
+                recommended_action="NONE",
+                execution_state=ActionExecutionState.RECOMMENDED,
+                rationale="Environmental conditions are normal or recovering; alert light not required.",
+            )
 
         # Uncertain, conflicting, missing, stale, or faulty telemetry -> inhibit actuation
         if (

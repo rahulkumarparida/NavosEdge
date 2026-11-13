@@ -26,6 +26,7 @@ from app.emergency.actuator_schemas import (
     ActuatorControlMode,
     ActuatorDispatchResult,
     ActuatorHeartbeatRequest,
+    ActuatorHeartbeatResponse,
     ActuatorPhysicalOutputState,
 )
 from app.emergency.database import EmergencyDatabase, RecordNotFoundError
@@ -33,7 +34,12 @@ from app.emergency.decision_schemas import (
     EventLifecycleTransition,
     PolicyDecisionResult,
 )
-from app.emergency.response_policy import is_actuator_filtration_capable
+from app.emergency.response_policy import (
+    is_actuator_alert_light,
+    is_actuator_filtration_capable,
+    is_diagnostic_hazard_type,
+    is_qualifying_environmental_hazard,
+)
 from app.emergency.schemas import (
     ActuatorCommandLog,
     ActuatorConnectionStatus,
@@ -41,6 +47,9 @@ from app.emergency.schemas import (
     ActuatorResponse,
     ActuatorState,
     CommandExecutionStatus,
+    EmergencyEventResponse,
+    EmergencyEventStatus,
+    NodeRegistration,
     ensure_utc,
     utc_now,
 )
@@ -178,7 +187,10 @@ class MockActuatorTransport(ActuatorTransport):
             else ActuatorPhysicalOutputState.SAFE_LOCKED_OFF,
         )
 
-        if payload.command == ActuatorCommandType.FAN_ON:
+        if payload.command in (
+            ActuatorCommandType.FAN_ON,
+            ActuatorCommandType.LIGHT_ON,
+        ):
             if self.physical_driver_verified:
                 current = ActuatorPhysicalOutputState.ON
                 status = ActuatorAckStatus.EXECUTED
@@ -187,6 +199,7 @@ class MockActuatorTransport(ActuatorTransport):
                 status = ActuatorAckStatus.ACKNOWLEDGED
         elif payload.command in (
             ActuatorCommandType.FAN_OFF,
+            ActuatorCommandType.LIGHT_OFF,
             ActuatorCommandType.EMERGENCY_STOP,
         ):
             current = (
@@ -263,6 +276,7 @@ class ActuatorService:
         duplicate_window_s: float = 30.0,
         default_lease_s: int = 60,
         demo_mode_enabled: bool = False,
+        alert_light_on_diagnostic: bool = False,
     ) -> None:
         self.db = emergency_db
         self.transport: ActuatorTransport = transport or HttpEsp32ActuatorTransport(
@@ -273,9 +287,63 @@ class ActuatorService:
         self.duplicate_window_s = duplicate_window_s
         self.default_lease_s = default_lease_s
         self.demo_mode_enabled = demo_mode_enabled
+        self.alert_light_on_diagnostic = alert_light_on_diagnostic
+
+    def _resolve_heartbeat_node_id(
+        self,
+        requested_node_id: str,
+        node_registry: Optional[object] = None,
+    ) -> str:
+        """
+        Resolve `associated_node_id` from an ESP32 heartbeat, bridging the legacy
+        'node-01' default with UNO Q's 'uno-q-001' primary node ID without
+        breaking explicit node registrations or foreign-key enforcement.
+        """
+        if self.db.get_node(requested_node_id) is not None:
+            return requested_node_id
+
+        has_in_registry = bool(
+            node_registry is not None
+            and hasattr(node_registry, "has_node")
+            and node_registry.has_node(requested_node_id)
+        )
+
+        if requested_node_id in ("uno-q-001", "node-01"):
+            if self.db.get_node("uno-q-001") is None:
+                self.db.register_node(
+                    NodeRegistration(
+                        node_id="uno-q-001",
+                        node_name="Arduino UNO Q Primary Node",
+                        location="Local Edge Node",
+                    )
+                )
+                logger.info(
+                    "Auto-registered primary UNO Q node 'uno-q-001' during ESP32 heartbeat (%s)",
+                    requested_node_id,
+                )
+            if requested_node_id == "node-01":
+                logger.info(
+                    "Aliasing ESP32 heartbeat node_id 'node-01' -> 'uno-q-001'"
+                )
+            return "uno-q-001"
+
+        if has_in_registry:
+            self.db.register_node(
+                NodeRegistration(
+                    node_id=requested_node_id,
+                    node_name=f"Edge Node {requested_node_id}",
+                    location="Local Edge Node",
+                )
+            )
+            return requested_node_id
+
+        return requested_node_id
 
     def register_or_heartbeat(
-        self, req: ActuatorHeartbeatRequest
+        self,
+        req: ActuatorHeartbeatRequest,
+        *,
+        node_registry: Optional[object] = None,
     ) -> ActuatorResponse:
         """
         Register a new ESP32 actuator or update heartbeat/state for an existing
@@ -283,12 +351,21 @@ class ActuatorService:
         """
         db_state = _map_physical_output_to_db_state(req.output_state)
         existing = self.db.get_actuator(req.actuator_id)
+        resolved_node_id = self._resolve_heartbeat_node_id(
+            req.associated_node_id, node_registry=node_registry
+        )
         if existing is not None:
-            if existing.associated_node_id != req.associated_node_id:
-                raise ValueError(
-                    f"Actuator '{req.actuator_id}' is bound to node "
-                    f"'{existing.associated_node_id}', not '{req.associated_node_id}'"
-                )
+            if existing.associated_node_id != resolved_node_id:
+                if (
+                    existing.associated_node_id == "uno-q-001"
+                    and req.associated_node_id == "node-01"
+                ):
+                    resolved_node_id = "uno-q-001"
+                else:
+                    raise ValueError(
+                        f"Actuator '{req.actuator_id}' is bound to node "
+                        f"'{existing.associated_node_id}', not '{req.associated_node_id}'"
+                    )
             return self.db.update_actuator_heartbeat(
                 actuator_id=req.actuator_id,
                 current_state=db_state,
@@ -299,7 +376,7 @@ class ActuatorService:
 
         registration = ActuatorRegistration(
             actuator_id=req.actuator_id,
-            associated_node_id=req.associated_node_id,
+            associated_node_id=resolved_node_id,
             actuator_type=req.actuator_type,
             device_name=req.device_name,
             ip_address=req.ip_address,
@@ -308,6 +385,70 @@ class ActuatorService:
             last_heartbeat=req.timestamp,
         )
         return self.db.register_actuator(registration)
+
+    def get_unresolved_alert_events(
+        self, node_id: str
+    ) -> List[EmergencyEventResponse]:
+        """Return unresolved events on `node_id` that qualify to keep an alert light ON."""
+        if not self.db.is_initialized:
+            return []
+        events = self.db.list_emergency_events(node_id=node_id)
+        active: List[EmergencyEventResponse] = []
+        for ev in events:
+            if ev.event_status in (
+                EmergencyEventStatus.RESOLVED,
+                EmergencyEventStatus.CANCELLED,
+            ):
+                continue
+            if (
+                not self.alert_light_on_diagnostic
+                and is_diagnostic_hazard_type(ev.event_type)
+            ):
+                continue
+            active.append(ev)
+        return active
+
+    def build_heartbeat_response(
+        self,
+        actuator: ActuatorResponse,
+        *,
+        system_ready: bool = True,
+    ) -> ActuatorHeartbeatResponse:
+        """
+        Construct the authoritative heartbeat response including `desired_state`
+        so rebooting ESP32 alert lights recover immediately from active events.
+        """
+        desired_state = ActuatorPhysicalOutputState.OFF
+        active_event_id: Optional[str] = None
+        active_event_count = 0
+        severity: Optional[str] = None
+        alert_type: Optional[str] = None
+
+        if is_actuator_alert_light(actuator.actuator_type):
+            unresolved = self.get_unresolved_alert_events(actuator.associated_node_id)
+            active_event_count = len(unresolved)
+            if unresolved:
+                top = unresolved[0]
+                desired_state = ActuatorPhysicalOutputState.ON
+                active_event_id = top.event_id
+                severity = (
+                    top.severity.value
+                    if hasattr(top.severity, "value")
+                    else str(top.severity)
+                )
+                alert_type = top.event_type
+        elif actuator.current_state == ActuatorState.ON:
+            desired_state = ActuatorPhysicalOutputState.ON
+
+        return ActuatorHeartbeatResponse(
+            **actuator.model_dump(),
+            system_ready=system_ready,
+            desired_state=desired_state,
+            active_event_id=active_event_id,
+            active_event_count=active_event_count,
+            severity=severity,
+            alert_type=alert_type,
+        )
 
     def mark_stale_actuators_offline(
         self, node_id: Optional[str] = None, now: Optional[datetime] = None
@@ -354,7 +495,7 @@ class ActuatorService:
 
         target_state = (
             ActuatorState.ON
-            if command == ActuatorCommandType.FAN_ON
+            if command in (ActuatorCommandType.FAN_ON, ActuatorCommandType.LIGHT_ON)
             else ActuatorState.OFF
         )
         if actuator.current_state != target_state:
@@ -403,6 +544,40 @@ class ActuatorService:
         now = utc_now()
         effective_cmd_id = command_id or f"cmd-{uuid.uuid4().hex[:12]}"
         effective_lease = lease_seconds or self.default_lease_s
+
+        # Reject commands incompatible with actuator hardware type
+        is_light = is_actuator_alert_light(actuator.actuator_type)
+        if (
+            is_light
+            and command in (ActuatorCommandType.FAN_ON, ActuatorCommandType.FAN_OFF)
+        ) or (
+            not is_light
+            and command in (ActuatorCommandType.LIGHT_ON, ActuatorCommandType.LIGHT_OFF)
+        ):
+            rejection_msg = (
+                f"Incompatible command '{command.value}' for actuator '{actuator_id}' "
+                f"(type={actuator.actuator_type})"
+            )
+            log = self.db.create_actuator_command_log(
+                ActuatorCommandLog(
+                    command_id=effective_cmd_id,
+                    actuator_id=actuator_id,
+                    event_id=event_id,
+                    command=command.value,
+                    requested_at=now,
+                    execution_status=CommandExecutionStatus.REJECTED,
+                    error_details=rejection_msg,
+                )
+            )
+            logger.warning(rejection_msg)
+            return ActuatorDispatchResult(
+                dispatched=False,
+                suppressed=True,
+                suppression_reason=rejection_msg,
+                control_mode=control_mode,
+                command_log=log,
+                actuator=actuator,
+            )
 
         # Safety Rule: Never activate an unfiltered fan automatically in PROTECTION_MODE
         if (
@@ -579,6 +754,55 @@ class ActuatorService:
             actuator=updated_act,
         )
 
+    async def sync_light_for_node(
+        self,
+        node_id: str,
+        *,
+        event_id: Optional[str] = None,
+        reason: Optional[str] = None,
+    ) -> List[ActuatorDispatchResult]:
+        """
+        Synchronize all ESP32 alert lights registered on `node_id` with the
+        current unresolved emergency events in `EmergencyDatabase`.
+        """
+        actuators = self.db.list_actuators_for_node(node_id)
+        light_actuators = [
+            a for a in actuators if is_actuator_alert_light(a.actuator_type)
+        ]
+        if not light_actuators:
+            return []
+
+        unresolved = self.get_unresolved_alert_events(node_id)
+        should_be_on = len(unresolved) > 0
+        effective_event_id = unresolved[0].event_id if unresolved else event_id
+
+        results: List[ActuatorDispatchResult] = []
+        for act in light_actuators:
+            if should_be_on and act.current_state != ActuatorState.ON:
+                results.append(
+                    await self.dispatch_command(
+                        actuator_id=act.actuator_id,
+                        command=ActuatorCommandType.LIGHT_ON,
+                        control_mode=ActuatorControlMode.PROTECTION_MODE,
+                        event_id=effective_event_id,
+                        reason=reason or "Unresolved environmental hazard active on node",
+                    )
+                )
+            elif not should_be_on and act.current_state in (
+                ActuatorState.ON,
+                ActuatorState.UNKNOWN,
+            ):
+                results.append(
+                    await self.dispatch_command(
+                        actuator_id=act.actuator_id,
+                        command=ActuatorCommandType.LIGHT_OFF,
+                        control_mode=ActuatorControlMode.PROTECTION_MODE,
+                        event_id=effective_event_id,
+                        reason=reason or "All active emergency events resolved; turning alert light OFF",
+                    )
+                )
+        return results
+
     async def apply_policy_decision(
         self, decision: PolicyDecisionResult
     ) -> List[ActuatorDispatchResult]:
@@ -593,8 +817,56 @@ class ActuatorService:
         results: List[ActuatorDispatchResult] = []
         rec = decision.actuator_recommendation
         event_id = decision.active_event_id
+        unresolved_alert_events: Optional[List[EmergencyEventResponse]] = None
 
         for act in actuators:
+            if is_actuator_alert_light(act.actuator_type):
+                if unresolved_alert_events is None:
+                    unresolved_alert_events = self.get_unresolved_alert_events(
+                        decision.node_id
+                    )
+
+                qualifying_now = is_qualifying_environmental_hazard(
+                    decision.evaluation,
+                    allow_diagnostic=self.alert_light_on_diagnostic,
+                )
+                if decision.lifecycle_transition == EventLifecycleTransition.EVENT_RESOLVED:
+                    should_be_on = len(unresolved_alert_events) > 0
+                else:
+                    should_be_on = qualifying_now or (len(unresolved_alert_events) > 0)
+
+                target_event_id = event_id or (
+                    unresolved_alert_events[0].event_id
+                    if unresolved_alert_events
+                    else None
+                )
+
+                if should_be_on:
+                    if act.current_state != ActuatorState.ON:
+                        res = await self.dispatch_command(
+                            actuator_id=act.actuator_id,
+                            command=ActuatorCommandType.LIGHT_ON,
+                            control_mode=ActuatorControlMode.PROTECTION_MODE,
+                            event_id=target_event_id,
+                            reason=rec.rationale or decision.reason,
+                        )
+                        results.append(res)
+                else:
+                    if act.current_state == ActuatorState.ON or (
+                        decision.lifecycle_transition
+                        == EventLifecycleTransition.EVENT_RESOLVED
+                        and act.current_state == ActuatorState.UNKNOWN
+                    ):
+                        res = await self.dispatch_command(
+                            actuator_id=act.actuator_id,
+                            command=ActuatorCommandType.LIGHT_OFF,
+                            control_mode=ActuatorControlMode.PROTECTION_MODE,
+                            event_id=target_event_id,
+                            reason="Emergency hazard cleared; turning alert light OFF",
+                        )
+                        results.append(res)
+                continue
+
             filtration_capable = is_actuator_filtration_capable(act.actuator_type)
 
             if (
