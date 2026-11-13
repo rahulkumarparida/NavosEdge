@@ -653,7 +653,7 @@ class ActuatorService:
                 command=command.value,
                 requested_at=now,
                 execution_status=CommandExecutionStatus.PENDING,
-                error_details=reason,
+                error_details=None,
             )
         )
 
@@ -843,12 +843,22 @@ class ActuatorService:
 
                 if should_be_on:
                     if act.current_state != ActuatorState.ON:
+                        light_on_reason = (
+                            rec.rationale
+                            if rec.recommended_action == "ACTIVATE_ALERT_LIGHT"
+                            and rec.rationale
+                            else (
+                                f"Active unresolved environmental hazard ({target_event_id}); turning alert light ON"
+                                if target_event_id
+                                else (rec.rationale or decision.reason)
+                            )
+                        )
                         res = await self.dispatch_command(
                             actuator_id=act.actuator_id,
                             command=ActuatorCommandType.LIGHT_ON,
                             control_mode=ActuatorControlMode.PROTECTION_MODE,
                             event_id=target_event_id,
-                            reason=rec.rationale or decision.reason,
+                            reason=light_on_reason,
                         )
                         results.append(res)
                 else:

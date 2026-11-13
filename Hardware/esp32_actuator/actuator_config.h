@@ -1,26 +1,35 @@
 #pragma once
 
 // ============================================================================
-// NavosEdge — NodeMCU ESP-32S V1.1 Alert Light Configuration
+// NavosEdge — NodeMCU ESP-32S V1.1 Alert Light & Buzzer Configuration
 // ============================================================================
 
 // Target Hardware: NodeMCU ESP-32S V1.1 (Classic ESP32, USB-C, 3.3V GPIO logic)
-// Safe non-strapping GPIO pin driving the 3.3V indicator LED + series resistor to GND:
+// Safe non-strapping GPIO pins:
+//   - GPIO25 -> Alert Bulb / LED driver (active-HIGH by default; set false for active-LOW relay module)
+//   - GPIO26 -> Synchronized Alert Buzzer driver (rings whenever alert bulb is ON)
 #define ALERT_LIGHT_PIN 25
 #define ALERT_LIGHT_GPIO ALERT_LIGHT_PIN
+#define ALERT_LIGHT_ACTIVE_HIGH true
 
-// GPIO25 drives a low-current 3.3V LED + series resistor (active-HIGH).
-// Hardware safety: initialized LOW at the very top of setup() before Serial or Wi-Fi.
+#define ALERT_BUZZER_ENABLED true
+#define ALERT_BUZZER_PIN 26
+#define ALERT_BUZZER_GPIO ALERT_BUZZER_PIN
+#define ALERT_BUZZER_ACTIVE_HIGH true
+#define ALERT_BUZZER_PASSIVE_TONE false  // Set true for passive 2-pin piezo buzzer using tone()
+#define ALERT_BUZZER_TONE_HZ 2400
+
+// GPIO25 (bulb) + GPIO26 (buzzer) armed; both are initialized OFF at top of setup() before Serial/Wi-Fi.
 #define PHYSICAL_DRIVER_VERIFIED true
 
 // Wi-Fi Credentials (update before flashing)
 // CENTRAL LIBRARY BUILDING -2ND FL / Heheheheheh
 // nopassword@ / 0987654321
-#define WIFI_SSID "NavosEdge_LAN"
-#define WIFI_PASSWORD "CHANGE_ME"
+#define WIFI_SSID "Heheheheheh"
+#define WIFI_PASSWORD "0987654321"
 
 // UNO Q Intelligence Server endpoint
-#define UNOQ_SERVER_HOST "10.103.68.140"
+#define UNOQ_SERVER_HOST "10.81.210.140"
 #define UNOQ_SERVER_PORT 8420
 
 // Device Identity (matches UNO Q EmergencyDatabase ESP32_ALERT_LIGHT registration)

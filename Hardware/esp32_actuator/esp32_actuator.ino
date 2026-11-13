@@ -1,19 +1,21 @@
 /*
- * NavosEdge — NodeMCU ESP-32S V1.1 Alert Light Firmware
+ * NavosEdge — NodeMCU ESP-32S V1.1 Alert Bulb + Buzzer Firmware
  *
  * Protocol: HTTP REST JSON over Wi-Fi LAN (port 8080)
- * Output Pin: GPIO25 (P25) -> 3.3V Indicator LED + Current-Limiting Resistor -> GND
+ * Output Pins:
+ *   - GPIO25 (P25) -> Alert Bulb / LED driver (relay/MOSFET/LED + resistor)
+ *   - GPIO26 (P26) -> Synchronized Buzzer (rings whenever alert bulb is ON)
  *
  * Safety & Recovery Guarantees:
- *   1. GPIO25 is configured as OUTPUT and driven LOW immediately at boot before
- *      Serial or Wi-Fi initialization.
- *   2. Only light-control commands (LIGHT_ON, LIGHT_OFF, GET_STATUS,
+ *   1. GPIO25 (bulb) and GPIO26 (buzzer) are configured as OUTPUT and driven OFF
+ *      immediately at boot before Serial or Wi-Fi initialization.
+ *   2. Only light/alarm control commands (LIGHT_ON, LIGHT_OFF, GET_STATUS,
  *      EMERGENCY_STOP) are executed; legacy fan commands (FAN_ON/FAN_OFF) are
  *      explicitly rejected with HTTP 400.
  *   3. Every 15s heartbeat parses UNO Q's authoritative `desired_state` and
  *      `system_ready` flags so reboots, missed commands, and reconnects stay
  *      synchronized with active environmental alerts.
- *   4. Communication-loss watchdog forces GPIO25 LOW (FAILSAFE_OFF) only if
+ *   4. Communication-loss watchdog forces bulb & buzzer OFF (FAILSAFE_OFF) only if
  *      UNO Q becomes unreachable for longer than STALE_COMM_TIMEOUT_MS (75s),
  *      preventing premature shutoff during sustained active hazards.
  */
@@ -25,8 +27,9 @@
 
 WebServer server(ACTUATOR_HTTP_PORT);
 
-// Runtime Alert Light State
+// Runtime Alert Bulb & Buzzer State
 static bool lightLogicalOn = false;
+static bool buzzerLogicalOn = false;
 static bool commLossTriggered = false;
 static bool hasBackendContact = false;
 static bool lastSystemReady = false;
@@ -57,14 +60,44 @@ static void sendHeartbeatToUnoQ(bool allowFollowupSync = true);
 
 static void applyHardwareOutput(bool turnOn) {
 #if PHYSICAL_DRIVER_VERIFIED
+  #if ALERT_LIGHT_ACTIVE_HIGH
   digitalWrite(ALERT_LIGHT_GPIO, turnOn ? HIGH : LOW);
+  #else
+  digitalWrite(ALERT_LIGHT_GPIO, turnOn ? LOW : HIGH);
+  #endif
+
+  #if ALERT_BUZZER_ENABLED
+    #if ALERT_BUZZER_PASSIVE_TONE
+  if (turnOn) {
+    tone(ALERT_BUZZER_GPIO, ALERT_BUZZER_TONE_HZ);
+  } else {
+    noTone(ALERT_BUZZER_GPIO);
+    digitalWrite(ALERT_BUZZER_GPIO, ALERT_BUZZER_ACTIVE_HIGH ? LOW : HIGH);
+  }
+    #else
+      #if ALERT_BUZZER_ACTIVE_HIGH
+  digitalWrite(ALERT_BUZZER_GPIO, turnOn ? HIGH : LOW);
+      #else
+  digitalWrite(ALERT_BUZZER_GPIO, turnOn ? LOW : HIGH);
+      #endif
+    #endif
+  #endif
+
   lightLogicalOn = turnOn;
+  buzzerLogicalOn = (ALERT_BUZZER_ENABLED && turnOn);
   if (turnOn) {
     commLossTriggered = false;
   }
 #else
   digitalWrite(ALERT_LIGHT_GPIO, LOW);
+  #if ALERT_BUZZER_ENABLED
+    #if ALERT_BUZZER_PASSIVE_TONE
+  noTone(ALERT_BUZZER_GPIO);
+    #endif
+  digitalWrite(ALERT_BUZZER_GPIO, ALERT_BUZZER_ACTIVE_HIGH ? LOW : HIGH);
+  #endif
   lightLogicalOn = false;
+  buzzerLogicalOn = false;
 #endif
 }
 
@@ -206,6 +239,8 @@ static String buildAckJson(
   json += "\"output_state\":\"" + String(outputStateStr) + "\",";
   json += "\"physical_driver_verified\":" + String(PHYSICAL_DRIVER_VERIFIED ? "true" : "false") + ",";
   json += "\"gpio_pin\":" + String(ALERT_LIGHT_GPIO) + ",";
+  json += "\"buzzer_gpio\":" + String(ALERT_BUZZER_GPIO) + ",";
+  json += "\"buzzer_active\":" + String(buzzerLogicalOn ? "true" : "false") + ",";
   json += "\"wifi_connected\":" + String(WiFi.status() == WL_CONNECTED ? "true" : "false") + ",";
   json += "\"system_ready\":" + String(lastSystemReady ? "true" : "false") + ",";
   json += "\"uptime_ms\":" + String(millis()) + ",";
@@ -297,8 +332,10 @@ static void handlePostCommand() {
     }
     applyHardwareOutput(true);
 #if PHYSICAL_DRIVER_VERIFIED
-    Serial.printf("[ACTUATOR] EXECUTED LIGHT_ON (GPIO%d HIGH, event=%s)\n",
+    Serial.printf("[ACTUATOR] EXECUTED LIGHT_ON (bulb=GPIO%d ON, buzzer=GPIO%d %s, event=%s)\n",
                   ALERT_LIGHT_GPIO,
+                  ALERT_BUZZER_GPIO,
+                  ALERT_BUZZER_ENABLED ? "ON" : "DISABLED",
                   activeEventId.length() > 0 ? activeEventId.c_str() : "none");
     ackJson = buildAckJson(commandId, "EXECUTED", currentOutputStateString());
 #else
@@ -312,7 +349,8 @@ static void handlePostCommand() {
     activeEventId = "";
     activeSeverity = "";
     activeAlertType = "";
-    Serial.printf("[ACTUATOR] EXECUTED %s (GPIO%d LOW)\n", command.c_str(), ALERT_LIGHT_GPIO);
+    Serial.printf("[ACTUATOR] EXECUTED %s (bulb=GPIO%d OFF, buzzer=GPIO%d OFF)\n",
+                  command.c_str(), ALERT_LIGHT_GPIO, ALERT_BUZZER_GPIO);
     ackJson = buildAckJson(commandId, "EXECUTED", currentOutputStateString());
   } else if (command == "GET_STATUS") {
     ackJson = buildAckJson(commandId, "EXECUTED", currentOutputStateString());
@@ -458,22 +496,35 @@ static void ensureWifiConnected() {
 // ---------------------------------------------------------------------------
 
 void setup() {
-  // 1. Safe GPIO initialization BEFORE Serial or Wi-Fi
+  // 1. Safe GPIO initialization BEFORE Serial or Wi-Fi (bulb & buzzer forced OFF)
   pinMode(ALERT_LIGHT_GPIO, OUTPUT);
+#if ALERT_LIGHT_ACTIVE_HIGH
   digitalWrite(ALERT_LIGHT_GPIO, LOW);
+#else
+  digitalWrite(ALERT_LIGHT_GPIO, HIGH);
+#endif
+
+#if ALERT_BUZZER_ENABLED
+  pinMode(ALERT_BUZZER_GPIO, OUTPUT);
+  digitalWrite(ALERT_BUZZER_GPIO, ALERT_BUZZER_ACTIVE_HIGH ? LOW : HIGH);
+#endif
   lightLogicalOn = false;
+  buzzerLogicalOn = false;
   commLossTriggered = false;
 
   Serial.begin(115200);
   delay(200);
   Serial.println();
   Serial.println("====================================================");
-  Serial.println(" NavosEdge — NodeMCU ESP-32S V1.1 Alert Light");
+  Serial.println(" NavosEdge — NodeMCU ESP-32S V1.1 Alert Bulb & Buzzer");
   Serial.printf(" Actuator ID: %s | Node: %s | Type: %s\n",
                 ACTUATOR_ID, ASSOCIATED_NODE_ID, ACTUATOR_TYPE);
-  Serial.printf(" GPIO: %d | PHYSICAL_DRIVER_VERIFIED: %s\n",
+  Serial.printf(" Bulb GPIO: %d (%s) | Buzzer GPIO: %d (%s) | ARMED: %s\n",
                 ALERT_LIGHT_GPIO,
-                PHYSICAL_DRIVER_VERIFIED ? "true (ARMED)" : "false (SAFE_LOCKED_OFF)");
+                ALERT_LIGHT_ACTIVE_HIGH ? "active-HIGH" : "active-LOW relay",
+                ALERT_BUZZER_GPIO,
+                ALERT_BUZZER_ENABLED ? (ALERT_BUZZER_PASSIVE_TONE ? "passive-tone" : "active-level") : "disabled",
+                PHYSICAL_DRIVER_VERIFIED ? "true" : "false (SAFE_LOCKED_OFF)");
   Serial.println("====================================================");
 
   WiFi.mode(WIFI_STA);

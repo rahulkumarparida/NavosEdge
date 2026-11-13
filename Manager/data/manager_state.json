@@ -1,3 +1,87 @@
 {
-  "nodes": {}
+  "nodes": {
+    "uno-q-001": {
+      "node_id": "uno-q-001",
+      "location": "Location-uno-q-001",
+      "ip": "10.81.210.140",
+      "port": 8420,
+      "status": "active",
+      "last_seen": "2026-11-13T07:06:26.445900+00:00",
+      "aqi": 33.0,
+      "pm": {
+        "PM1_0": 13.43,
+        "PM2_5": 20.15,
+        "PM10": 27.87
+      },
+      "temperature_C": 30.5,
+      "humidity_pct": 68.59,
+      "source_prediction": "COOKING_OR_FUEL_COMBUSTION",
+      "source_confidence": 0.7836,
+      "predictions": {
+        "source": {
+          "value": "COOKING_OR_FUEL_COMBUSTION",
+          "confidence": 0.7836
+        },
+        "forecast": {
+          "value": {
+            "status": "ok",
+            "PM1_0": [
+              15.07,
+              17.01,
+              17.73,
+              18.38,
+              18.83,
+              18.99,
+              19.01,
+              18.92,
+              18.72,
+              18.45,
+              18.14,
+              17.8
+            ],
+            "PM2_5": [
+              23.95,
+              21.9,
+              23.6,
+              25.32,
+              26.34,
+              27.59,
+              28.16,
+              28.58,
+              28.77,
+              28.67,
+              28.43,
+              28.03
+            ],
+            "PM10": [
+              32.16,
+              32.81,
+              34.45,
+              35.98,
+              36.88,
+              37.65,
+              38.03,
+              38.1,
+              37.95,
+              37.6,
+              37.11,
+              36.53
+            ]
+          },
+          "confidence": 1.0
+        }
+      },
+      "advisory": {
+        "severity": "HIGH",
+        "advice": "Provisional PM assessment indicates acceptable particulate levels across available readings.",
+        "actions": [
+          "[ACTIVITY] Limit intense training; prefer early morning sessions.",
+          "[HOME] Keep road-facing windows closed; run indoor air circulation.",
+          "[HEALTH] Children and seniors should reduce strenuous outdoor time.",
+          "[GAS ALERT] Move away from dense smoke and protect airways."
+        ],
+        "weather_advice": "The weather is at a comfortable level. Have a good day outside."
+      }
+    }
+  }
 }
