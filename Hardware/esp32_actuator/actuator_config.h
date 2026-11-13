@@ -5,9 +5,10 @@
 // ============================================================================
 
 // Target Hardware: NodeMCU ESP-32S V1.1 (Classic ESP32, USB-C, 3.3V GPIO logic)
-// Safe non-strapping GPIO pins:
-//   - GPIO25 -> Alert Bulb / LED driver (active-HIGH by default; set false for active-LOW relay module)
-//   - GPIO26 -> Synchronized Alert Buzzer driver (rings whenever alert bulb is ON)
+// Physical Pin Assignments:
+//   - ESP32 GPIO25 -> Alert LED / Bulb (active-HIGH by default; set false for active-LOW relay)
+//   - UNO Q Pin D9  -> Primary Synchronized Alarm Buzzer (configured in Hardware/mcu_display/mcu_display.ino)
+//   - ESP32 GPIO26 -> Optional auxiliary buzzer pin on ESP32
 #define ALERT_LIGHT_PIN 25
 #define ALERT_LIGHT_GPIO ALERT_LIGHT_PIN
 #define ALERT_LIGHT_ACTIVE_HIGH true

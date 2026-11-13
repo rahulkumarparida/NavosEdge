@@ -578,19 +578,63 @@ static void sample_and_transmit_sensors(unsigned long now) {
 
 // ─── Buzzer Hardware Control Helpers ──────────────────────────────
 static inline void buzzerOn() {
-#if BUZZER_IS_PASSIVE
     tone(BUZZER_PIN, BUZZER_TONE_FREQ);
-#else
     digitalWrite(BUZZER_PIN, HIGH);
-#endif
 }
 
 static inline void buzzerOff() {
-#if BUZZER_IS_PASSIVE
     noTone(BUZZER_PIN);
-#else
     digitalWrite(BUZZER_PIN, LOW);
-#endif
+}
+
+// ─── Synchronized Alarm State & Logic ─────────────────────────────
+static bool manual_alarm_active = false;
+static unsigned long last_alarm_toggle_ms = 0;
+static bool alarm_sound_state = false;
+
+void set_alarm(bool active) {
+    manual_alarm_active = active;
+    if (!active) {
+        alarm_sound_state = false;
+        buzzerOff();
+    }
+}
+
+bool isEmergencyAlarmActive() {
+    if (manual_alarm_active) return true;
+    if (!state.valid) return false;
+    if (state.aqi >= 150.0f) return true;
+
+    if (state.severity[0] != '\0') {
+        String sev = String(state.severity);
+        sev.toUpperCase();
+        if (sev.indexOf("HAZARD") >= 0 || sev.indexOf("VERY UNHEALTHY") >= 0 ||
+            sev.indexOf("UNHEALTHY") >= 0 || sev.indexOf("EMERGENCY") >= 0 ||
+            sev.indexOf("CRITICAL") >= 0 || sev.indexOf("WARNING") >= 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void updateAlarmBuzzer(unsigned long now) {
+    if (isEmergencyAlarmActive()) {
+        // Intermittent pulsing alarm (300 ms ON / 300 ms OFF)
+        if (now - last_alarm_toggle_ms >= 300) {
+            last_alarm_toggle_ms = now;
+            alarm_sound_state = !alarm_sound_state;
+            if (alarm_sound_state) {
+                buzzerOn();
+            } else {
+                buzzerOff();
+            }
+        }
+    } else {
+        if (alarm_sound_state) {
+            alarm_sound_state = false;
+            buzzerOff();
+        }
+    }
 }
 
 /**
@@ -689,6 +733,7 @@ void setup() {
     Bridge.provide_safe("update_actions", update_actions);
     Bridge.provide_safe("update_predictions", update_predictions);
     Bridge.provide_safe("update_raw_sensors", update_raw_sensors);
+    Bridge.provide_safe("set_alarm", set_alarm);
 
     Serial.println(F("{\"status\":\"booting\",\"firmware\":\"navos_unified\",\"version\":\"1.1.0\"}"));
 
@@ -706,8 +751,11 @@ void loop() {
     // 3. Service any safe RPC requests that arrived during GUI rendering
     safeUpdate();
 
-    // 4. Periodically sample physical sensors and stream JSON
+    // 4. Update synchronized alarm buzzer on Pin D9
     unsigned long now = millis();
+    updateAlarmBuzzer(now);
+
+    // 5. Periodically sample physical sensors and stream JSON
     if ((now - last_sensor_sample_ms) >= SENSOR_SAMPLE_MS) {
         last_sensor_sample_ms = now;
         sample_and_transmit_sensors(now);
