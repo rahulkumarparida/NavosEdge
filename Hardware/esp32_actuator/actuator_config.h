@@ -24,6 +24,8 @@
 #define PHYSICAL_DRIVER_VERIFIED false
 
 // Wi-Fi Credentials (update before flashing)
+//  CENTRAL LIBRARY BUILDING -2ND FL
+// nopassword@
 #define WIFI_SSID "NavosEdge_LAN"
 #define WIFI_PASSWORD "CHANGE_ME"
 
