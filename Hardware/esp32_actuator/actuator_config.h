@@ -16,7 +16,7 @@
 #define ALERT_BUZZER_PIN 26
 #define ALERT_BUZZER_GPIO ALERT_BUZZER_PIN
 #define ALERT_BUZZER_ACTIVE_HIGH true
-#define ALERT_BUZZER_PASSIVE_TONE false  // Set true for passive 2-pin piezo buzzer using tone()
+#define ALERT_BUZZER_PASSIVE_TONE true  // Set true for passive 2-pin piezo buzzer using tone()
 #define ALERT_BUZZER_TONE_HZ 2400
 
 // GPIO25 (bulb) + GPIO26 (buzzer) armed; both are initialized OFF at top of setup() before Serial/Wi-Fi.
